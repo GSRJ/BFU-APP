@@ -336,7 +336,7 @@ g.bosel{opacity:.85}
 #plLegBox .lgi svg{flex:none}
 #V_topstamp,#V_stamp{display:none}
 /* cabeçalho do item com altura fixa: os botões Em ordem / Problema ficam sempre no mesmo lugar */
-.sh-head.fix{height:84px;align-items:center;overflow:hidden}
+.sh-head.fix{height:84px;flex:none;align-items:center;overflow:hidden}
 .sh-head.fix .tt h2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sh-head.fix .tt p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sh-head.fix .tt p.whr{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;height:2.6em;overflow:hidden}
@@ -562,6 +562,9 @@ body.in-hub .top::before{display:none!important}
 @keyframes tRip2{from{transform:scale(.2);opacity:1}to{transform:scale(1);opacity:0}}
 @media (prefers-reduced-motion:reduce){.t-finger.idle .fh,.t-finger.idle .fr{animation:none}}
 @media (prefers-reduced-motion:reduce){.t-dim,.t-hole,.t-finger{transition:none!important}#tNext::after{animation:none}}
+
+/* balão do tour: encosta em cima ou embaixo, do lado que não cobre o destaque */
+.t-card.baixo{top:auto!important;bottom:calc(8px + env(safe-area-inset-bottom))!important}
 </style>
 </head>
 <body>
@@ -3237,16 +3240,33 @@ let tourI=0,tourSnap=null,tourBusy=false;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 /* tour leve: o escurecimento é feito por 4 painéis movidos só com transform */
 let tourRect=null;
+function tourDock(r){
+  const c=$('#tCard');if(!c)return;
+  const H=innerHeight,ch=c.offsetHeight||176,m=16;
+  let baixo=c.classList.contains('baixo');
+  if(!r)baixo=false;
+  else{
+    const y0=r.y,y1=r.y+r.h,ov=(a,b)=>Math.max(0,Math.min(b,y1)-Math.max(a,y0));
+    const emCima=ov(0,ch+m),embaixo=ov(H-ch-m,H);
+    if(emCima!==embaixo)baixo=embaixo<emCima;      /* fica do lado que cobre menos */
+    else if(emCima===0)baixo=baixo;                 /* os dois livres: não pula à toa */
+  }
+  if(baixo!==c.classList.contains('baixo')){
+    c.classList.toggle('baixo',baixo);
+    try{c.animate([{opacity:0,transform:`translateY(${baixo?14:-14}px)`},{opacity:1,transform:'none'}],{duration:220,easing:'ease-out'});}catch(_){}
+  }
+}
+addEventListener('resize',()=>{if(typeof touring!=='undefined'&&touring)tourDock(tourRect);});
 function tourSpot(r,pad){
   const T=$('#tour'),h=$('#tHole');let d=T._dim;
   const W=T.clientWidth||innerWidth,H=T.clientHeight||innerHeight;
   const put=(x,y,w,hh)=>{d[0].style.transform=`translate3d(0,${y-H}px,0)`;d[1].style.transform=`translate3d(0,${y+hh}px,0)`;d[2].style.transform=`translate3d(${x-W}px,${y}px,0) scaleY(${hh/H})`;d[3].style.transform=`translate3d(${x+w}px,${y}px,0) scaleY(${hh/H})`;};
   if(!d){d=T._dim=[0,1,2,3].map(()=>{const e=document.createElement('div');e.className='t-dim';e.style.transition='none';T.insertBefore(e,T.firstChild);return e;});put(W/2,H/2,0,0);void T.offsetWidth;d.forEach(e=>e.style.transition='');}
-  if(!r){const c=tourRect||{x:W/2,y:H/2,w:0,h:0};put(Math.round(c.x+c.w/2),Math.round(c.y+c.h/2),0,0);tourRect=null;h.classList.add('none');return;}
+  if(!r){const c=tourRect||{x:W/2,y:H/2,w:0,h:0};put(Math.round(c.x+c.w/2),Math.round(c.y+c.h/2),0,0);tourRect=null;h.classList.add('none');tourDock(null);return;}
   pad=pad==null?6:pad;
   const x=Math.round(r.left-pad),y=Math.round(r.top-pad),w=Math.round(r.width+2*pad),hh=Math.round(r.height+2*pad);
   if(h.classList.contains('none')){h.style.transition='none';h.style.transform=`translate3d(${x}px,${y}px,0)`;h.style.width=w+'px';h.style.height=hh+'px';void h.offsetWidth;h.style.transition='';}
-  tourRect={x,y,w,h:hh};put(x,y,w,hh);
+  tourRect={x,y,w,h:hh};put(x,y,w,hh);tourDock(tourRect);
   h.classList.remove('none');h.style.setProperty('--r',r.round?'50%':'14px');
   Object.assign(h.style,{width:w+'px',height:hh+'px',transform:`translate3d(${x}px,${y}px,0)`});
 }
@@ -3275,7 +3295,7 @@ function tourClick(e){
 function tourHole(t,pad){
   const card=$('#tCard');
   let r=null;
-  if(t&&t.getBoundingClientRect){t.scrollIntoView({block:'center',behavior:'instant'});r=t.getBoundingClientRect();const cb=card.getBoundingClientRect().bottom+10;if(r.top<cb&&r.height<innerHeight-cb-20){let sc=t.parentElement;while(sc&&sc!==document.body&&!(sc.scrollHeight>sc.clientHeight+4&&/(auto|scroll)/.test(getComputedStyle(sc).overflowY)))sc=sc.parentElement;if(sc&&sc!==document.body){sc.scrollTop-=(cb-r.top);r=t.getBoundingClientRect();}}}else if(t)r=t;
+  if(t&&t.getBoundingClientRect){t.scrollIntoView({block:'center',behavior:'instant'});r=t.getBoundingClientRect();}else if(t)r=t;
   tourSpot(r,pad);
 }
 async function tourTap(el,doIt){
