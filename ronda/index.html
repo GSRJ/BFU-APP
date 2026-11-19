@@ -337,10 +337,10 @@ g.bosel{opacity:.85}
 #plLegBox .lgi svg{flex:none}
 #V_topstamp,#V_stamp{display:none}
 /* cabeçalho do item com altura fixa: os botões Em ordem / Problema ficam sempre no mesmo lugar */
-.sh-head.fix{height:84px;flex:none;align-items:center;overflow:hidden}
+.sh-head.fix{height:auto;min-height:84px;flex:none;align-items:center;overflow:hidden;padding-top:6px;padding-bottom:6px}
 .sh-head.fix .tt h2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sh-head.fix .tt p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sh-head.fix .tt p.whr{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;height:2.6em;overflow:hidden}
+.sh-head.fix .tt p.whr{white-space:normal;display:block;height:auto;overflow:visible}
 .sh-head.fix .tt .lbl{display:none}
 /* ===== ajustes de usabilidade (16/11) ===== */
 .foot-strip{height:calc(26px + env(safe-area-inset-bottom));padding:6px 14px 0;align-items:flex-start}
