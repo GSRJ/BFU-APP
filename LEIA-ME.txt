@@ -25,3 +25,9 @@ troque esse arquivo e suba a versão do sw.js da raiz, senão o celular já inst
 servindo o arquivo guardado no cache. O sw.js da raiz e o gbd/sw.js guardam arquivo por arquivo
 e não listam endereços de pasta (como "gbd/"), porque a Vercel redireciona esses endereços e isso
 derrubava a instalação inteira do cache.
+
+Atualização 19/11 (turnos e confirmação): a placa "GBD do dia" abre uma escolha de turno —
+manhã, tarde e noite. Só a tarde tem GBD publicado; manhã e noite explicam que ainda não foram
+criadas, contam como funciona a ferramenta de montagem e orientam o líder do turno a procurar o
+AAS Gerson. No GBD, cada dia aparece como "previsto" até o responsável confirmar no montador;
+confirmado, a etiqueta vira "confirmado" na página dos agentes.
