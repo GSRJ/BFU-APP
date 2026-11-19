@@ -2444,6 +2444,13 @@ function whereText(p){
   if(plat)return `${acc}${pos?' · '+pos:''}`;
   return pos||p.area;
 }
+/* escadas e elevadores sempre com o acesso: no mezanino, às plataformas; nas plataformas, ao mezanino */
+function acessoDe(p){
+  if(!p||p.custom||![A_ROL,A_FIX,A_ELE].includes(p.area))return '';
+  const plat=PLAT_MAP[baseName(p)]||(String(p.name).match(/ – Plataformas ([\d e]+)/)||[])[1];
+  return KIND==='mez'?(plat?'Plataformas '+plat:''):'Mezanino';
+}
+const nomeAc=p=>{const a=acessoDe(p);return noPlat(p.name)+(a?' (acesso '+(a==='Mezanino'?'ao ':'às ')+a+')':'');};
 function locLine(p){return 'Ponto de referência: '+whereText(p);}
 function imgFrom(src){return new Promise((res_,rej)=>{const i=new Image();i.onload=()=>res_(i);i.onerror=()=>rej(new Error('img'));i.src=src;});}
 /* foto com faixa de legenda embaixo: problema, local, gravidade, bloqueios e descrição */
@@ -2573,7 +2580,7 @@ function buildSummary(){
     L.push(`Problema: ${r.note&&r.note.trim()?r.note.trim():'sem descrição'}`);
     if(r.t)L.push('🕒 Registrado em '+whenOf(r));
   });
-  if(na.length){L.push('',`*➖ NÃO SE APLICA (${na.length})*`);na.forEach(p=>L.push('• '+p.name));}
+  if(na.length){L.push('',`*➖ NÃO SE APLICA (${na.length})*`);na.forEach(p=>L.push('• '+nomeAc(p)));}
   if(pend.length&&pend.length<=15){L.push('',`*⏳ NÃO ANALISADOS (${pend.length})*`);pend.forEach(p=>L.push('• '+noPlat(p.name)+' – '+whereText(p)));}
   else if(pend.length)L.push('',`⏳ Não analisados: ${pend.length} itens (não fazem parte desta ronda)`);
   if(m.obs&&m.obs.trim())L.push('','Obs.: '+m.obs.trim());
@@ -2773,7 +2780,7 @@ function areaStat(){
   const nap=all.filter(p=>statusOf(p)==='na'),pdp=all.filter(p=>!statusOf(p));
   const full=bad.map(p=>{const r=res(p.id);return {t:ttl(p),w:p.custom?'':whereText(p),b:r.blq&&r.blq.length?r.blq.map(p2).join(', '):'',n:r.note&&r.note.trim()?r.note.trim():'sem descrição',h:r.t?whenOf(r):''};});
   const cat={};all.forEach(p=>{const c=cat[p.area]||(cat[p.area]={n:0,ok:0,bad:0,na:0,pend:0}),st=statusOf(p);c.n++;if(st==='ok')c.ok++;else if(st==='problema')c.bad++;else if(st==='na')c.na++;else c.pend++;});
-  return {k:KIND,cat,full,naNames:nap.map(p=>noPlat(p.name)),pendNames:pdp.map(p=>noPlat(p.name)),label:KIND_LABEL[KIND],ok:okp.length,okNames:okp.map(p=>noPlat(p.name)),okAreas:okp.reduce((g,p)=>{g[p.area]=(g[p.area]||0)+1;return g;},{}),na:all.filter(p=>statusOf(p)==='na').length,pend:all.filter(p=>!statusOf(p)).length,
+  return {k:KIND,cat,full,naNames:nap.map(nomeAc),pendNames:pdp.map(nomeAc),label:KIND_LABEL[KIND],ok:okp.length,okNames:okp.map(nomeAc),okAreas:okp.reduce((g,p)=>{g[p.area]=(g[p.area]||0)+1;return g;},{}),na:all.filter(p=>statusOf(p)==='na').length,pend:all.filter(p=>!statusOf(p)).length,
     bad:bad.map(p=>{const r=res(p.id);return `*${ttl(p)}*${p.custom?'':' – '+whereText(p)}${r.blq&&r.blq.length?' – bloq. '+r.blq.map(p2).join(', '):''} – ${r.note&&r.note.trim()?r.note.trim():'sem descrição'}`;})};
 }
 function buildCaptionMulti(stats){
@@ -2971,7 +2978,7 @@ async function plantaDoLocal(list){
   const bate=(a,b)=>a.x<b.x+b.w&&b.x<a.x+a.w&&a.y<b.y+b.h&&b.y<a.y+a.h;
   let rot='';
   for(const p of viz){
-    const t=refName(noPlat(p.name)),nm=t.length>26?t.slice(0,25)+'…':t;
+    const t0=refName(noPlat(p.name)),ac=acessoDe(p),t=t0.length>26?t0.slice(0,25)+'…':t0,nm=t+(ac?' → '+(ac==='Mezanino'?'Mezanino':'Plat. '+ac.replace('Plataformas ','')):'');
     const tw=nm.length*fs*.56+u*16,th=fs*1.5,x=p.nx*W,y=p.ny*H,d=u*30;
     const cands=[{x:x+d,y:y-th/2},{x:x-d-tw,y:y-th/2},{x:x-tw/2,y:y+d},{x:x-tw/2,y:y-d-th}];
     const c=cands.find(c=>{const bx={x:c.x,y:c.y,w:tw,h:th};return dentro(c.x,c.y,0)&&dentro(c.x+tw,c.y+th,0)&&!caixas.some(o=>bate(bx,o))});
@@ -2989,7 +2996,8 @@ async function plantaDoLocal(list){
   });
   // legenda: só as categorias que aparecem no recorte
   const cats=[];viz.forEach(p=>{const n=AREAS[p.area];if(!cats.some(c=>c.n===n))cats.push({n,p})});
-  const imgH=Math.round(OUT*ch/cw),HEAD=118,LIN=56,cols=2,legH=30+Math.ceil((cats.length+1)/cols)*LIN+20+62;
+  const acNum=list.length>1?list.map((p,i)=>`${i+1}. ${refName(noPlat(p.name))}${acessoDe(p)?' → '+acessoDe(p):''}`):[];
+  const imgH=Math.round(OUT*ch/cw),HEAD=118,LIN=56,cols=2,gridH=30+Math.ceil((cats.length+1)/cols)*LIN,legH=gridH+(acNum.length?acNum.length*36+14:0)+20+62;
   const total=HEAD+imgH+legH;
   let leg=`<g transform="translate(0 ${HEAD+imgH})"><rect width="${OUT}" height="${legH}" fill="#fff"/><rect width="${OUT}" height="3" fill="#141414"/>`;
   const itensLeg=[{n:list.length>1?'Locais do fato':'Local do fato',marca:true},...cats];
@@ -2999,13 +3007,14 @@ async function plantaDoLocal(list){
     else{const q=Object.assign({},c.p,{nx:0,ny:0,id:'__pl_'+c.p.id});leg+=`<g transform="translate(${cx+18} ${cy})">${pinSVG(q,P,{k:1.15})}</g>`;}
     leg+=`<text x="${cx+50}" y="${cy+8}" font-size="23" font-weight="600" fill="#1F2933">${escX(c.n)}</text>`;
   });
+  acNum.forEach((t,i)=>{leg+=`<text x="34" y="${gridH+14+i*36+24}" font-size="22" fill="#1F2933">${escX(t.length>70?t.slice(0,69)+'…':t)}</text>`;});
   leg+=`<rect y="${legH-62}" width="${OUT}" height="62" fill="#F3F1EC"/><text x="${OUT/2}" y="${legH-24}" text-anchor="middle" font-size="19" fill="#5B6470">Planta sem escala · desenvolvida pelo AAS Gerson · appbfu.vercel.app</text>`;
   leg+='</g>';
   // cabeçalho com o local e a hora
   const m=ronda.meta||{},p0=list[0],r0=res(p0.id),quando=r0&&r0.t?whenOf(r0):fmtDate(m.data||'');
-  const titulo=list.length>1?`${list.length} locais do fato`:ttl(p0);
+  const ac0=list.length>1?'':acessoDe(p0),titulo=list.length>1?`${list.length} locais do fato`:ttl(p0)+(ac0?' → '+ac0:'');
   const ref=list.length>1?'':(p0.custom?'':whereText(p0));
-  const t1=titulo.length>44?titulo.slice(0,43)+'…':titulo,t2=(KIND_LABEL[KIND]+(quando?' · '+quando:'')+(m.agente?' · '+m.agente:'')),t3=ref.length>70?ref.slice(0,69)+'…':ref;
+  const t1=titulo.length>52?titulo.slice(0,51)+'…':titulo,t2=(KIND_LABEL[KIND]+(quando?' · '+quando:'')+(m.agente?' · '+m.agente:'')),t3=ref.length>70?ref.slice(0,69)+'…':ref;
   const head=`<rect width="${OUT}" height="${HEAD}" fill="#141414"/><rect y="${HEAD-6}" width="${OUT}" height="6" fill="#FFC61A"/>`+
     `<text x="30" y="46" font-size="32" font-weight="800" fill="#fff">${escX(t1)}</text>`+
     `<text x="30" y="${t3?79:88}" font-size="21" fill="#D6D6D0">${escX(t2)}</text>`+(t3?`<text x="30" y="104" font-size="19" fill="#FFC61A">${escX('Referência: '+t3)}</text>`:'');
