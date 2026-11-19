@@ -1,0 +1,16 @@
+App BFU · Estação Barra Funda (Ronda + Reporte SSO num só app)
+
+Como publicar no Netlify:
+1. Crie um site novo (por exemplo "bfu") e arraste esta pasta inteira (com index.html, ronda/ e reporte-sso/).
+2. Abra o endereço do site no celular e toque em "Instalar no celular".
+
+Estrutura:
+- index.html ........ tela "O que você quer fazer?" (sem saudação) com as placas "Fazer a ronda" e "Reportar à SSO"
+- ronda/ ............ app Ronda completo
+- reporte-sso/ ...... app Reporte SSO completo
+Dentro de cada app, o botão "🏠 Início" no topo e o item "🏠 Tela inicial" do menu voltam para esta tela.
+
+Os sites rondabfu e reportsso continuam funcionando separados, se quiser mantê-los.
+Rondas e configurações salvas no celular ficam guardadas por site: no site novo o app começa sem dados salvos.
+
+Atualização 19/11: a tela inicial mostra o aviso "Funciona sem internet depois de instalado". A instalação do BFU já guarda a Ronda e o Reporte SSO, que abrem sem internet mesmo sem terem sido abertos antes. Dentro do BFU, "Instalar o app" instala o BFU, e o botão "🏠 Início" no topo volta para a tela inicial.
