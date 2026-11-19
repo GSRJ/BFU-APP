@@ -1,10 +1,17 @@
-/* Publica o GBD dos agentes: grava gbd/gbd-dados.json no repositório.
-   O token do GitHub nunca sai daqui. Variáveis necessárias na Vercel:
-   GITHUB_TOKEN    token fino, só neste repositório, permissão Contents: Read and write
-   PUBLICAR_SENHA  senha que você digita no montador (12 caracteres ou mais) */
+/* Publica o GBD dos agentes: grava o arquivo do turno no repositório.
+   O token do GitHub nunca sai daqui. Variáveis na Vercel:
+   GITHUB_TOKEN            token fino, só neste repositório, Contents: Read and write
+   PUBLICAR_SENHA          senha do turno da tarde (12 caracteres ou mais)
+   PUBLICAR_SENHA_MANHA    senha do turno da manhã
+   PUBLICAR_SENHA_NOITE    senha do turno da noite
+   Cada turno só grava o próprio arquivo, com a própria senha. */
 const REPO = process.env.GBD_REPO || 'GSRJ/BFU-APP';
-const CAMINHO = 'gbd/gbd-dados.json';
 const RAMO = process.env.GBD_RAMO || 'main';
+const TURNOS = {
+  tarde: { arquivo: 'gbd/gbd-dados.json', senha: 'PUBLICAR_SENHA', rotulo: 'Tarde' },
+  manha: { arquivo: 'gbd/gbd-dados-manha.json', senha: 'PUBLICAR_SENHA_MANHA', rotulo: 'Manhã' },
+  noite: { arquivo: 'gbd/gbd-dados-noite.json', senha: 'PUBLICAR_SENHA_NOITE', rotulo: 'Noite' },
+};
 
 const igual = (a, b) => {
   a = String(a == null ? '' : a); b = String(b == null ? '' : b);
@@ -13,25 +20,38 @@ const igual = (a, b) => {
   for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i);
   return d === 0;
 };
+const senhaOk = s => !!s && s.length >= 12;
 
 module.exports = async (req, res) => {
-  const senha = process.env.PUBLICAR_SENHA, token = process.env.GITHUB_TOKEN;
+  const token = process.env.GITHUB_TOKEN;
   res.setHeader('cache-control', 'no-store');
 
-  if (req.method === 'GET') return res.status(200).json({ pronto: !!(senha && token && senha.length >= 12) });
+  if (req.method === 'GET') {
+    const turnos = {};
+    for (const [t, c] of Object.entries(TURNOS)) turnos[t] = !!(token && senhaOk(process.env[c.senha]));
+    return res.status(200).json({ pronto: turnos.tarde, turnos });
+  }
   if (req.method !== 'POST') return res.status(405).json({ erro: 'use POST' });
-  if (!token) return res.status(500).json({ erro: 'falta a variável GITHUB_TOKEN na Vercel' });
-  if (!senha) return res.status(500).json({ erro: 'falta a variável PUBLICAR_SENHA na Vercel' });
-  if (senha.length < 12) return res.status(500).json({ erro: 'a PUBLICAR_SENHA precisa ter 12 caracteres ou mais' });
 
   let corpo = req.body;
   if (typeof corpo === 'string') { try { corpo = JSON.parse(corpo); } catch (e) { return res.status(400).json({ erro: 'corpo inválido' }); } }
   if (!corpo || typeof corpo !== 'object') return res.status(400).json({ erro: 'corpo inválido' });
+
+  const turno = corpo.turno || 'tarde';
+  const conf = TURNOS[turno];
+  if (!conf) return res.status(400).json({ erro: 'turno desconhecido' });
+
+  const senha = process.env[conf.senha];
+  if (!token) return res.status(500).json({ erro: 'falta a variável GITHUB_TOKEN na Vercel' });
+  if (!senha) return res.status(500).json({ erro: `falta a variável ${conf.senha} na Vercel` });
+  if (!senhaOk(senha)) return res.status(500).json({ erro: `a ${conf.senha} precisa ter 12 caracteres ou mais` });
   if (!igual(corpo.senha, senha)) return res.status(401).json({ erro: 'senha incorreta' });
 
   const dados = corpo.dados;
   if (!dados || typeof dados !== 'object' || !dados.dias || !Object.keys(dados.dias).length)
     return res.status(400).json({ erro: 'dados sem nenhum dia' });
+  dados.turno = conf.rotulo;      /* o rótulo do turno vem daqui, não de quem publicou */
+  dados.turnoId = turno;
 
   const texto = JSON.stringify(dados);
   if (texto.length > 4 * 1024 * 1024) return res.status(413).json({ erro: 'arquivo grande demais' });
@@ -42,7 +62,7 @@ module.exports = async (req, res) => {
     'x-github-api-version': '2022-11-28',
     'user-agent': 'bfu-app-gbd',
   };
-  const url = `https://api.github.com/repos/${REPO}/contents/${CAMINHO}`;
+  const url = `https://api.github.com/repos/${REPO}/contents/${conf.arquivo}`;
 
   try {
     let sha;
@@ -56,7 +76,7 @@ module.exports = async (req, res) => {
       method: 'PUT',
       headers: { ...h, 'content-type': 'application/json' },
       body: JSON.stringify({
-        message: `Atualiza o GBD dos agentes: ${dias.length} dias, de ${dias[0]} a ${dias[dias.length - 1]}`,
+        message: `Atualiza o GBD da ${conf.rotulo.toLowerCase()}: ${dias.length} dias, de ${dias[0]} a ${dias[dias.length - 1]}`,
         content: Buffer.from(texto, 'utf8').toString('base64'),
         branch: RAMO,
         ...(sha ? { sha } : {}),
@@ -65,7 +85,7 @@ module.exports = async (req, res) => {
     const j = await r.json().catch(() => ({}));
     if (!r.ok) return res.status(502).json({ erro: j.message || 'o GitHub respondeu ' + r.status });
     return res.status(200).json({
-      ok: true, dias: dias.length, de: dias[0], ate: dias[dias.length - 1],
+      ok: true, turno, dias: dias.length, de: dias[0], ate: dias[dias.length - 1],
       commit: ((j.commit && j.commit.sha) || '').slice(0, 7),
     });
   } catch (e) {
