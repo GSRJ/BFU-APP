@@ -1696,7 +1696,7 @@ function pinSVG(p,P,o){
   }
   if(isSel){
     let nm=p.custom?'Problema em outro local':p.area===A_VAO?'Vão':refName(noPlat(p.name));
-    const t=nm.length>36?nm.slice(0,35)+'…':nm,w=t.length*10.2+26,px=p.nx*VW(),py=p.ny*VH();
+    const t=(nm.length>36?nm.slice(0,35)+'…':nm)+acCurto(p),w=t.length*10.2+26,px=p.nx*VW(),py=p.ny*VH();
     /* o balão nunca sai da planta: desloca para os lados e, perto do topo, passa para baixo do ícone */
     let sx=0;const half=w/2*k,mg=6*k;
     if(px-half<mg)sx=(mg-(px-half))/k;else if(px+half>VW()-mg)sx=-((px+half)-(VW()-mg))/k;
@@ -2066,7 +2066,7 @@ function blqHTML(p,r){
 const miniEnd=(extra)=>`<div class="miniend">${extra||''}<button class="link" type="button" data-act="pdf">🏁 Encerrar ronda</button><button class="link" type="button" data-act="newround">↺ Nova ronda</button></div>`;
 function sheetPoint(p){
   const r=res(p.id),st=statusOf(p),li=locInfo(p);
-  let h=`<div class="sh-head fix">${badgeHTML(p)}<div class="tt"><h2>${p.custom?'Problema fora dos pontos':p.area===A_VAO?'Vão':esc(p.name)}</h2><p>${p.custom?'Fora dos pontos de ronda':isOff(p)?esc(p.area)+' · fora da ronda (só se precisar reportar)':esc(p.area)+' · '+(()=>{const ar=cfg.points.filter(q=>q.area===p.area);return ar.filter(q=>res(q.id).status).length+'/'+ar.length;})()}${r.t?' · '+esc(r.t):''}</p><p class="whr">📍 ${p.custom?esc(li.text||'—'):esc(whereText(p))}</p></div>${doneStack.length&&!p.custom&&mode!=='edit'?'<button class="bk" type="button" data-act="back" aria-label="Voltar ao item anterior" title="Voltar ao item anterior">↩</button>':''}<button class="x" type="button" data-act="close" aria-label="Fechar">✕</button></div>`;
+  let h=`<div class="sh-head fix">${badgeHTML(p)}<div class="tt"><h2>${p.custom?'Problema fora dos pontos':p.area===A_VAO?'Vão':esc(nomeAc(p))}</h2><p>${p.custom?'Fora dos pontos de ronda':isOff(p)?esc(p.area)+' · fora da ronda (só se precisar reportar)':esc(p.area)+' · '+(()=>{const ar=cfg.points.filter(q=>q.area===p.area);return ar.filter(q=>res(q.id).status).length+'/'+ar.length;})()}${r.t?' · '+esc(r.t):''}</p><p class="whr">📍 ${p.custom?esc(li.text||'—'):esc(whereText(p))}</p></div>${doneStack.length&&!p.custom&&mode!=='edit'?'<button class="bk" type="button" data-act="back" aria-label="Voltar ao item anterior" title="Voltar ao item anterior">↩</button>':''}<button class="x" type="button" data-act="close" aria-label="Fechar">✕</button></div>`;
   if(p.custom){
     h+=`<div><label class="lbl" for="extraName">Onde / o que foi encontrado</label><input class="inp" id="extraName" type="text" value="${esc(p.name)}" autocomplete="off"></div>`;
   }else if(!st){
@@ -2148,7 +2148,7 @@ function renderList(){
     const st=statusOf(p);
     if(!(listFilter==='todos'||(listFilter==='pend'&&!st)||(listFilter==='prob'&&st==='problema')))continue;
     const pill=st?`<span class="pill ${st==='ok'?'ok':st==='problema'?'bad':''}">${st==='ok'?'OK':st==='problema'?'Problema':'N/A'}</span>`:'';
-    h+=`<button class="row" type="button" data-id="${esc(p.id)}">${badgeHTML(p)}<span class="nm">${esc(p.name)}<small>${p.custom?esc(locInfo(p).text):esc(p.area)}</small></span>${pill}</button>`;
+    h+=`<button class="row" type="button" data-id="${esc(p.id)}">${badgeHTML(p)}<span class="nm">${esc(p.custom?p.name:nomeAc(p))}<small>${p.custom?esc(locInfo(p).text):esc(p.area)}</small></span>${pill}</button>`;
   }
   $('#list').innerHTML=h||'<p style="padding:24px;text-align:center" class="mut">Nada por aqui.</p>';
 }
@@ -2517,6 +2517,14 @@ function whereText(p){
   if(plat)return `${acc}${pos?' · '+pos:''}`;
   return pos||p.area;
 }
+/* escadas e elevadores sempre com o acesso: no mezanino, às plataformas; nas plataformas, ao mezanino */
+function acessoDe(p){
+  if(!p||p.custom||![A_ROL,A_FIX,A_ELE].includes(p.area))return '';
+  const plat=PLAT_MAP[baseName(p)]||(String(p.name).match(/ – Plataformas ([\d e]+)/)||[])[1];
+  return KIND==='mez'?(plat?'Plataformas '+plat:''):'Mezanino';
+}
+const nomeAc=p=>{const a=acessoDe(p);return noPlat(p.name)+(a?' (acesso '+(a==='Mezanino'?'ao ':'às ')+a+')':'');};
+const acCurto=p=>{const a=acessoDe(p);return a?' → '+(a==='Mezanino'?'Mezanino':'Plat. '+a.replace('Plataformas ','')):'';};
 function locLine(p){return 'Local: '+whereText(p);}
 function imgFrom(src){return new Promise((res_,rej)=>{const i=new Image();i.onload=()=>res_(i);i.onerror=()=>rej(new Error('img'));i.src=src;});}
 /* foto com faixa de legenda embaixo: problema, local, gravidade, bloqueios e descrição */
@@ -2585,7 +2593,7 @@ async function buildCover(){
     T(`ITENS EM ORDEM (${ok.length})`,M,30,'#5FD39A',1);y+=12;
     if(!ok.length){y+=LH;T('Nenhum item marcado em ordem.',M,FS,'#93A3B2');}
     const colW=(W-2*M-24)/2;
-    const items=ok.map(p=>wrapT('• '+noPlat(p.name),colW,24,0));
+    const items=ok.map(p=>wrapT('• '+nomeAc(p),colW,24,0));
     const half=Math.ceil(items.length/2),y0=y,hs=[y0,y0];
     [items.slice(0,half),items.slice(half)].forEach((col,ci)=>{
       let yy=y0;
@@ -2610,7 +2618,7 @@ async function buildCover(){
     if(pend.length){
       y+=34;T(`PONTOS NÃO ANALISADOS (${pend.length})`,M,30,'#F0B35A',1);
       if(m.enc&&m.enc.motivo)for(const l of wrapT('Motivo: '+m.enc.motivo,W-2*M,24,0)){y+=Math.round(24*1.35);T(l,M,24,'#F0B35A');}
-      const pi=pend.map(p=>wrapT('• '+noPlat(p.name),colW,24,0));const ph=Math.ceil(pi.length/2),py0=y,hh=[py0,py0];
+      const pi=pend.map(p=>wrapT('• '+nomeAc(p),colW,24,0));const ph=Math.ceil(pi.length/2),py0=y,hh=[py0,py0];
       [pi.slice(0,ph),pi.slice(ph)].forEach((col,ci)=>{let yy=py0;for(const it of col)for(const l of it){yy+=Math.round(24*1.35);if(draw){ctx.font=font(24,0);ctx.fillStyle='#E6ECF1';ctx.fillText(l,M+ci*(colW+24),yy);}}hh[ci]=yy;});
       y=Math.max(hh[0],hh[1]);
     }
@@ -2635,7 +2643,7 @@ function buildSummary(){
   if(encTxt())L.push('⚠️ *'+encTxt()+'*');
   L.push(`✅ Em ordem: ${ok.length} · ❌ Com problema: ${bad.length}${na.length?' · ➖ N/A: '+na.length:''}${pend.length?' · ⏳ Não verificados: '+pend.length:''}`);
   L.push('',`*✅ EM ORDEM (${ok.length})*`);
-  if(ok.length)ok.forEach(p=>L.push('• '+p.name));else L.push('—');
+  if(ok.length)ok.forEach(p=>L.push('• '+nomeAc(p)));else L.push('—');
   L.push('',`*❌ COM PROBLEMA (${bad.length})*`);
   if(!bad.length)L.push('Nenhum item com problema.');
   bad.forEach((p,i)=>{
@@ -2646,7 +2654,7 @@ function buildSummary(){
     L.push(`Problema: ${r.note&&r.note.trim()?r.note.trim():'sem descrição'}`);
     if(r.t)L.push('🕒 Registrado em '+whenOf(r));
   });
-  if(na.length){L.push('',`*➖ NÃO SE APLICA (${na.length})*`);na.forEach(p=>L.push('• '+p.name));}
+  if(na.length){L.push('',`*➖ NÃO SE APLICA (${na.length})*`);na.forEach(p=>L.push('• '+nomeAc(p)));}
   if(pend.length&&pend.length<=15){L.push('',`*⏳ NÃO ANALISADOS (${pend.length})*`);pend.forEach(p=>L.push('• '+noPlat(p.name)+' – '+whereText(p)));}
   else if(pend.length)L.push('',`⏳ Não analisados: ${pend.length} itens (não fazem parte desta ronda)`);
   if(m.obs&&m.obs.trim())L.push('','Obs.: '+m.obs.trim());
@@ -2681,7 +2689,7 @@ function buildCaption(){
   const badL=bad.map((p,i)=>{const r=res(p.id);return `${i+1}) *${ttl(p)}*${p.custom?'':' – '+whereText(p)}${r.blq&&r.blq.length?' – bloq. '+r.blq.map(p2).join(', '):''} – ${r.note&&r.note.trim()?r.note.trim():'sem descrição'}`;});
   if(encTxt())head.push('⚠️ *ENCERRADA ANTES DO FIM*'+(m.enc.motivo?' – '+m.enc.motivo:''));
   const build=okLines=>head.concat(['',`✅ *EM ORDEM (${ok.length})*`],okLines,['',`❌ *COM PROBLEMA (${bad.length})*`],bad.length?badL:['Nenhum.'],foot).join('\n');
-  let t=build(ok.map(p=>'• '+noPlat(p.name)));
+  let t=build(ok.map(p=>'• '+nomeAc(p)));
   if(t.length>MAX){
     const g={};ok.forEach(p=>{g[p.area]=(g[p.area]||0)+1;});
     t=build([Object.entries(g).map(([a,n])=>`${a}: ${n}`).join(' · ')||'—']);
@@ -2834,7 +2842,7 @@ function areaStat(){
   const nap=all.filter(p=>statusOf(p)==='na'),pdp=all.filter(p=>!statusOf(p));
   const full=bad.map(p=>{const r=res(p.id);return {t:ttl(p),w:p.custom?'':whereText(p),b:r.blq&&r.blq.length?r.blq.map(p2).join(', '):'',n:r.note&&r.note.trim()?r.note.trim():'sem descrição',h:r.t?whenOf(r):''};});
   const cat={};all.forEach(p=>{const c=cat[p.area]||(cat[p.area]={n:0,ok:0,bad:0,na:0,pend:0}),st=statusOf(p);c.n++;if(st==='ok')c.ok++;else if(st==='problema')c.bad++;else if(st==='na')c.na++;else c.pend++;});
-  return {k:KIND,cat,full,naNames:nap.map(p=>noPlat(p.name)),pendNames:pdp.map(p=>noPlat(p.name)),label:KIND_LABEL[KIND],ok:okp.length,okNames:okp.map(p=>noPlat(p.name)),okAreas:okp.reduce((g,p)=>{g[p.area]=(g[p.area]||0)+1;return g;},{}),na:all.filter(p=>statusOf(p)==='na').length,pend:all.filter(p=>!statusOf(p)).length,
+  return {k:KIND,cat,full,naNames:nap.map(nomeAc),pendNames:pdp.map(nomeAc),label:KIND_LABEL[KIND],ok:okp.length,okNames:okp.map(nomeAc),okAreas:okp.reduce((g,p)=>{g[p.area]=(g[p.area]||0)+1;return g;},{}),na:all.filter(p=>statusOf(p)==='na').length,pend:all.filter(p=>!statusOf(p)).length,
     bad:bad.map(p=>{const r=res(p.id);return `*${ttl(p)}*${p.custom?'':' – '+whereText(p)}${r.blq&&r.blq.length?' – bloq. '+r.blq.map(p2).join(', '):''} – ${r.note&&r.note.trim()?r.note.trim():'sem descrição'}`;})};
 }
 function buildCaptionMulti(stats){
@@ -3721,7 +3729,7 @@ async function renderPl(keep){
     let lb='';
     if(plZ>=2){const u=B.w/(plZ*Math.min(innerWidth,700)),fs=10*u,ih=15*.62*kk;
       lb=allPoints().filter(p=>!p.custom).map(p=>{const x=p.nx*Wd,y=p.ny*Hd+(typeOf(p)?ih+fs*1.05:fs*.35),t=noPlat(p.name).replace(/^Escada rolante/,'Esc. rolante').replace(/^Escada fixa/,'Esc. fixa');
-        return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" font-size="${fs.toFixed(1)}" font-weight="700" text-anchor="middle" fill="#1F2937" stroke="#FBF8F1" stroke-width="${(fs*.32).toFixed(1)}" paint-order="stroke" pointer-events="none">${esc(t.length>26?t.slice(0,25)+'…':t)}</text>`;}).join('');}
+        return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" font-size="${fs.toFixed(1)}" font-weight="700" text-anchor="middle" fill="#1F2937" stroke="#FBF8F1" stroke-width="${(fs*.32).toFixed(1)}" paint-order="stroke" pointer-events="none">${esc((t.length>26?t.slice(0,25)+'…':t)+acCurto(p))}</text>`;}).join('');}
     $('#plLegBox').innerHTML=plLegend();
     return `<svg viewBox="${B.x0.toFixed(1)} ${y0.toFixed(1)} ${B.w.toFixed(1)} ${(B.h+B.y0-y0).toFixed(1)}" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, Helvetica, Arial, sans-serif" role="img" aria-label="Planta ${esc(KIND_LABEL[KIND])}" style="width:${(plZ*100).toFixed(0)}%"><rect x="${B.x0}" y="${y0}" width="${B.w}" height="${B.h+B.y0-y0}" fill="${P.bg}"/>${base}${ic}${lb}</svg>`;
   });
