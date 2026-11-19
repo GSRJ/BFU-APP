@@ -575,6 +575,15 @@ body.in-hub .top::before{display:none!important}
 #tNext{font-size:17px!important}
 /* balão do tour: encosta em cima ou embaixo, do lado que não cobre o destaque */
 .t-card.baixo{top:auto!important;bottom:calc(8px + env(safe-area-inset-bottom))!important}
+
+.repPlanta{margin:4px 0 12px;padding:10px 12px;border:2px solid var(--k,#141414);border-radius:10px;background:#FFF7D6}
+.repPlanta label{display:flex;gap:9px;align-items:center;font-size:15px;cursor:pointer}
+.repPlanta input{width:22px;height:22px;flex:none;accent-color:#0A5C9E}
+#repPlantaPrev{margin-top:9px;display:flex;gap:10px;align-items:center}
+#repPlantaPrev[hidden]{display:none}
+#repPlantaPrev img{width:92px;height:auto;border-radius:6px;border:1px solid #C9C2B4;background:#fff}
+#repPlantaPrev a{font-weight:700;color:#0A5C9E;font-size:14px}
+#repPlantaMsg{display:block;margin-top:6px;color:#5B6470;font-size:12.5px}
 </style>
 </head>
 <body>
@@ -673,6 +682,11 @@ body.in-hub .top::before{display:none!important}
 <dialog id="repDlg" aria-label="Enviar à SSO">
   <h2>Enviar à SSO</h2>
   <p id="repInfo"></p>
+  <div class="repPlanta">
+    <label><input type="checkbox" id="repPlantaChk" checked> <b>Incluir a planta com o local marcado</b></label>
+    <div id="repPlantaPrev" hidden><img id="repPlantaImg" alt="Planta com o local do fato"><a id="repPlantaBaixar" download="planta-local.jpg">Baixar a planta</a></div>
+    <small id="repPlantaMsg">Gerando a planta…</small>
+  </div>
   <div class="menu-list">
     <div class="opt" id="repPhOpt"><button class="big two" id="repStep" type="button" style="background:#25D366;border-color:#25D366;color:#fff"><span class="bt">📤 Enviar foto e texto à SSO</span><span class="bs">No WhatsApp, selecione o contato da SSO</span></button></div>
     <div class="opt"><button class="big two" id="repMsg" type="button"><span class="bt">💬 Enviar à SSO</span><span class="bs">Abre a conversa com a SSO no WhatsApp</span></button><small id="repMsgHint"></small></div>
@@ -2708,8 +2722,22 @@ async function openRep(){
   {const nf=repSteps.filter(x=>x.file).length;$('#repPhOpt').hidden=!nf;$('#repStep').querySelector('.bt').textContent='📤 Enviar '+(nf===1?'foto':nf+' fotos')+' e texto à SSO';$('#repMsg').querySelector('.bt').textContent=nf?'💬 Só o texto (sem fotos)':'💬 Enviar à SSO';$('#repMsg').classList.toggle('cta',!nf);$('#repMsg').style.cssText=nf?'':'background:#25D366;border-color:#25D366;color:#fff';}
   $('#repInfo').textContent=`${list.length} registro${list.length===1?'':'s'} · ${repSteps.filter(s=>s.file).length} foto${repSteps.filter(s=>s.file).length===1?'':'s'}`;
   $('#toast').classList.remove('on');
-  $('#repDlg').showModal();
+  $('#repDlg').showModal();repRotulos();
+  /* planta do local: gera em seguida, sem segurar o diálogo */
+  repPlanta=null;$('#repPlantaPrev').hidden=true;$('#repPlantaMsg').textContent='Gerando a planta…';
+  try{const keep=repIds.slice();repPlanta=await withArea(KIND,cfg,ronda,()=>plantaDoLocal(keep.map(pointById).filter(Boolean)));}catch(e){repPlanta=null;}
+  if(repPlanta){const u=URL.createObjectURL(repPlanta);$('#repPlantaImg').src=u;$('#repPlantaBaixar').href=u;$('#repPlantaBaixar').download=repPlanta.name;$('#repPlantaPrev').hidden=false;$('#repPlantaMsg').textContent=(repSteps.some(x=>x.file)?'Vai junto com as fotos. ':'Vai junto com o texto. ')+'Para guardar, toque em "Baixar a planta".';}
+  else $('#repPlantaMsg').textContent='Não deu para gerar a planta neste celular.';
+  repRotulos();
 }
+function repRotulos(){
+  const nf=repSteps.filter(x=>x.file).length,np=($('#repPlantaChk').checked&&repPlanta)?1:0,n=nf+np;
+  $('#repPhOpt').hidden=!n;
+  $('#repStep').querySelector('.bt').textContent='📤 Enviar '+(nf?(nf===1?'foto':nf+' fotos'):'')+(nf&&np?', planta':np?'planta':'')+' e texto à SSO';
+  $('#repMsg').querySelector('.bt').textContent=n?'💬 Só o texto (sem imagens)':'💬 Enviar à SSO';
+  $('#repMsg').classList.toggle('cta',!n);$('#repMsg').style.cssText=n?'':'background:#25D366;border-color:#25D366;color:#fff';
+}
+$('#repPlantaChk').onchange=repRotulos;
 /* número da SSO que recebe os reportes */
 const SSO_PHONE='5511926885833';
 function repText(){
@@ -2723,7 +2751,7 @@ function openWa(text){
 }
 $('#repMsg').onclick=()=>{openWa(repText());$('#repMsg').querySelector('.bt').textContent='✅ Mensagem aberta · tocar para reenviar';};
 $('#repStep').onclick=async()=>{
-  const files=repSteps.filter(x=>x.file).map(x=>x.file),text=repText();
+  const files=[...(($('#repPlantaChk').checked&&repPlanta)?[repPlanta]:[]),...repSteps.filter(x=>x.file).map(x=>x.file)],text=repText();
   if(!files.length){openWa(text);return;}
   try{
     if(navigator.share&&navigator.canShare&&navigator.canShare({files,text})){await navigator.share({files,text});}
@@ -2916,6 +2944,85 @@ async function planJpeg(){
     return c.toDataURL('image/jpeg',.92);
   }finally{URL.revokeObjectURL(url);}
 }
+
+/* ---------- planta do local do fato, para mandar junto ao reporte ----------
+   recorte da planta em volta do local, com o ponto marcado em vermelho e, por perto,
+   escadas, elevadores, bloqueios, sanitários e edificações com nome e legenda */
+const PLANTA_AREAS=()=>({[A_ROL]:'Escada rolante',[A_FIX]:'Escada fixa',[A_ELE]:'Elevador',[A_BLQ]:'Bloqueio',[A_SAN]:'Sanitário',[A_SALA]:'Edificação · sala',[A_TEC]:'Edificação · técnica',[A_QUI]:'Edificação · quiosque'});
+function escX(t){return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+async function plantaDoLocal(list){
+  if(!list.length)return null;
+  const P=PDF_PAL,W=VW(),H=VH(),B=planBounds(),OUT=1080;
+  // recorte: os pontos reportados com folga em volta, em pé (4:5)
+  const xs=list.map(p=>p.nx*W),ys=list.map(p=>p.ny*H);
+  let cw=Math.max(1150,Math.max(...xs)-Math.min(...xs)+520),ch=cw*1.25;
+  ch=Math.max(ch,Math.max(...ys)-Math.min(...ys)+520);cw=Math.max(cw,ch/1.25);
+  cw=Math.min(cw,B.w);ch=Math.min(ch,B.h);
+  const mx=(Math.max(...xs)+Math.min(...xs))/2,my=(Math.max(...ys)+Math.min(...ys))/2;
+  const x0=Math.max(B.x0,Math.min(B.x0+B.w-cw,mx-cw/2)),y0=Math.max(B.y0,Math.min(B.y0+B.h-ch,my-ch/2));
+  const u=cw/OUT;                       // unidades da planta por pixel da imagem
+  const k=u*1.55,fs=u*21;               // ícones e letras com tamanho fixo na imagem
+  const AREAS=PLANTA_AREAS(),rep=new Set(list.map(p=>p.id));
+  const dentro=(x,y,m)=>x>x0+m&&x<x0+cw-m&&y>y0+m&&y<y0+ch-m;
+  const viz=allPoints().filter(p=>!p.custom&&AREAS[p.area]&&!rep.has(p.id)&&dentro(p.nx*W,p.ny*H,u*20));
+  // rótulos sem sobrepor: tenta à direita, à esquerda, embaixo e em cima do ícone
+  const caixas=list.map(p=>({x:p.nx*W-u*40,y:p.ny*H-u*40,w:u*80,h:u*80}));
+  viz.forEach(p=>caixas.push({x:p.nx*W-u*24,y:p.ny*H-u*24,w:u*48,h:u*48}));
+  const bate=(a,b)=>a.x<b.x+b.w&&b.x<a.x+a.w&&a.y<b.y+b.h&&b.y<a.y+a.h;
+  let rot='';
+  for(const p of viz){
+    const t=refName(noPlat(p.name)),nm=t.length>26?t.slice(0,25)+'…':t;
+    const tw=nm.length*fs*.56+u*16,th=fs*1.5,x=p.nx*W,y=p.ny*H,d=u*30;
+    const cands=[{x:x+d,y:y-th/2},{x:x-d-tw,y:y-th/2},{x:x-tw/2,y:y+d},{x:x-tw/2,y:y-d-th}];
+    const c=cands.find(c=>{const bx={x:c.x,y:c.y,w:tw,h:th};return dentro(c.x,c.y,0)&&dentro(c.x+tw,c.y+th,0)&&!caixas.some(o=>bate(bx,o))});
+    if(!c)continue;
+    caixas.push({x:c.x,y:c.y,w:tw,h:th});
+    rot+=`<g><rect x="${c.x.toFixed(1)}" y="${c.y.toFixed(1)}" width="${tw.toFixed(1)}" height="${th.toFixed(1)}" rx="${(u*7).toFixed(1)}" fill="#fff" fill-opacity=".93" stroke="#8E8576" stroke-width="${(u*1.2).toFixed(2)}"/><text x="${(c.x+u*8).toFixed(1)}" y="${(c.y+th*.69).toFixed(1)}" font-size="${fs.toFixed(1)}" font-weight="700" fill="#1F2933">${escX(nm)}</text></g>`;
+  }
+  // marcação do local do fato
+  let marca='';
+  list.forEach((p,i)=>{
+    const x=(p.nx*W).toFixed(1),y=(p.ny*H).toFixed(1),r=u*34;
+    marca+=`<circle cx="${x}" cy="${y}" r="${(r*1.9).toFixed(1)}" fill="#DC2626" fill-opacity=".14"/><circle cx="${x}" cy="${y}" r="${(r*1.9).toFixed(1)}" fill="none" stroke="#DC2626" stroke-width="${(u*5).toFixed(1)}"/>`+
+      `<circle cx="${x}" cy="${y}" r="${r.toFixed(1)}" fill="#DC2626" stroke="#fff" stroke-width="${(u*5).toFixed(1)}"/>`+
+      `<text x="${x}" y="${(p.ny*H+u*12).toFixed(1)}" text-anchor="middle" font-size="${(u*34).toFixed(1)}" font-weight="800" fill="#fff">${list.length>1?i+1:'!'}</text>`;
+  });
+  // legenda: só as categorias que aparecem no recorte
+  const cats=[];viz.forEach(p=>{const n=AREAS[p.area];if(!cats.some(c=>c.n===n))cats.push({n,p})});
+  const imgH=Math.round(OUT*ch/cw),HEAD=118,LIN=56,cols=2,legH=30+Math.ceil((cats.length+1)/cols)*LIN+20;
+  const total=HEAD+imgH+legH;
+  let leg=`<g transform="translate(0 ${HEAD+imgH})"><rect width="${OUT}" height="${legH}" fill="#fff"/><rect width="${OUT}" height="3" fill="#141414"/>`;
+  const itensLeg=[{n:list.length>1?'Locais do fato':'Local do fato',marca:true},...cats];
+  itensLeg.forEach((c,i)=>{
+    const cx=34+(i%cols)*(OUT/cols),cy=30+Math.floor(i/cols)*LIN+22;
+    if(c.marca)leg+=`<circle cx="${cx+18}" cy="${cy}" r="17" fill="#DC2626" stroke="#fff" stroke-width="3"/><text x="${cx+18}" y="${cy+7}" text-anchor="middle" font-size="19" font-weight="800" fill="#fff">!</text>`;
+    else{const q=Object.assign({},c.p,{nx:0,ny:0,id:'__pl_'+c.p.id});leg+=`<g transform="translate(${cx+18} ${cy})">${pinSVG(q,P,{k:1.15})}</g>`;}
+    leg+=`<text x="${cx+50}" y="${cy+8}" font-size="23" font-weight="600" fill="#1F2933">${escX(c.n)}</text>`;
+  });
+  leg+='</g>';
+  // cabeçalho com o local e a hora
+  const m=ronda.meta||{},p0=list[0],r0=res(p0.id),quando=r0&&r0.t?whenOf(r0):fmtDate(m.data||'');
+  const titulo=list.length>1?`${list.length} locais do fato`:ttl(p0);
+  const ref=list.length>1?'':(p0.custom?'':whereText(p0));
+  const t1=titulo.length>44?titulo.slice(0,43)+'…':titulo,t2=(KIND_LABEL[KIND]+(quando?' · '+quando:'')+(m.agente?' · '+m.agente:'')),t3=ref.length>70?ref.slice(0,69)+'…':ref;
+  const head=`<rect width="${OUT}" height="${HEAD}" fill="#141414"/><rect y="${HEAD-6}" width="${OUT}" height="6" fill="#FFC61A"/>`+
+    `<text x="30" y="46" font-size="32" font-weight="800" fill="#fff">${escX(t1)}</text>`+
+    `<text x="30" y="${t3?79:88}" font-size="21" fill="#D6D6D0">${escX(t2)}</text>`+(t3?`<text x="30" y="104" font-size="19" fill="#FFC61A">${escX('Referência: '+t3)}</text>`:'');
+  const planta=`<svg x="0" y="${HEAD}" width="${OUT}" height="${imgH}" viewBox="${x0.toFixed(1)} ${y0.toFixed(1)} ${cw.toFixed(1)} ${ch.toFixed(1)}" preserveAspectRatio="xMidYMid slice">`+
+    `<rect x="${B.x0}" y="${B.y0}" width="${B.w}" height="${B.h}" fill="${P.bg}"/>`+
+    (cfg.bg?`<image href="${cfg.bg.d}" x="0" y="0" width="${W}" height="${H}" preserveAspectRatio="none"/>`:basePlan(P))+
+    viz.map(p=>pinSVG(Object.assign({},p,{id:'__pl_'+p.id}),P,{k})).join('')+rot+marca+`</svg>`;
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${OUT}" height="${total}" viewBox="0 0 ${OUT} ${total}" font-family="Helvetica, Arial, sans-serif">${head}${planta}${leg}</svg>`;
+  const url=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml;charset=utf-8'}));
+  try{
+    const im=await new Promise((ok_,er)=>{const i=new Image();i.onload=()=>ok_(i);i.onerror=()=>er(new Error('svg'));i.src=url;});
+    const c=document.createElement('canvas');c.width=OUT;c.height=total;
+    const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,OUT,total);x.drawImage(im,0,0,OUT,total);
+    const b=await new Promise(ok_=>c.toBlob(ok_,'image/jpeg',.9));
+    return new File([b],`planta-${slug2(ttl(p0))||'local'}.jpg`,{type:'image/jpeg'});
+  }finally{URL.revokeObjectURL(url);}
+}
+let repPlanta=null;
 
 async function buildPdf(){
   const {PDFDocument,StandardFonts,rgb}=PDFLib;
