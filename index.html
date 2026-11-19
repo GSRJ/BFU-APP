@@ -48,8 +48,12 @@ main{flex:1;width:100%;max-width:540px;margin:0 auto;padding:22px 14px 20px;disp
 .tn:focus-visible{outline:4px solid #1F5FD1;outline-offset:3px}
 @media (hover:hover){.tn:hover{background:var(--y)}}
 @media (max-width:759px) and (max-height:720px){.tn b{font-size:18px}.tn{padding:7px 8px 8px}}
-.card.ronda{--c:#00998C}.card.sso{--c:#C8201F}.card.gbd{--c:#1F5FD1}
+.card.ronda{--c:#00998C}.card.sso{--c:#C8201F}.card.gbd{--c:#7FB2FF}
 .card.sso{background:#0E2A4F}.card.sso .go{background:#FF7A1A}
+.card.gbd{background:#17386E}.card.gbd .go{background:#7FB2FF}
+.card.gbd .go::before{border-color:#0C2550}
+.card.gbd .ic svg{stroke:#0C2550}
+.card.gbd .tx span{color:#C6D8F5}
 .inst{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:52px;border:2px solid var(--k);background:#fff;border-radius:10px;padding:8px 14px;font:700 21px/1.1 var(--fc);color:var(--k);cursor:pointer}
 .inst:active{background:var(--y)}
 footer{position:sticky;bottom:0;z-index:2;min-height:calc(66px + env(safe-area-inset-bottom));background:#0A0A0A;color:rgba(255,255,255,.5);font-size:11px;padding:10px 14px 0}
@@ -114,7 +118,7 @@ body.app-open{overflow:hidden}
     <button class="tn noite" type="button" data-t="noite"><span class="p"></span><b>Noite</b><i>22h às 06h</i><em>ainda não criado</em></button>
   </div>
   <button class="inst" id="inst" type="button" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M12 7v7m-3-3 3 3 3-3M10 18h4"/></svg>Instalar no celular</button>
-  <p class="offnote" id="offnote" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0"/><path d="M12 19h.01"/><path d="M3 3l18 18"/></svg><span><b>Funciona sem internet depois de instalado.</b> Dá para fazer tudo sem sinal, e as mensagens saem pelo WhatsApp quando o celular voltar a ter conexão.</span></p>
+  <p class="offnote" id="offnote" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0"/><path d="M12 19h.01"/><path d="M3 3l18 18"/></svg><span><b>Funciona sem internet depois de instalado.</b> Dá para fazer a ronda e o reporte sem sinal, e as mensagens saem pelo WhatsApp quando o celular voltar a ter conexão. O GBD também abre sem sinal, mostrando o último que foi publicado.</span></p>
 </main>
 <footer>Desenvolvido por AAS Gerson</footer>
 <!-- a Ronda, o Reporte SSO e o GBD abrem aqui dentro, sem sair da página do BFU -->
