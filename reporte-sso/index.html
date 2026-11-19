@@ -2989,7 +2989,7 @@ async function plantaDoLocal(list){
   });
   // legenda: só as categorias que aparecem no recorte
   const cats=[];viz.forEach(p=>{const n=AREAS[p.area];if(!cats.some(c=>c.n===n))cats.push({n,p})});
-  const imgH=Math.round(OUT*ch/cw),HEAD=118,LIN=56,cols=2,legH=30+Math.ceil((cats.length+1)/cols)*LIN+20;
+  const imgH=Math.round(OUT*ch/cw),HEAD=118,LIN=56,cols=2,legH=30+Math.ceil((cats.length+1)/cols)*LIN+20+62;
   const total=HEAD+imgH+legH;
   let leg=`<g transform="translate(0 ${HEAD+imgH})"><rect width="${OUT}" height="${legH}" fill="#fff"/><rect width="${OUT}" height="3" fill="#141414"/>`;
   const itensLeg=[{n:list.length>1?'Locais do fato':'Local do fato',marca:true},...cats];
@@ -2999,6 +2999,7 @@ async function plantaDoLocal(list){
     else{const q=Object.assign({},c.p,{nx:0,ny:0,id:'__pl_'+c.p.id});leg+=`<g transform="translate(${cx+18} ${cy})">${pinSVG(q,P,{k:1.15})}</g>`;}
     leg+=`<text x="${cx+50}" y="${cy+8}" font-size="23" font-weight="600" fill="#1F2933">${escX(c.n)}</text>`;
   });
+  leg+=`<rect y="${legH-62}" width="${OUT}" height="62" fill="#F3F1EC"/><text x="${OUT/2}" y="${legH-24}" text-anchor="middle" font-size="19" fill="#5B6470">Planta sem escala · desenvolvida pelo AAS Gerson · appbfu.vercel.app</text>`;
   leg+='</g>';
   // cabeçalho com o local e a hora
   const m=ronda.meta||{},p0=list[0],r0=res(p0.id),quando=r0&&r0.t?whenOf(r0):fmtDate(m.data||'');
