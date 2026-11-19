@@ -155,6 +155,15 @@ td.c,th.c{text-align:center}
 .ord{display:flex;align-items:center;gap:6px}
 .ord button{background:var(--bg);border:1px solid var(--line);border-radius:6px;width:24px;height:24px;line-height:1;padding:0;color:var(--tx2)}
 .ord button:hover{color:var(--ac);border-color:var(--ac)}
+
+/* ⓘ: explicação de cada opção, abre ao tocar */
+.inf{display:inline-grid;place-items:center;width:22px;height:22px;margin-left:6px;padding:0;border-radius:50%;
+ border:1.5px solid var(--ac);background:transparent;color:var(--ac);font:italic 700 12px/1 Georgia,serif;cursor:pointer;
+ vertical-align:middle;flex:none;position:relative}
+.inf::after{content:"";position:absolute;inset:-8px}
+.inf:hover,.inf.on{background:var(--ac);color:#fff}
+.infpop{position:fixed;z-index:10000;background:#10294A;color:#F2F6FB;padding:11px 13px;border-radius:10px;
+ font-size:13.5px;line-height:1.45;box-shadow:0 10px 28px rgba(0,0,0,.28)}
 </style>
 </head>
 <body>
@@ -1824,6 +1833,77 @@ $('#ausDe').value=hojeK();$('#exDia').value=hojeK();
 aplicarCabecalho();
 if(S.pronto){cicloAtual=inicioCicloDe(diaFoco());cicloPostos=cicloAtual;renderWizard();mostrarAba('ciclo');renderTudo()}
 else iniciarWizard();
+
+/* ===================== explicações (ⓘ) ===================== */
+const EXPLICA={
+ 'Turno':'Manhã ou noite. Define os horários-padrão de pausa e intervalo e quando o destaque vira para o dia seguinte: na manhã, às 14h; na noite, o destaque continua no turno que começou na véspera até as 6h.',
+ 'Início da contagem dos ciclos':'Primeiro dia do primeiro ciclo. A partir dele o app conta os ciclos seguidos. Cada ciclo tem um dia para cada agente operacional, para todos passarem uma vez pelo posto de rodízio.',
+ 'Rodapé do GBD':'Última linha do texto do GBD, que vai junto para o WhatsApp.',
+ 'Rodapé':'Última linha do texto do GBD, que vai junto para o WhatsApp.',
+ 'Nome do posto':'Como o posto aparece no texto do GBD. Cadastre do mais importante para o menos importante: a ordem da lista é a prioridade.',
+ 'Abreviação (tabelas)':'Nome curto usado nas tabelas de postos e no calendário, onde o nome inteiro não cabe. Exemplo: LB para Linha de Bloqueio.',
+ 'Ícone do posto':'Aparece antes do nome do posto no texto do GBD que vai para o WhatsApp.',
+ 'no máximo 1× por ciclo':'Cada agente passa por este posto no máximo uma vez por ciclo. Serve para postos que ninguém deve repetir na mesma semana.',
+ '1× por ciclo':'Cada agente passa por este posto no máximo uma vez por ciclo. Serve para postos que ninguém deve repetir na mesma semana.',
+ 'sempre coberto':'O posto nunca fica vazio: não cai quando falta gente, e quem está nele não sai na mesma pausa nem no mesmo intervalo que quem está em outro posto sempre coberto. Use na SSO, por exemplo.',
+ 'Intervalo mínimo entre duas passagens (dias)':'Distância mínima, em dias, entre duas vezes da mesma pessoa no posto de rodízio. Com 4, quem passou no dia 7 só volta a partir do dia 11. Use 0 para não ter limite.',
+ 'Intervalo mínimo no rodízio (dias)':'Distância mínima, em dias, entre duas vezes da mesma pessoa no posto de rodízio. Com 4, quem passou no dia 7 só volta a partir do dia 11. Use 0 para não ter limite.',
+ 'não escalar nele no dia de ausência parcial':'Quem tem ausência parcial registrada no dia (sai antes, chega depois ou se ausenta por parte do turno) trabalha, mas não fica no posto de rodízio.',
+ 'não escalar no rodízio no dia de ausência parcial':'Quem tem ausência parcial registrada no dia (sai antes, chega depois ou se ausenta por parte do turno) trabalha, mas não fica no posto de rodízio.',
+ 'rodízio e cobertura nunca saem no mesmo intervalo':'Quem está no posto de rodízio e quem o cobre nunca saem juntos na pausa nem no intervalo, para o posto não ficar sem ninguém.',
+ 'Primeiro horário':'Horário da primeira pausa do turno.',
+ 'Duração (min)':'Quanto tempo dura cada pausa. Aparece no título do bloco no GBD, como "PAUSA (15 min)".',
+ 'De quanto em quanto (min)':'Espaço entre um horário de pausa e o seguinte. Com 30, as pausas saem às 8h00, 8h30, 9h00…',
+ 'Quantos horários':'Quantos horários de pausa existem. O app divide a equipe entre eles.',
+ 'Com efetivo curto: de quanto em quanto':'Nos dias com pouca gente as pausas ficam mais próximas e saem uma pessoa por vez. Este valor só vale nesses dias; quanto é "pouca gente" você define em "Efetivo curto a partir de".',
+ 'Com efetivo curto: quantos horários':'Nos dias com pouca gente as pausas ficam mais próximas e saem uma pessoa por vez. Este valor só vale nesses dias; quanto é "pouca gente" você define em "Efetivo curto a partir de".',
+ 'Mínimo no posto durante a pausa':'Quantos agentes precisam continuar trabalhando enquanto os outros estão na pausa. O app não tira mais gente do que isso permite.',
+ 'Primeiro turno começa às':'Início do primeiro turno de intervalo. Os seguintes vêm em sequência, cada um com a duração abaixo.',
+ 'Duração do turno (min)':'Quanto tempo dura cada turno de intervalo. Com 60, os turnos saem de hora em hora: 11h–12h, 12h–13h…',
+ 'Quantos turnos':'Quantos turnos de intervalo existem. O app divide a equipe entre eles.',
+ 'Mínimo no posto durante o intervalo':'Quantos agentes precisam continuar trabalhando em cada turno de intervalo.',
+ 'Distribuição':'"Mais gente trabalhando no começo" deixa menos pessoas saírem nos primeiros turnos de intervalo. "Esvazia mais cedo" faz o contrário. "Equilibrada" divide igual.',
+ 'Efetivo curto a partir de (ou menos)':'Com este número de agentes no dia, ou menos, o app passa a usar os horários de efetivo curto: uma pessoa por vez na pausa e um turno de intervalo para cada.',
+ 'abrir um turno antes quando o efetivo for curto':'Nos dias de efetivo curto, cria um turno de intervalo antes do primeiro, para caber uma pessoa por turno.',
+ 'Função':'Operacional entra nos postos. Apoio (ASL) aparece no topo do GBD e não entra em posto. Supervisão também não entra em posto.',
+ 'Regime':'O padrão de trabalho e folga da pessoa, como 6x2: seis dias de trabalho, dois de folga. O app repete esse padrão pelos próximos anos a partir das folgas que você marcar.',
+ 'Padrão personalizado (dias trabalhados x folga)':'Para escalas fora da lista. Escreva os blocos em ordem, separados por ponto e vírgula. Exemplo: 6x2; 6x1; 5x2.',
+ 'Ou informe direto o 1º dia de folga do padrão':'Em vez de marcar as folgas no calendário, informe o primeiro dia de folga de um ciclo da pessoa. O app encaixa o padrão a partir dele.',
+ 'Matrícula':'Opcional. Fica só neste aparelho e não vai para o app dos agentes.',
+ 'Tamanho do ciclo (0 = nº de operacionais)':'Quantos dias tem cada ciclo. Com 0, o ciclo tem um dia para cada agente operacional, para todos passarem uma vez pelo posto de rodízio.',
+ 'Apoio do dia':'Nome de quem faz o apoio (ASL) nesse dia, quando não é o de sempre.',
+ 'Marcar ausente':'Tira a pessoa desse dia e monta o dia de novo sem ela. Ela aparece no bloco de folgas como ausente.',
+ 'Até (opcional)':'Último dia da ausência. Deixe em branco quando for um dia só.',
+ 'Senha de publicação':'A senha do seu turno, que o AAS Gerson passa. Ela fica guardada neste aparelho depois da primeira publicação.',
+ 'Dias para trás':'Quantos dias antes de hoje vão para o app. Os agentes conseguem voltar até esse limite.',
+ 'Dias para frente':'Quantos dias depois de hoje vão para o app. Os agentes só veem até hoje; os dias à frente garantem o GBD de amanhã mesmo se ninguém publicar.',
+};
+let infEl=null;
+function fechaInf(){if(infEl){if(infEl._b)infEl._b.classList.remove('on');infEl.remove();infEl=null}}
+function abreInf(b,txt){
+ const mesmo=infEl&&infEl._b===b;fechaInf();if(mesmo)return;
+ infEl=document.createElement('div');infEl.className='infpop';infEl.setAttribute('role','tooltip');infEl.textContent=txt;infEl._b=b;
+ document.body.appendChild(infEl);b.classList.add('on');
+ const r=b.getBoundingClientRect(),w=Math.min(320,innerWidth-24);infEl.style.width=w+'px';
+ const x=Math.min(Math.max(12,r.left+r.width/2-w/2),innerWidth-w-12);let y=r.bottom+8;
+ infEl.style.left=x+'px';infEl.style.top=y+'px';
+ if(y+infEl.offsetHeight>innerHeight-8)infEl.style.top=Math.max(8,r.top-8-infEl.offsetHeight)+'px';
+}
+function decoraInf(raiz){
+ raiz.querySelectorAll('label').forEach(l=>{
+  if(l.dataset.inf)return;
+  const t=l.textContent.replace(/\s+/g,' ').trim(),txt=EXPLICA[t];
+  if(!txt)return;
+  l.dataset.inf='1';
+  const b=document.createElement('button');b.type='button';b.className='inf';b.textContent='i';b.setAttribute('aria-label','O que é: '+t);
+  b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();abreInf(b,txt)});
+  l.appendChild(b);
+ });
+}
+document.addEventListener('click',e=>{if(infEl&&!e.target.closest('.infpop,.inf'))fechaInf()},true);
+addEventListener('scroll',fechaInf,true);addEventListener('resize',fechaInf);
+{let t=null;new MutationObserver(()=>{clearTimeout(t);t=setTimeout(()=>decoraInf(document.body),20)}).observe(document.body,{childList:true,subtree:true});}
+decoraInf(document.body);
 </script>
 </body>
 </html>
