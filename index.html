@@ -65,6 +65,11 @@ dialog button{margin-top:12px;width:100%;min-height:48px;border:2px solid var(--
   .card .go{width:50px}
   .inst{min-height:44px;font-size:19px}
 }
+#appView{position:fixed;inset:0;z-index:50;background:#141414}
+#appView[hidden]{display:none}
+#appView iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:#EEEEE9}
+#appView iframe[hidden]{display:none}
+body.app-open{overflow:hidden}
 @media (hover:hover){.card:hover{filter:brightness(1.2)}.inst:hover{background:var(--y)}}
 .card:focus-visible,.inst:focus-visible{outline:4px solid #1F5FD1;outline-offset:3px}
 @media (prefers-reduced-motion:no-preference){.card,.inst{animation:rise .45s cubic-bezier(.2,.8,.2,1) both}.card.sso{animation-delay:.07s}.inst{animation-delay:.15s}}
@@ -89,6 +94,8 @@ dialog button{margin-top:12px;width:100%;min-height:48px;border:2px solid var(--
   <p class="offnote" id="offnote" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0"/><path d="M12 19h.01"/><path d="M3 3l18 18"/></svg><span><b>Funciona sem internet depois de instalado.</b> Dá para fazer tudo sem sinal, e as mensagens saem pelo WhatsApp quando o celular voltar a ter conexão.</span></p>
 </main>
 <footer>Desenvolvido por AAS Gerson</footer>
+<!-- a Ronda e o Reporte SSO abrem aqui dentro, sem sair da página do BFU -->
+<div id="appView" hidden></div>
 <dialog id="dlg"><b>Instalar o app</b><p id="dlgT" style="margin:8px 0 0"></p><button type="button" id="dlgOk">Entendi</button></dialog>
 <script>
 (function(){
@@ -103,14 +110,34 @@ const btn=document.getElementById('inst');
 if(!standalone){btn.hidden=false;document.getElementById('offnote').hidden=false;}
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;});
 addEventListener('appinstalled',()=>{btn.hidden=true;document.getElementById('offnote').hidden=true;});
-btn.onclick=async()=>{
+async function doInstall(){
   if(deferred){deferred.prompt();try{await deferred.userChoice;}catch(_){}deferred=null;return;}
   const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
   document.getElementById('dlgT').textContent=ios?'No Safari, toque em Compartilhar (quadrado com seta) e depois em “Adicionar à Tela de Início”.':'No Chrome, toque no menu ⋮ e depois em “Instalar app” ou “Adicionar à tela inicial”.';
   document.getElementById('dlg').showModal();
-};
+}
+btn.onclick=doInstall;
 document.getElementById('dlgOk').onclick=()=>document.getElementById('dlg').close();
 if('serviceWorker' in navigator&&/^https?:/.test(location.protocol)){navigator.serviceWorker.register('sw.js').catch(()=>{});}
+/* abre a Ronda ou o Reporte SSO dentro do BFU; cada um fica carregado para voltar de onde parou */
+const view=document.getElementById('appView'),frames={};
+function openApp(k,push){
+  const src=k==='ronda'?'ronda/index.html':'reporte-sso/index.html';
+  if(!frames[k]){const f=document.createElement('iframe');f.src=src;f.title=k==='ronda'?'Ronda':'Reporte SSO';f.setAttribute('allow','web-share; clipboard-write; camera; fullscreen');view.appendChild(f);frames[k]=f;}
+  for(const x in frames)frames[x].hidden=x!==k;
+  view.hidden=false;document.body.classList.add('app-open');
+  if(push!==false)history.pushState({app:k},'','#'+k);
+  try{frames[k].focus();}catch(_){}
+}
+function showMenu(){view.hidden=true;document.body.classList.remove('app-open');}
+document.querySelectorAll('a.card').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();openApp(a.classList.contains('ronda')?'ronda':'sso');}));
+addEventListener('popstate',e=>{const k=e.state&&e.state.app;if(k)openApp(k,false);else showMenu();});
+addEventListener('message',e=>{
+  if(e.origin!==location.origin)return;const d=e.data||{};
+  if(d.bfu==='home'){if(history.state&&history.state.app)history.back();else showMenu();}
+  else if(d.bfu==='install')doInstall();
+});
+{const k=location.hash.slice(1);if(k==='ronda'||k==='sso'){history.replaceState(null,'',location.pathname);history.pushState({app:k},'','#'+k);openApp(k,false);}}
 </script>
 </body>
 </html>

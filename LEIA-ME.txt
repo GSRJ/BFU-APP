@@ -14,3 +14,5 @@ Os sites rondabfu e reportsso continuam funcionando separados, se quiser mantê-
 Rondas e configurações salvas no celular ficam guardadas por site: no site novo o app começa sem dados salvos.
 
 Atualização 19/11: a tela inicial mostra o aviso "Funciona sem internet depois de instalado". A instalação do BFU já guarda a Ronda e o Reporte SSO, que abrem sem internet mesmo sem terem sido abertos antes. Dentro do BFU, "Instalar o app" instala o BFU, e o botão "🏠 Início" no topo volta para a tela inicial.
+
+Atualização 19/11 (madrugada): a Ronda e o Reporte SSO abrem dentro da página do BFU, sem redirecionar. O endereço continua o do BFU. "🏠 Início" e o voltar do celular retornam a esta tela, e cada app fica aberto do ponto onde parou.
