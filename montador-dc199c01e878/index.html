@@ -214,8 +214,8 @@ code.k{font:12.5px var(--mono);background:var(--bg3);padding:1px 5px;border-radi
         <div class="list" id="ausList"></div>
       </div>
       <div class="card">
-        <h3>Exame periódico</h3>
-        <p class="hint">Ninguém fica na SSO no dia do próprio exame.</p>
+        <h3>Ausência parcial</h3>
+        <p class="hint">Para quem sai antes, chega depois ou se ausenta por parte do turno. A pessoa trabalha, mas não fica na SSO nesse dia.</p>
         <div class="form">
           <div class="f"><label>Agente</label><select id="exWho"></select></div>
           <div class="f"><label>Data</label><input type="date" id="exDia"></div>
@@ -745,7 +745,7 @@ function resolverDia(k,ctx){
     if(p==='SSO'&&(dow(k)===0||dow(k)===6)){s+=1000;avisos.push(['e','Gerson na SSO em fim de semana'])}
     if(gp&&p!==gp){s+=1000;avisos.push(['w',`Gerson deveria ficar em ${POSTOS[gp].ab} hoje pela regra do fim de semana`])}
    }
-   if(p==='SSO'&&emExame(id,k)){s+=1000;avisos.push(['e',`${nome(id)} na SSO no dia do exame`])}
+   if(p==='SSO'&&emExame(id,k)){s+=1000;avisos.push(['e',`${nome(id)} na SSO no dia da ausência parcial`])}
    if(p==='CARTOES'){
     if(cartNoCiclo.has(id)){s+=1000;avisos.push(['e',`${nome(id)} faria Cartões duas vezes no ciclo`])}
     if(ssoAmanha&&id===ssoAmanha)s-=35;
@@ -795,7 +795,7 @@ function resolverDia(k,ctx){
  return d;
 }
 
-/* ----- café ----- */
+/* ----- pausa (café) ----- */
 function balancear(n,k,max){
  const base=Math.floor(n/k),rem=n%k;
  let caps=Array.from({length:k},(_,i)=>base+(i<rem?1:0));
@@ -907,14 +907,14 @@ function textoGBD(k){
  }
  L.push('');
  L.push('━━━━━━━━━━━━━━');
- L.push('☕ *CAFÉ*');
+ L.push('☕ *PAUSA*');
  L.push('━━━━━━━━━━━━━━');
  const cs={};for(const[id,s]of Object.entries(d.cafe||{}))(cs[s]=cs[s]||[]).push(id);
  const slots=Object.keys(cs).sort();
  for(const s of slots)L.push(`🕒 ${s} ▸ ${lista(cs[s].map(nome))}`);
  L.push('');
  L.push('━━━━━━━━━━━━━━');
- L.push('🍽️ *JANTA*');
+ L.push('🍽️ *INTERVALO*');
  L.push('━━━━━━━━━━━━━━');
  const js={};for(const[id,t]of Object.entries(d.janta||{}))(js[t]=js[t]||[]).push(id);
  for(const t of JANTA_4)if(js[t])L.push(`${JICO[t]} ${t} ▸ ${lista(js[t].map(nome))}`);
@@ -1308,7 +1308,7 @@ function renderAus(){
  }));
  const E=$('#exList');E.innerHTML='';
  const eks=Object.keys(S.exames).sort();
- if(!eks.length)E.appendChild(el('div','empty','Nenhum exame registrado.'));
+ if(!eks.length)E.appendChild(el('div','empty','Nenhuma ausência parcial registrada.'));
  eks.forEach(k=>S.exames[k].forEach(id=>{
   const it=el('div','item');
   it.appendChild(el('strong',null,nome(id)));
@@ -1328,7 +1328,7 @@ $('#ausAdd').onclick=()=>{
 $('#exAdd').onclick=()=>{
  const id=$('#exWho').value,k=$('#exDia').value;if(!k)return toast('Informe a data');
  S.exames[k]=Array.from(new Set([...(S.exames[k]||[]),id]));
- salvar();limparCache(k);renderAus();renderCiclo();toast('Exame registrado');
+ salvar();limparCache(k);renderAus();renderCiclo();toast('Ausência parcial registrada');
 };
 
 /* ---- aba escalas ---- */

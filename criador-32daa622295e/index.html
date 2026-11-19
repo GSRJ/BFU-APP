@@ -235,7 +235,7 @@ td.c,th.c{text-align:center}
         <div class="list" id="ausList"></div>
       </div>
       <div class="card">
-        <h3>Exame periódico</h3>
+        <h3>Ausência parcial</h3>
         <p class="hint" id="exHint"></p>
         <div class="form">
           <div class="f"><label>Agente</label><select id="exWho"></select></div>
@@ -300,8 +300,8 @@ function estadoPadrao(){return{
  rodizio:{posto:'',intervalo:4,exameBloqueia:true},
  cobertura:{posto:'',separar:true},
  cafe:{inicio:480,duracao:15,espaco:30,qtd:3,espacoRed:15,qtdRed:4,
-       horarios:['15h00','15h30','16h00'],reduzido:['15h00','15h15','15h30','15h45'],limite:4,min:3,titulo:'☕ *CAFÉ* _(15 min)_'},
- janta:{nome:'Almoço',inicio:660,duracao:60,qtd:3,extraAntes:true,
+       horarios:['15h00','15h30','16h00'],reduzido:['15h00','15h15','15h30','15h45'],limite:4,min:3,titulo:'☕ *PAUSA* _(15 min)_'},
+ janta:{nome:'Intervalo',inicio:660,duracao:60,qtd:3,extraAntes:true,
         turnos:['18h–19h','19h–20h','20h–21h'],extra:'17h–18h',limite:4,min:3,perfil:'cedoCheio'},
  agentes:[],ausencias:{},exames:{},feriados:{},aslCob:{},manuais:{},
  pronto:false,
@@ -311,7 +311,7 @@ function salvar(){try{localStorage.setItem('gbd-bfu-manha-noite-v1',JSON.stringi
 
 
 /* turnos que este criador atende: a tarde tem o montador próprio */
-const TURNOS_OK={manha:{rot:'Manhã',cafe:480,ref:660,refNome:'Almoço',vira:'às 14h'},noite:{rot:'Noite',cafe:1410,ref:60,refNome:'Janta',vira:'às 6h'}};
+const TURNOS_OK={manha:{rot:'Manhã',cafe:480,ref:660,refNome:'Intervalo',vira:'às 14h'},noite:{rot:'Noite',cafe:1410,ref:60,refNome:'Intervalo',vira:'às 6h'}};
 function turnoId(t){t=String(t==null?(S&&S.estacao&&S.estacao.turno):t||'').toLowerCase();return t.startsWith('n')?'noite':'manha'}
 function padraoTurno(id,cafe,janta){const T=TURNOS_OK[id];cafe.inicio=T.cafe;janta.inicio=T.ref;janta.nome=T.refNome;}
 /* horários montados por hora de início, duração e espaçamento */
@@ -328,7 +328,7 @@ function gerarIntervalos(cfg){
  const c=cfg.cafe,j=cfg.janta;
  c.horarios=Array.from({length:Math.max(1,c.qtd)},(_,i)=>hhmm(c.inicio+i*c.espaco));
  c.reduzido=Array.from({length:Math.max(1,c.qtdRed)},(_,i)=>hhmm(c.inicio+i*c.espacoRed));
- c.titulo=c.duracao>0?`☕ *CAFÉ* _(${c.duracao} min)_`:'☕ *CAFÉ*';
+ c.titulo=c.duracao>0?`☕ *PAUSA* _(${c.duracao} min)_`:'☕ *PAUSA*';
  j.turnos=Array.from({length:Math.max(1,j.qtd)},(_,i)=>`${hCurta(j.inicio+i*j.duracao)}–${hCurta(j.inicio+(i+1)*j.duracao)}`);
  j.extra=j.extraAntes?`${hCurta(j.inicio-j.duracao)}–${hCurta(j.inicio)}`:'';
  return cfg;
@@ -634,7 +634,7 @@ function resolverDia(k,ctx){
    if(ult[id]===p){s+=1000;av.push(['e',`${nome(id)} repetiria ${abPosto(p)} do último dia trabalhado`])}
    if(noCiclo[id]&&noCiclo[id].has(p))s+=45;
    if(p===R){
-    if(S.rodizio.exameBloqueia&&emExame(id,k)){s+=1000;av.push(['e',`${nome(id)} em ${abPosto(R)} no dia do exame`])}
+    if(S.rodizio.exameBloqueia&&emExame(id,k)){s+=1000;av.push(['e',`${nome(id)} em ${abPosto(R)} no dia da ausência parcial`])}
     const u=ultimoNoPosto(id,k,R);if(u&&diff(k,u)<INT){s+=1000;av.push(['e',`${nome(id)} em ${abPosto(R)} com ${diff(k,u)} dias de intervalo`])}
    }
    if(umaVezUsados[p]&&umaVezUsados[p].has(id)){s+=1000;av.push(['e',`${nome(id)} faria ${abPosto(p)} duas vezes no ciclo`])}
@@ -725,8 +725,8 @@ function colisoesCriticas(d){
  for(let i=0;i<crit.length;i++)for(let j=i+1;j<crit.length;j++){
   const a=(d.postos[crit[i]]||[])[0],b=(d.postos[crit[j]]||[])[0];
   if(!a||!b)continue;
-  if(d.cafe&&d.cafe[a]&&d.cafe[a]===d.cafe[b])out.push(`${abPosto(crit[i])} e ${abPosto(crit[j])} saem juntos no café das ${d.cafe[a]}`);
-  if(d.janta&&d.janta[a]&&d.janta[a]===d.janta[b])out.push(`${abPosto(crit[i])} e ${abPosto(crit[j])} saem juntos na janta das ${d.janta[a]}`);
+  if(d.cafe&&d.cafe[a]&&d.cafe[a]===d.cafe[b])out.push(`${abPosto(crit[i])} e ${abPosto(crit[j])} saem juntos na pausa das ${d.cafe[a]}`);
+  if(d.janta&&d.janta[a]&&d.janta[a]===d.janta[b])out.push(`${abPosto(crit[i])} e ${abPosto(crit[j])} saem juntos no intervalo das ${d.janta[a]}`);
  }
  return out;
 }
@@ -795,14 +795,14 @@ function textoGBD(k){
  }
  const cs={};for(const[id,s]of Object.entries(d.cafe||{}))(cs[s]=cs[s]||[]).push(id);
  if(Object.keys(cs).length){
-  L.push('');L.push('━━━━━━━━━━━━━━');L.push(S.cafe.titulo||'☕ *CAFÉ*');L.push('━━━━━━━━━━━━━━');
+  L.push('');L.push('━━━━━━━━━━━━━━');L.push(S.cafe.titulo||'☕ *PAUSA*');L.push('━━━━━━━━━━━━━━');
   const chH=x=>{const m=parseHora(x);return m==null?0:(turnoId()==='noite'&&m<720?m+1440:m)};/* na noite, 0h vem depois das 23h */
   const ordem=[...S.cafe.reduzido,...S.cafe.horarios].filter((v,i,a)=>a.indexOf(v)===i).sort((x,y)=>chH(x)-chH(y));
   ordem.forEach(s=>{if(cs[s])L.push(`🕒 ${s} ▸ ${lista(cs[s].map(nome))}`)});
  }
  const js={};for(const[id,t]of Object.entries(d.janta||{}))(js[t]=js[t]||[]).push(id);
  if(Object.keys(js).length){
-  L.push('');L.push('━━━━━━━━━━━━━━');L.push(`🍽️ *${String(S.janta.nome||'Janta').toUpperCase()}*`);L.push('━━━━━━━━━━━━━━');
+  L.push('');L.push('━━━━━━━━━━━━━━');L.push('🍽️ *INTERVALO*');L.push('━━━━━━━━━━━━━━');
   const ico=['🕔','🕕','🕖','🕗','🕘'];
   [S.janta.extra,...S.janta.turnos].filter(Boolean).forEach((t,i)=>{if(js[t])L.push(`${ico[i]||'🕐'} ${t} ▸ ${lista(js[t].map(nome))}`)});
  }
@@ -875,7 +875,7 @@ function renderWizard(){
  w.appendChild(c);
  box.appendChild(w);
 }
-/* bloco reutilizável: monta café e janta por hora, duração e espaçamento */
+/* bloco reutilizável: monta pausa e intervalo por hora, duração e espaçamento */
 function formIntervalos(host,cfg,aoMudar){
  host.innerHTML='';
  const aplica=()=>{gerarIntervalos(cfg);desenha();if(aoMudar)aoMudar()};
@@ -894,7 +894,7 @@ function formIntervalos(host,cfg,aoMudar){
  function desenha(){
   host.innerHTML='';
   const c=cfg.cafe,j=cfg.janta;
-  const b1=el('div');b1.appendChild(el('h4',null,'Café'));
+  const b1=el('div');b1.appendChild(el('h4',null,'Pausa'));
   const g1=el('div','form');g1.style.marginTop='8px';
   hora(g1,'Primeiro horário',c.inicio,v=>c.inicio=v);
   num(g1,'Duração (min)',c.duracao,v=>c.duracao=v,0,120);
@@ -904,19 +904,17 @@ function formIntervalos(host,cfg,aoMudar){
   const g1b=el('div','form');g1b.style.marginTop='8px';
   num(g1b,'Com efetivo curto: de quanto em quanto',c.espacoRed,v=>c.espacoRed=v,5,120);
   num(g1b,'Com efetivo curto: quantos horários',c.qtdRed,v=>c.qtdRed=v,1,10);
-  num(g1b,'Mínimo no posto durante o café',c.min,v=>c.min=v,0,20);
+  num(g1b,'Mínimo no posto durante a pausa',c.min,v=>c.min=v,0,20);
   b1.appendChild(g1b);
   b1.appendChild(el('div','prev',`${c.titulo}   →   ${c.horarios.join(' · ')}\nefetivo curto: ${c.reduzido.join(' · ')}`));
   host.appendChild(b1);
-  const b2=el('div');b2.style.marginTop='16px';b2.appendChild(el('h4',null,j.nome||'Refeição'));
-  {const gN=el('div','form');gN.style.marginTop='8px';const dN=el('div','f');dN.appendChild(el('label',null,'Nome da refeição no GBD'));
-   const iN=el('input');iN.type='text';iN.value=j.nome||'';iN.placeholder='Almoço, Janta…';iN.onchange=()=>{j.nome=iN.value.trim()||'Refeição';aplica()};
-   dN.appendChild(iN);gN.appendChild(dN);b2.appendChild(gN);}
+  const b2=el('div');b2.style.marginTop='16px';b2.appendChild(el('h4',null,'Intervalo'));
+
   const g2=el('div','form');g2.style.marginTop='8px';
   hora(g2,'Primeiro turno começa às',j.inicio,v=>j.inicio=v);
   num(g2,'Duração do turno (min)',j.duracao,v=>j.duracao=v,15,240);
   num(g2,'Quantos turnos',j.qtd,v=>j.qtd=v,1,6);
-  num(g2,'Mínimo no posto durante a refeição',j.min,v=>j.min=v,0,20);
+  num(g2,'Mínimo no posto durante o intervalo',j.min,v=>j.min=v,0,20);
   b2.appendChild(g2);
   const g2b=el('div','form');g2b.style.marginTop='8px';
   const dP=el('div','f');dP.appendChild(el('label',null,'Distribuição'));
@@ -943,8 +941,8 @@ function formIntervalos(host,cfg,aoMudar){
 }
 function passoIntervalos(c){
  const T=wz.tmp;
- c.appendChild(el('h3',null,'3. Café e janta'));
- c.appendChild(el('p','hint','Os horários são montados a partir da hora de início, da duração e do espaçamento. A duração do café entra no título do bloco do GBD.'));
+ c.appendChild(el('h3',null,'3. Pausa e intervalo'));
+ c.appendChild(el('p','hint','Os horários são montados a partir da hora de início, da duração e do espaçamento. A duração da pausa entra no título do bloco do GBD.'));
  const box=el('div');c.appendChild(box);
  formIntervalos(box,{cafe:T.cafe,janta:T.janta});
  navWz(c,true,'Continuar ›',()=>{wz.passo=3;renderWizard()});
@@ -1063,11 +1061,11 @@ function passoPostos(c){
    const f2=el('div','f');const lb=el('label','sub');lb.style.display='flex';lb.style.gap='6px';lb.style.alignItems='center';
    const cb=el('input');cb.type='checkbox';cb.checked=T.rodizio.exameBloqueia;cb.style.width='auto';
    cb.onchange=()=>T.rodizio.exameBloqueia=cb.checked;
-   lb.append(cb,document.createTextNode('não escalar nele no dia do exame periódico'));
+   lb.append(cb,document.createTextNode('não escalar nele no dia de ausência parcial'));
    f2.appendChild(lb);d.appendChild(f2);
    c.appendChild(d);
   }
-  sel('Posto que cobre o de rodízio','Esse agente não sai no mesmo horário de café nem no mesmo turno de janta que o do rodízio.',
+  sel('Posto que cobre o de rodízio','Esse agente não sai no mesmo horário de pausa nem no mesmo turno de intervalo que o do rodízio.',
       T.cobertura.posto,v=>T.cobertura.posto=v,'— nenhum —');
   sel('Em caso de mais agentes do que postos, os demais vão para','Esta é a pergunta do excedente: quando sobrar gente, todos vão para este posto.',
       T.excedente,v=>T.excedente=v,'— o último da prioridade —');
@@ -1127,8 +1125,8 @@ function passoFim(c){
  Excedente vai para: <b>${T.excedente?esc(T.postos.find(p=>p.id===T.excedente).nome):'o último da prioridade'}</b><br>
  <b>${nAAS}</b> operacionais e <b>${T.agentes.filter(a=>a.funcao!=='AAS').length}</b> de apoio · ciclo de <b>${nAAS}</b> dias<br>
  Sempre cobertos: <b>${T.postos.filter(p=>p.sempre).map(p=>esc(p.nome)).join(', ')||'nenhum em especial'}</b><br>
- Café: <b>${T.cafe.horarios.join(' · ')}</b>${T.cafe.duracao?` (${T.cafe.duracao} min)`:''}<br>
- Janta: <b>${T.janta.turnos.join(' · ')}</b>`;
+ Pausa: <b>${T.cafe.horarios.join(' · ')}</b>${T.cafe.duracao?` (${T.cafe.duracao} min)`:''}<br>
+ Intervalo: <b>${T.janta.turnos.join(' · ')}</b>`;
  c.appendChild(u);
  navWz(c,true,'Montar os GBDs',()=>{
   S.estacao={...S.estacao,...T.estacao};
@@ -1555,7 +1553,7 @@ function opAg(sel){sel.innerHTML='';S.agentes.forEach(a=>sel.appendChild(new Opt
 function renderAus(){
  opAg($('#ausWho'));opAg($('#exWho'));
  $('#exHint').textContent=S.rodizio.posto&&S.rodizio.exameBloqueia
-  ?`Ninguém entra em ${abPosto(S.rodizio.posto)} no dia do próprio exame.`
+  ?`Ninguém entra em ${abPosto(S.rodizio.posto)} no dia da própria ausência parcial.`
   :'Registro informativo: a regra de bloqueio está desligada na configuração.';
  const L=$('#ausList');L.innerHTML='';
  const ks=Object.keys(S.ausencias).sort();
@@ -1570,7 +1568,7 @@ function renderAus(){
  }));
  const E=$('#exList');E.innerHTML='';
  const eks=Object.keys(S.exames).sort();
- if(!eks.length)E.appendChild(el('div','empty','Nenhum exame.'));
+ if(!eks.length)E.appendChild(el('div','empty','Nenhuma ausência parcial.'));
  eks.forEach(k=>(S.exames[k]||[]).forEach(id=>{
   const it=el('div','item');it.appendChild(el('strong',null,nome(id)));
   it.appendChild(el('span','sub',br(k)));
@@ -1589,7 +1587,7 @@ $('#ausAdd').onclick=()=>{
 $('#exAdd').onclick=()=>{
  const id=$('#exWho').value,k=$('#exDia').value;if(!k)return toast('Informe a data');
  S.exames[k]=Array.from(new Set([...(S.exames[k]||[]),id]));
- salvar();limparCache(k);renderAus();renderCiclo();toast('Exame registrado');
+ salvar();limparCache(k);renderAus();renderCiclo();toast('Ausência parcial registrada');
 };
 
 function renderConfig(){
@@ -1678,7 +1676,7 @@ function renderConfig(){
  const lb2=el('label','hint');lb2.style.display='flex';lb2.style.gap='6px';lb2.style.marginTop='10px';
  const cb2=el('input');cb2.type='checkbox';cb2.checked=S.rodizio.exameBloqueia;cb2.style.width='auto';
  cb2.onchange=()=>{S.rodizio.exameBloqueia=cb2.checked;salvar();limparCache();renderTudo()};
- lb2.append(cb2,document.createTextNode('não escalar no rodízio no dia do exame periódico'));
+ lb2.append(cb2,document.createTextNode('não escalar no rodízio no dia de ausência parcial'));
  c2.appendChild(lb2);
  const lb3=el('label','hint');lb3.style.display='flex';lb3.style.gap='6px';
  const cb3=el('input');cb3.type='checkbox';cb3.checked=S.cobertura.separar;cb3.style.width='auto';
@@ -1686,9 +1684,9 @@ function renderConfig(){
  lb3.append(cb3,document.createTextNode('rodízio e cobertura nunca saem no mesmo intervalo'));
  c2.appendChild(lb3);
  box.appendChild(c2);
- // café e janta
- const c3=el('div','card');c3.appendChild(el('h3',null,'Café e janta'));
- c3.appendChild(el('p','hint','Os horários são montados a partir da hora de início, da duração e do espaçamento. A duração do café entra no título do bloco.'));
+ // pausa e intervalo
+ const c3=el('div','card');c3.appendChild(el('h3',null,'Pausa e intervalo'));
+ c3.appendChild(el('p','hint','Os horários são montados a partir da hora de início, da duração e do espaçamento. A duração da pausa entra no título do bloco.'));
  const bInt=el('div');c3.appendChild(bInt);
  formIntervalos(bInt,S,()=>{salvar();limparCache();renderTudo()});
  box.appendChild(c3);
