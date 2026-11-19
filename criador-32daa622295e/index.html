@@ -249,6 +249,7 @@ td.c,th.c{text-align:center}
         <div class="form">
           <div class="f"><label>Agente</label><select id="exWho"></select></div>
           <div class="f"><label>Data</label><input type="date" id="exDia"></div>
+          <div class="f"><label>Motivo</label><input type="text" id="exMot" maxlength="60" placeholder="Ex.: exame periódico, consulta, sai às 19h"></div>
           <div class="f"><button class="btn pri" id="exAdd" style="width:100%">Adicionar</button></div>
         </div>
         <div class="list" id="exList"></div>
@@ -312,7 +313,7 @@ function estadoPadrao(){return{
        horarios:['15h00','15h30','16h00'],reduzido:['15h00','15h15','15h30','15h45'],limite:4,min:3,titulo:'☕ *PAUSA* _(15 min)_'},
  janta:{nome:'Intervalo',inicio:660,duracao:60,qtd:3,extraAntes:true,
         turnos:['18h–19h','19h–20h','20h–21h'],extra:'17h–18h',limite:4,min:3,perfil:'cedoCheio'},
- agentes:[],ausencias:{},exames:{},feriados:{},aslCob:{},manuais:{},
+ agentes:[],ausencias:{},exames:{},exMotivo:{},feriados:{},aslCob:{},manuais:{},
  pronto:false,
 }}
 let S=(()=>{try{const r=localStorage.getItem('gbd-bfu-manha-noite-v1');if(r)return{...estadoPadrao(),...JSON.parse(r)}}catch(e){}return estadoPadrao()})();
@@ -789,6 +790,7 @@ function resolverCiclo(ini){
 }
 
 /* ===================== texto ===================== */
+function motivoParcial(id,k){return ((S.exMotivo||{})[k+'|'+id]||'').trim()}
 function lista(a){return a.length<=1?(a[0]||'—'):a.slice(0,-1).join(', ')+' e '+a[a.length-1]}
 function textoGBD(k){
  const d=dia(k);if(!d)return'';
@@ -820,6 +822,8 @@ function textoGBD(k){
  apoios().forEach(id=>{if(!trabalha(id,k))fg.unshift(nome(id)+' (ASL)')});
  L.push(fg.length?fg.join(' • '):'—');
  if(d.ausentes.length)L.push(`🚫 *Ausente:* ${d.ausentes.map(nome).join(' • ')}`);
+ {const parc=(S.exames[k]||[]).filter(id=>trabalha(id,k)&&!ausente(id,k));
+  if(parc.length)L.push(`⏳ *Ausência parcial:* ${parc.map(id=>{const m=motivoParcial(id,k);return m?`${nome(id)} (${m})`:nome(id)}).join(' • ')}`);}
  if(S.estacao.rodape){L.push('');L.push(S.estacao.rodape)}
  return L.join('\n');
 }
@@ -1584,9 +1588,9 @@ function renderAus(){
  if(!eks.length)E.appendChild(el('div','empty','Nenhuma ausência parcial.'));
  eks.forEach(k=>(S.exames[k]||[]).forEach(id=>{
   const it=el('div','item');it.appendChild(el('strong',null,nome(id)));
-  it.appendChild(el('span','sub',br(k)));
+  it.appendChild(el('span','sub',br(k)+(motivoParcial(id,k)?' · '+motivoParcial(id,k):'')));
   const x=el('button','btn sm danger x','Remover');
-  x.onclick=()=>{S.exames[k]=S.exames[k].filter(v=>v!==id);if(!S.exames[k].length)delete S.exames[k];
+  x.onclick=()=>{S.exames[k]=S.exames[k].filter(v=>v!==id);if(!S.exames[k].length)delete S.exames[k];if(S.exMotivo)delete S.exMotivo[k+'|'+id];
    salvar();limparCache(k);renderAus();renderCiclo()};
   it.appendChild(x);E.appendChild(it);
  }));
@@ -1599,7 +1603,9 @@ $('#ausAdd').onclick=()=>{
 };
 $('#exAdd').onclick=()=>{
  const id=$('#exWho').value,k=$('#exDia').value;if(!k)return toast('Informe a data');
+ const mot=$('#exMot').value.trim();if(!mot){$('#exMot').focus();return toast('Informe o motivo da ausência')}
  S.exames[k]=Array.from(new Set([...(S.exames[k]||[]),id]));
+ S.exMotivo=S.exMotivo||{};S.exMotivo[k+'|'+id]=mot;$('#exMot').value='';
  salvar();limparCache(k);renderAus();renderCiclo();toast('Ausência parcial registrada');
 };
 
@@ -1873,6 +1879,7 @@ const EXPLICA={
  'Tamanho do ciclo (0 = nº de operacionais)':'Quantos dias tem cada ciclo. Com 0, o ciclo tem um dia para cada agente operacional, para todos passarem uma vez pelo posto de rodízio.',
  'Apoio do dia':'Nome de quem faz o apoio (ASL) nesse dia, quando não é o de sempre.',
  'Marcar ausente':'Tira a pessoa desse dia e monta o dia de novo sem ela. Ela aparece no bloco de folgas como ausente.',
+ 'Motivo':'Aparece no GBD do dia, ao lado do nome, na linha de ausência parcial.',
  'Até (opcional)':'Último dia da ausência. Deixe em branco quando for um dia só.',
  'Senha de publicação':'A senha do seu turno, que o AAS Gerson passa. Ela fica guardada neste aparelho depois da primeira publicação.',
  'Dias para trás':'Quantos dias antes de hoje vão para o app. Os agentes conseguem voltar até esse limite.',
