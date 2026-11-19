@@ -134,11 +134,19 @@ body.app-open{overflow:hidden}
   document.getElementById('hoje').textContent=dias[d.getDay()]+', '+String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0');
 })();
 let deferred=null;
-const standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone;
+/* já instalado? vale o app aberto pelo ícone e também o navegador comum num aparelho que já instalou */
+const standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+const marcaInstalado=()=>{try{localStorage.setItem('bfu-instalado','1')}catch(_){}};
+const jaInstalado=()=>{if(standalone)return true;try{return localStorage.getItem('bfu-instalado')==='1'}catch(_){return false}};
 const btn=document.getElementById('inst');
-if(!standalone){btn.hidden=false;document.getElementById('offnote').hidden=false;}
+const esconderInstalar=()=>{btn.hidden=true;document.getElementById('offnote').hidden=true;};
+if(standalone)marcaInstalado();
+if(!jaInstalado()){btn.hidden=false;document.getElementById('offnote').hidden=false;}
+if(!standalone&&navigator.getInstalledRelatedApps){
+  navigator.getInstalledRelatedApps().then(l=>{if(l&&l.length){marcaInstalado();esconderInstalar();}}).catch(()=>{});
+}
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;});
-addEventListener('appinstalled',()=>{btn.hidden=true;document.getElementById('offnote').hidden=true;});
+addEventListener('appinstalled',()=>{marcaInstalado();esconderInstalar();});
 async function doInstall(){
   if(deferred){deferred.prompt();try{await deferred.userChoice;}catch(_){}deferred=null;return;}
   const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
