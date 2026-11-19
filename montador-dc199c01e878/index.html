@@ -219,6 +219,7 @@ code.k{font:12.5px var(--mono);background:var(--bg3);padding:1px 5px;border-radi
         <div class="form">
           <div class="f"><label>Agente</label><select id="exWho"></select></div>
           <div class="f"><label>Data</label><input type="date" id="exDia"></div>
+          <div class="f"><label>Motivo</label><input type="text" id="exMot" maxlength="60" placeholder="Ex.: exame periódico, consulta, sai às 19h"></div>
           <div class="f"><button class="btn pri" id="exAdd" style="width:100%">Adicionar</button></div>
         </div>
         <div class="list" id="exList"></div>
@@ -400,6 +401,7 @@ const PADRAO={
  feriados:{},
  aslCob:{'2026-11-14':'Lucas'},
  fixarSSO:{'2026-11-26':'gerson'},
+ exMotivo:{'2026-11-09|josefa':'exame periódico','2026-11-10|gerson':'exame periódico','2026-11-11|hugo':'exame periódico','2026-11-12|jhonatan':'exame periódico','2026-11-13|jonathas':'exame periódico','2026-11-16|vanessa':'exame periódico','2026-11-17|william':'exame periódico'},
  manuais:JSON.parse(JSON.stringify(FECHADOS)),
  confirmados:Object.fromEntries([...Object.keys(REALIZADO),...Object.keys(FECHADOS)].map(k=>[k,1])),
 };
@@ -926,10 +928,13 @@ function textoGBD(k){
  if(!trabalha('jhonatan',k))fg.unshift('Jhonatan (ASL)');
  L.push(fg.length?fg.join(' • '):'—');
  if(d.ausentes.length)L.push(`🚫 *Ausente:* ${d.ausentes.map(nome).join(' • ')}`);
+ {const parc=(S.exames[k]||[]).filter(id=>trabalha(id,k)&&!ausente(id,k));
+  if(parc.length)L.push(`⏳ *Ausência parcial:* ${parc.map(id=>{const m=motivoParcial(id,k);return m?`${nome(id)} (${m})`:nome(id)}).join(' • ')}`);}
  L.push('');
  L.push('🚆 _Operação assistida pela CPTM._');
  return L.join('\n');
 }
+function motivoParcial(id,k){return ((S.exMotivo||{})[k+'|'+id]||'').trim()}
 function lista(a){return a.length<=1?(a[0]||'—'):a.slice(0,-1).join(', ')+' e '+a[a.length-1]}
 
 /* ============================ UI ============================ */
@@ -1312,9 +1317,9 @@ function renderAus(){
  eks.forEach(k=>S.exames[k].forEach(id=>{
   const it=el('div','item');
   it.appendChild(el('strong',null,nome(id)));
-  it.appendChild(el('span',null,br(k)));
+  it.appendChild(el('span',null,br(k)+(motivoParcial(id,k)?' · '+motivoParcial(id,k):'')));
   const x=el('button','btn sm danger x','Remover');
-  x.onclick=()=>{S.exames[k]=S.exames[k].filter(v=>v!==id);if(!S.exames[k].length)delete S.exames[k];salvar();limparCache(k);renderAus();renderCiclo()};
+  x.onclick=()=>{S.exames[k]=S.exames[k].filter(v=>v!==id);if(!S.exames[k].length)delete S.exames[k];if(S.exMotivo)delete S.exMotivo[k+'|'+id];salvar();limparCache(k);renderAus();renderCiclo()};
   it.appendChild(x);E.appendChild(it);
  }));
 }
@@ -1327,7 +1332,9 @@ $('#ausAdd').onclick=()=>{
 };
 $('#exAdd').onclick=()=>{
  const id=$('#exWho').value,k=$('#exDia').value;if(!k)return toast('Informe a data');
+ const mot=$('#exMot').value.trim();if(!mot){$('#exMot').focus();return toast('Informe o motivo da ausência')}
  S.exames[k]=Array.from(new Set([...(S.exames[k]||[]),id]));
+ S.exMotivo=S.exMotivo||{};S.exMotivo[k+'|'+id]=mot;$('#exMot').value='';
  salvar();limparCache(k);renderAus();renderCiclo();toast('Ausência parcial registrada');
 };
 
