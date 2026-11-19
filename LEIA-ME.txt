@@ -1,13 +1,15 @@
-App BFU · Estação Barra Funda (Ronda + Reporte SSO num só app)
+App BFU · Estação Barra Funda (Ronda + Reporte SSO + GBD num só app)
 
-Como publicar no Netlify:
-1. Crie um site novo (por exemplo "bfu") e arraste esta pasta inteira (com index.html, ronda/ e reporte-sso/).
+Publicado na Vercel a partir desta branch main: cada push na main republica o site.
+Para publicar à mão em outro lugar:
+1. Crie um site novo (por exemplo "bfu") e arraste esta pasta inteira (com index.html, ronda/, reporte-sso/ e gbd/).
 2. Abra o endereço do site no celular e toque em "Instalar no celular".
 
 Estrutura:
 - index.html ........ tela "O que você quer fazer?" (sem saudação) com as placas "Fazer a ronda" e "Reportar à SSO"
 - ronda/ ............ app Ronda completo
 - reporte-sso/ ...... app Reporte SSO completo
+- gbd/ .............. GBD do dia, somente leitura, com os postos, o café e a janta e o rodízio da SSO
 Dentro de cada app, o botão "🏠 Início" no topo e o item "🏠 Tela inicial" do menu voltam para esta tela.
 
 Os sites rondabfu e reportsso continuam funcionando separados, se quiser mantê-los.
@@ -16,3 +18,10 @@ Rondas e configurações salvas no celular ficam guardadas por site: no site nov
 Atualização 19/11: a tela inicial mostra o aviso "Funciona sem internet depois de instalado". A instalação do BFU já guarda a Ronda e o Reporte SSO, que abrem sem internet mesmo sem terem sido abertos antes. Dentro do BFU, "Instalar o app" instala o BFU, e o botão "🏠 Início" no topo volta para a tela inicial.
 
 Atualização 19/11 (madrugada): a Ronda e o Reporte SSO abrem dentro da página do BFU, sem redirecionar. O endereço continua o do BFU. "🏠 Início" e o voltar do celular retornam a esta tela, e cada app fica aberto do ponto onde parou.
+
+Atualização 19/11 (GBD): terceira placa "GBD do dia". A página é somente leitura: lê o arquivo
+gbd/gbd-dados.json, que já traz os GBDs calculados, e não recalcula nada. Para atualizar o GBD,
+troque esse arquivo e suba a versão do sw.js da raiz, senão o celular já instalado continua
+servindo o arquivo guardado no cache. O sw.js da raiz e o gbd/sw.js guardam arquivo por arquivo
+e não listam endereços de pasta (como "gbd/"), porque a Vercel redireciona esses endereços e isso
+derrubava a instalação inteira do cache.
