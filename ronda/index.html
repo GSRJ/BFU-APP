@@ -1991,7 +1991,7 @@ function sheetIdle(){
   if(!done)h+=`<p class="mut" style="text-align:center">Ou toque num ponto da planta.</p>`;
   return h;
 }
-const isStandalone=()=>{const sa=w=>{try{return w.matchMedia('(display-mode: standalone)').matches||w.navigator.standalone===true}catch(_){return false}};if(sa(window))return true;try{if(window.parent!==window&&sa(window.parent))return true}catch(_){}try{return localStorage.getItem('bfu-instalado')==='1'}catch(_){return false}};
+const isStandalone=()=>matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;
 /* aberto dentro do app BFU (pastas ronda/ ou reporte-sso/): quem instala é o BFU, então aqui não há botão de instalar nem aviso de uso sem internet */
 const IN_HUB=/\/(ronda|reporte-sso)\/(index\.html)?$/.test(location.pathname);
 const IN_FRAME=(()=>{try{return window.parent!==window&&parent.location.origin===location.origin;}catch(_){return false;}})();
@@ -2437,7 +2437,7 @@ $('#mPdf').onclick=()=>{$('#menuDlg').close();onPdf();};
 $('#mHome').onclick=()=>{$('#menuDlg').close();if(basicOn)setBasicOn(false);home=true;sel=null;placing=false;mode='round';renderAll();renderPins();};
 $('#mInstall').onclick=()=>{$('#menuDlg').close();installApp();};
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e;});
-window.addEventListener('appinstalled',()=>{try{localStorage.setItem('bfu-instalado','1')}catch(_){}deferredInstall=null;$('#mInstall').hidden=true;renderSheet();});
+window.addEventListener('appinstalled',()=>{deferredInstall=null;$('#mInstall').hidden=true;renderSheet();});
 if(isStandalone())$('#mInstall').hidden=true;
 if(IN_HUB){document.body.classList.add('in-hub');$('#mHome').textContent='↩ Início da ronda';const hb=$('#hubBack');hb.hidden=false;hb.onclick=goHub;}
 async function installApp(){
