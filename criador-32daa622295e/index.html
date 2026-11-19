@@ -859,7 +859,7 @@ function iniciarWizard(){
  };
  renderWizard();
 }
-const PASSOS=[passoEstacao,passoPostos,passoIntervalos,passoAgentes,passoFim];
+const PASSOS=[passoEstacao,passoPostos,passoRegras,passoIntervalos,passoAgentes,passoFim];
 function renderWizard(){
  const box=$('#wizard');box.innerHTML='';
  $('#nav').style.display=S.pronto?'flex':'none';
@@ -939,13 +939,65 @@ function formIntervalos(host,cfg,aoMudar){
  }
  gerarIntervalos(cfg);desenha();
 }
+function passoRegras(c){
+ const T=wz.tmp;
+ c.appendChild(el('h3',null,'3. Regras dos postos'));
+ c.appendChild(el('p','hint','Com os postos cadastrados, diga qual é o de rodízio, quem cobre, para onde vai quem sobrar e se a ordem muda aos domingos e feriados.'));
+  const sel=(lbl,hint,val,set,vazio)=>{
+   const d=el('div','card');d.style.margin='14px 0 0';d.style.background='var(--bg3)';
+   d.appendChild(el('h4',null,lbl));d.appendChild(el('p','hint',hint));
+   const s=el('select');
+   if(vazio)s.appendChild(new Option(vazio,''));
+   T.postos.forEach(p=>s.appendChild(new Option(p.nome,p.id)));
+   s.value=val||'';s.onchange=()=>set(s.value);
+   d.appendChild(s);c.appendChild(d);return s;
+  };
+  sel('Posto de rodízio','Todos os agentes operacionais passam por ele uma vez a cada ciclo. É o que define o tamanho do ciclo.',
+      T.rodizio.posto,v=>T.rodizio.posto=v,'— nenhum —');
+  if(T.rodizio.posto){
+   const d=el('div','form');d.style.marginTop='10px';
+   const f=el('div','f');f.appendChild(el('label',null,'Intervalo mínimo entre duas passagens (dias)'));
+   const i=el('input');i.type='number';i.min='0';i.value=T.rodizio.intervalo;i.onchange=()=>T.rodizio.intervalo=+i.value||0;
+   f.appendChild(i);d.appendChild(f);
+   const f2=el('div','f');const lb=el('label','sub');lb.style.display='flex';lb.style.gap='6px';lb.style.alignItems='center';
+   const cb=el('input');cb.type='checkbox';cb.checked=T.rodizio.exameBloqueia;cb.style.width='auto';
+   cb.onchange=()=>T.rodizio.exameBloqueia=cb.checked;
+   lb.append(cb,document.createTextNode('não escalar nele no dia de ausência parcial'));
+   f2.appendChild(lb);d.appendChild(f2);
+   c.appendChild(d);
+  }
+  sel('Posto que cobre o de rodízio','Esse agente não sai no mesmo horário de pausa nem no mesmo turno de intervalo que o do rodízio.',
+      T.cobertura.posto,v=>T.cobertura.posto=v,'— nenhum —');
+  sel('Em caso de mais agentes do que postos, os demais vão para','Esta é a pergunta do excedente: quando sobrar gente, todos vão para este posto.',
+      T.excedente,v=>T.excedente=v,'— o último da prioridade —');
+  const dd=el('div','card');dd.style.margin='14px 0 0';dd.style.background='var(--bg3)';
+  dd.appendChild(el('h4',null,'Domingos e feriados'));
+  dd.appendChild(el('p','hint','Se a prioridade muda nesses dias, reordene aqui. Se não muda, deixe igual.'));
+  if(!T.prioFer.length)T.prioFer=T.postos.map(p=>p.id);
+  T.prioFer=T.prioFer.filter(id=>T.postos.some(p=>p.id===id));
+  T.postos.forEach(p=>{if(!T.prioFer.includes(p.id))T.prioFer.push(p.id)});
+  const LF=el('div','list');
+  T.prioFer.forEach((pid,i)=>{
+   const p=T.postos.find(x=>x.id===pid);if(!p)return;
+   const it=el('div','item');it.style.background='var(--bg2)';
+   const o=el('div','ord');
+   const up=el('button',null,'↑');up.onclick=()=>{if(i>0){[T.prioFer[i-1],T.prioFer[i]]=[T.prioFer[i],T.prioFer[i-1]];renderWizard()}};
+   const dn=el('button',null,'↓');dn.onclick=()=>{if(i<T.prioFer.length-1){[T.prioFer[i+1],T.prioFer[i]]=[T.prioFer[i],T.prioFer[i+1]];renderWizard()}};
+   o.append(up,dn);it.appendChild(o);
+   it.appendChild(el('span','sub',`${i+1}º`));
+   it.appendChild(el('strong',null,`${p.ico} ${p.nome}`));
+   LF.appendChild(it);
+  });
+  dd.appendChild(LF);c.appendChild(dd);
+ navWz(c,true,'Continuar ›',()=>{wz.passo=3;renderWizard()});
+}
 function passoIntervalos(c){
  const T=wz.tmp;
- c.appendChild(el('h3',null,'3. Pausa e intervalo'));
+ c.appendChild(el('h3',null,'4. Pausa e intervalo'));
  c.appendChild(el('p','hint','Os horários são montados a partir da hora de início, da duração e do espaçamento. A duração da pausa entra no título do bloco do GBD.'));
  const box=el('div');c.appendChild(box);
  formIntervalos(box,{cafe:T.cafe,janta:T.janta});
- navWz(c,true,'Continuar ›',()=>{wz.passo=3;renderWizard()});
+ navWz(c,true,'Continuar ›',()=>{wz.passo=4;renderWizard()});
 }
 function navWz(c,podeAvancar,rotulo,aoAvancar){
  const f=el('div','wzfoot');
@@ -987,7 +1039,7 @@ function passoEstacao(c){
 function passoPostos(c){
  const T=wz.tmp;
  c.appendChild(el('h3',null,'2. Os postos'));
- c.appendChild(el('p','hint','Cadastre na ordem de prioridade: o primeiro é o que sempre tem que ser coberto, o último é o que fica vazio quando falta efetivo.'));
+ c.appendChild(el('p','hint','Cadastre todos os postos na ordem de prioridade: o primeiro é o que sempre tem que ser coberto, o último é o que fica vazio quando falta efetivo. As regras de cada posto vêm no próximo passo.'));
  const g=el('div','form');
  const fNome=el('div','f');fNome.appendChild(el('label',null,'Nome do posto'));
  const iNome=el('input');iNome.type='text';iNome.placeholder='SSO';fNome.appendChild(iNome);
@@ -1041,59 +1093,11 @@ function passoPostos(c){
   L.appendChild(it);
  });
  c.appendChild(L);
- if(T.postos.length){
-  const sel=(lbl,hint,val,set,vazio)=>{
-   const d=el('div','card');d.style.margin='14px 0 0';d.style.background='var(--bg3)';
-   d.appendChild(el('h4',null,lbl));d.appendChild(el('p','hint',hint));
-   const s=el('select');
-   if(vazio)s.appendChild(new Option(vazio,''));
-   T.postos.forEach(p=>s.appendChild(new Option(p.nome,p.id)));
-   s.value=val||'';s.onchange=()=>set(s.value);
-   d.appendChild(s);c.appendChild(d);return s;
-  };
-  sel('Posto de rodízio','Todos os agentes operacionais passam por ele uma vez a cada ciclo. É o que define o tamanho do ciclo.',
-      T.rodizio.posto,v=>T.rodizio.posto=v,'— nenhum —');
-  if(T.rodizio.posto){
-   const d=el('div','form');d.style.marginTop='10px';
-   const f=el('div','f');f.appendChild(el('label',null,'Intervalo mínimo entre duas passagens (dias)'));
-   const i=el('input');i.type='number';i.min='0';i.value=T.rodizio.intervalo;i.onchange=()=>T.rodizio.intervalo=+i.value||0;
-   f.appendChild(i);d.appendChild(f);
-   const f2=el('div','f');const lb=el('label','sub');lb.style.display='flex';lb.style.gap='6px';lb.style.alignItems='center';
-   const cb=el('input');cb.type='checkbox';cb.checked=T.rodizio.exameBloqueia;cb.style.width='auto';
-   cb.onchange=()=>T.rodizio.exameBloqueia=cb.checked;
-   lb.append(cb,document.createTextNode('não escalar nele no dia de ausência parcial'));
-   f2.appendChild(lb);d.appendChild(f2);
-   c.appendChild(d);
-  }
-  sel('Posto que cobre o de rodízio','Esse agente não sai no mesmo horário de pausa nem no mesmo turno de intervalo que o do rodízio.',
-      T.cobertura.posto,v=>T.cobertura.posto=v,'— nenhum —');
-  sel('Em caso de mais agentes do que postos, os demais vão para','Esta é a pergunta do excedente: quando sobrar gente, todos vão para este posto.',
-      T.excedente,v=>T.excedente=v,'— o último da prioridade —');
-  const dd=el('div','card');dd.style.margin='14px 0 0';dd.style.background='var(--bg3)';
-  dd.appendChild(el('h4',null,'Domingos e feriados'));
-  dd.appendChild(el('p','hint','Se a prioridade muda nesses dias, reordene aqui. Se não muda, deixe igual.'));
-  if(!T.prioFer.length)T.prioFer=T.postos.map(p=>p.id);
-  T.prioFer=T.prioFer.filter(id=>T.postos.some(p=>p.id===id));
-  T.postos.forEach(p=>{if(!T.prioFer.includes(p.id))T.prioFer.push(p.id)});
-  const LF=el('div','list');
-  T.prioFer.forEach((pid,i)=>{
-   const p=T.postos.find(x=>x.id===pid);if(!p)return;
-   const it=el('div','item');it.style.background='var(--bg2)';
-   const o=el('div','ord');
-   const up=el('button',null,'↑');up.onclick=()=>{if(i>0){[T.prioFer[i-1],T.prioFer[i]]=[T.prioFer[i],T.prioFer[i-1]];renderWizard()}};
-   const dn=el('button',null,'↓');dn.onclick=()=>{if(i<T.prioFer.length-1){[T.prioFer[i+1],T.prioFer[i]]=[T.prioFer[i],T.prioFer[i+1]];renderWizard()}};
-   o.append(up,dn);it.appendChild(o);
-   it.appendChild(el('span','sub',`${i+1}º`));
-   it.appendChild(el('strong',null,`${p.ico} ${p.nome}`));
-   LF.appendChild(it);
-  });
-  dd.appendChild(LF);c.appendChild(dd);
- }
  navWz(c,T.postos.length>0,'Continuar ›',()=>{wz.passo=2;renderWizard()});
 }
 function passoAgentes(c){
  const T=wz.tmp;
- c.appendChild(el('h3',null,'4. A equipe'));
+ c.appendChild(el('h3',null,'5. A equipe'));
  c.appendChild(el('p','hint','Cadastre cada agente com o regime e as últimas folgas. O sistema encaixa o padrão nessas datas e projeta os anos seguintes.'));
  const L=el('div','list');
  if(!T.agentes.length)L.appendChild(el('div','empty','Nenhum agente ainda.'));
@@ -1111,12 +1115,12 @@ function passoAgentes(c){
  c.appendChild(box);
  const nAAS=T.agentes.filter(a=>a.funcao==='AAS').length;
  if(nAAS)c.appendChild(el('p','hint',`Com ${nAAS} agente${nAAS>1?'s':''} operaciona${nAAS>1?'is':'l'}, o ciclo fica com ${nAAS} dia${nAAS>1?'s':''}.`));
- navWz(c,nAAS>0,'Continuar ›',()=>{wz.passo=4;renderWizard()});
+ navWz(c,nAAS>0,'Continuar ›',()=>{wz.passo=5;renderWizard()});
 }
 function passoFim(c){
  const T=wz.tmp;
  const nAAS=T.agentes.filter(a=>a.funcao==='AAS').length;
- c.appendChild(el('h3',null,'5. Pronto'));
+ c.appendChild(el('h3',null,'6. Pronto'));
  c.appendChild(el('p','hint','Confira e comece a usar. Tudo isso continua editável depois, na aba Configuração.'));
  const u=el('div','kv');
  u.innerHTML=`<b>${esc(T.estacao.nome)}</b> — turno ${esc(T.estacao.turno||'—')}<br>
