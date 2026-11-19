@@ -1,0 +1,1827 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="only light">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Criador de GBD · BFU manhã e noite</title>
+<style>
+:root{
+  --bg:#0f1115;--bg2:#161a21;--bg3:#1d222b;--line:#2a313d;
+  --tx:#e6e9ef;--tx2:#9aa4b2;--tx3:#6b7482;
+  --ac:#4da3ff;--ok:#3fbf7f;--warn:#e8b339;--err:#f2635f;
+  --r:10px;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+:root{color-scheme:only light;--bg:#f6f7f9;--bg2:#fff;--bg3:#eef1f5;--line:#dfe3ea;--tx:#161a21;--tx2:#5b6472;--tx3:#8b93a1}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-text-size-adjust:100%}
+h1,h2,h3,h4{margin:0;font-weight:650;letter-spacing:-.01em}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px 80px}
+header{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.hd{max-width:1180px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.hd h1{font-size:17px;display:flex;align-items:center;gap:8px}
+.hd h1 small{font-weight:450;color:var(--tx2);font-size:13px}
+nav{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+nav button{background:transparent;border:1px solid transparent;color:var(--tx2);padding:6px 12px;border-radius:999px;font-size:13.5px}
+nav button:hover{color:var(--tx);background:var(--bg3)}
+nav button[aria-selected=true]{background:var(--ac);color:#fff}
+.panel{display:none;padding-top:20px}.panel.on{display:block}
+.btn{background:var(--bg3);border:1px solid var(--line);color:var(--tx);padding:6px 12px;border-radius:8px;font-size:13.5px}
+.btn:hover{border-color:var(--ac);color:var(--ac)}
+.btn.pri{background:var(--ac);border-color:var(--ac);color:#fff}
+.btn.pri:hover{filter:brightness(1.08);color:#fff}
+.btn.sm{padding:4px 9px;font-size:12.5px;border-radius:7px}
+.btn.danger:hover{border-color:var(--err);color:var(--err)}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.card{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:16px}
+.card h3{font-size:15px;margin-bottom:4px}
+.card>p.hint,p.hint{color:var(--tx2);font-size:13px;margin:0 0 12px}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:10px;align-items:end}
+.f label{display:block;font-size:12.5px;color:var(--tx2);margin-bottom:4px}
+select,input[type=text],input[type=date],input[type=number],input[type=month],textarea{background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:6px 9px;font-size:13.5px;width:100%}
+select:focus,input:focus,textarea:focus{outline:none;border-color:var(--ac)}
+.list{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.item{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--bg3);border-radius:8px;font-size:13.5px;flex-wrap:wrap}
+.item .x{margin-left:auto;display:flex;gap:5px}
+.item .sub{color:var(--tx2);font-size:12.5px}
+.empty{color:var(--tx3);font-size:13px;padding:10px 0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(14px);background:var(--tx);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:13.5px;font-weight:600;opacity:0;pointer-events:none;transition:.22s;z-index:99}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+code.k{font:12.5px var(--mono);background:var(--bg3);padding:1px 5px;border-radius:5px}
+.chip{display:inline-flex;align-items:center;gap:5px;background:var(--bg3);border:1px solid var(--line);border-radius:999px;padding:2px 6px 2px 10px;font-size:12.5px}
+.chip button{background:none;border:0;color:var(--tx3);padding:0 3px;font-size:14px;line-height:1}
+.chip button:hover{color:var(--err)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px;min-height:26px}
+/* wizard */
+.wz{max-width:760px;margin:40px auto}
+.wzsteps{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap}
+.wzsteps div{flex:1;min-width:90px;height:4px;border-radius:2px;background:var(--bg3)}
+.wzsteps div.on{background:var(--ac)}
+.wzfoot{display:flex;gap:8px;margin-top:18px;align-items:center}
+.wzfoot .spacer{flex:1}
+/* ciclo */
+.cyclebar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:18px;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px}
+.cyclebar .lbl{font-weight:600}.cyclebar .sub{color:var(--tx2);font-size:13px}
+.spacer{flex:1}
+#foco{margin-bottom:18px}
+.foco{background:var(--bg2);border:2px solid var(--ac);border-radius:var(--r);overflow:hidden}
+.foco .fh{padding:11px 15px;background:color-mix(in srgb,var(--ac) 14%,var(--bg2));border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.foco .fh .q{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ac);font-weight:700}
+.foco .fh .dd{font-weight:650;font-size:16px}
+.foco .fb{display:grid;grid-template-columns:minmax(0,1fr)}
+@media(min-width:760px){.foco .fb{grid-template-columns:minmax(0,1fr) minmax(0,270px)}}
+.foco .fside{border-top:1px solid var(--line);padding:13px 15px;display:flex;flex-direction:column;gap:9px}
+@media(min-width:760px){.foco .fside{border-top:0;border-left:1px solid var(--line)}}
+.foco .fside h4{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--tx2)}
+.kv{font-size:13px;color:var(--tx2);line-height:1.6}.kv b{color:var(--tx);font-weight:600}
+.days{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(330px,1fr))}
+.day{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column}
+.day.foconow{border-color:var(--ac);box-shadow:0 0 0 2px color-mix(in srgb,var(--ac) 35%,transparent)}
+.day.locked .dh{background:color-mix(in srgb,var(--ok) 12%,var(--bg3))}
+.dh{padding:10px 13px;background:var(--bg3);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.dh .dd{font-weight:650}
+.tag{font-size:11px;text-transform:uppercase;letter-spacing:.04em;padding:2px 7px;border-radius:999px;background:var(--bg);color:var(--tx2);border:1px solid var(--line)}
+.tag.fer{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 45%,var(--line))}
+.tag.real{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 45%,var(--line))}
+pre.gbd{margin:0;padding:13px;font:12.5px/1.55 var(--mono);white-space:pre-wrap;word-break:break-word;flex:1}
+.dactions{display:flex;gap:6px;padding:10px 13px;border-top:1px solid var(--line);flex-wrap:wrap}
+.avisos{padding:0 13px 10px;display:flex;flex-direction:column;gap:5px}
+.aviso{font-size:12.5px;padding:6px 9px;border-radius:7px}
+.aviso.w{background:color-mix(in srgb,var(--warn) 13%,transparent);color:color-mix(in srgb,var(--warn) 78%,var(--tx))}
+.aviso.e{background:color-mix(in srgb,var(--err) 13%,transparent);color:color-mix(in srgb,var(--err) 82%,var(--tx))}
+.aviso.ok{background:color-mix(in srgb,var(--ok) 15%,transparent);color:color-mix(in srgb,var(--ok) 80%,var(--tx))}
+.aviso.i{background:var(--bg3);color:var(--tx2)}
+.editor{border-top:1px solid var(--line);padding:11px 13px;display:none;gap:9px;flex-direction:column}
+.editor.on{display:flex}
+.erow{display:grid;grid-template-columns:1fr 1.1fr;gap:8px;align-items:center}
+.erow label{font-size:12.5px;color:var(--tx2)}
+/* tabelas */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:left}
+th{background:var(--bg3);font-weight:600;white-space:nowrap}
+td.c,th.c{text-align:center}
+.tblwrap{overflow-x:auto;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r)}
+.tblwrap table{border:0}
+.tblwrap th:first-child,.tblwrap td:first-child{position:sticky;left:0;background:var(--bg2);z-index:1}
+.tblwrap th:first-child{background:var(--bg3);z-index:2}
+.pill{display:inline-block;padding:1px 7px;border-radius:999px;font-size:11.5px;font-weight:600;white-space:nowrap;background:var(--bg3);color:var(--tx2)}
+.pill.folga{color:var(--tx3)}.pill.aus{background:#f2635f22;color:#f2635f}
+/* calendário */
+.cal{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:14px}
+.calgrid{overflow-x:auto}
+.calgrid table{font-size:11.5px}
+.calgrid th,.calgrid td{padding:3px 0;text-align:center;min-width:23px}
+.calgrid td.nome,.calgrid th.nome{text-align:left;padding:3px 8px;min-width:92px;white-space:nowrap;position:sticky;left:0;background:var(--bg2)}
+.calgrid th.nome{background:var(--bg3)}
+.calgrid th.fds{color:var(--ac)}.calgrid th.fer{color:var(--warn)}.calgrid th.wk{color:var(--tx3);font-weight:500}
+.cel{display:block;border-radius:4px;line-height:19px;font-weight:600}
+.cel.t{background:color-mix(in srgb,var(--ok) 16%,transparent);color:var(--ok)}
+.cel.f{background:var(--bg3);color:var(--tx3)}
+.cel.a{background:color-mix(in srgb,var(--err) 20%,transparent);color:var(--err)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--tx2);margin-top:8px}
+.sw{width:12px;height:12px;border-radius:3px;display:inline-block;vertical-align:-2px;margin-right:4px}
+.prev{font:12px/1.5 var(--mono);background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:8px;margin-top:8px;overflow-x:auto;white-space:nowrap}
+.ok{color:var(--ok)}.bad{color:var(--err)}
+.mcal{margin-top:12px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:10px}
+.mcalhd{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.mcalhd .m{flex:1;text-align:center;font-weight:600;font-size:13.5px}
+.mgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.mgrid .wd{text-align:center;font-size:10.5px;color:var(--tx3);padding:1px 0}
+.mgrid button{background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:4px 0 3px;
+ display:flex;flex-direction:column;align-items:center;gap:1px;font-size:12.5px;line-height:1.1;min-height:40px;justify-content:center}
+.mgrid button span{font-size:9px;font-weight:700;letter-spacing:.02em}
+.mgrid button.vazio{visibility:hidden;pointer-events:none}
+.mgrid button.prevF{color:var(--tx3)}
+.mgrid button.prevT{color:var(--tx2)}
+.mgrid button.prevF span,.mgrid button.prevT span{opacity:.55;text-transform:uppercase}
+.mgrid button.marcF{background:color-mix(in srgb,var(--tx3) 26%,var(--bg));border-color:var(--tx3);color:var(--tx)}
+.mgrid button.marcT{background:color-mix(in srgb,var(--ok) 26%,var(--bg));border-color:var(--ok);color:var(--tx)}
+.mgrid button.conflito{border-color:var(--err);box-shadow:0 0 0 1px var(--err) inset}
+.mgrid button.hoje{outline:2px solid var(--ac);outline-offset:-2px}
+.mgrid button:hover{border-color:var(--ac)}
+.icons{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.icons button{background:var(--bg);border:1px solid var(--line);border-radius:8px;width:38px;height:38px;font-size:19px;line-height:1;padding:0;display:flex;align-items:center;justify-content:center}
+.icons button:hover{border-color:var(--ac)}
+.icons button[aria-pressed=true]{background:color-mix(in srgb,var(--ac) 22%,var(--bg));border-color:var(--ac);box-shadow:0 0 0 1px var(--ac) inset}
+.icobtn{background:var(--bg);border:1px solid var(--line);border-radius:8px;width:34px;height:30px;font-size:17px;line-height:1;padding:0}
+.icobtn:hover{border-color:var(--ac)}
+.icopane{flex-basis:100%;display:none;padding-top:4px}
+.icopane.on{display:block}
+.ord{display:flex;align-items:center;gap:6px}
+.ord button{background:var(--bg);border:1px solid var(--line);border-radius:6px;width:24px;height:24px;line-height:1;padding:0;color:var(--tx2)}
+.ord button:hover{color:var(--ac);border-color:var(--ac)}
+</style>
+</head>
+<body>
+<header>
+  <div class="hd">
+    <h1>🚉 <span id="hdTit">Montador de GBD</span> <small id="hdSub"></small></h1>
+    <nav id="nav" style="display:none">
+      <button data-tab="ciclo" aria-selected="true">Ciclo</button>
+      <button data-tab="postos" aria-selected="false">Postos</button>
+      <button data-tab="cal" aria-selected="false">Calendário</button>
+      <button data-tab="equipe" aria-selected="false">Equipe</button>
+      <button data-tab="aus" aria-selected="false">Ausências</button>
+      <button data-tab="config" aria-selected="false">Configuração</button>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <div id="wizard"></div>
+
+  <section class="panel" id="tab-ciclo">
+    <div id="foco"></div>
+    <div class="cyclebar">
+      <button class="btn" id="prevC">‹ Anterior</button>
+      <div><div class="lbl" id="cLbl">—</div><div class="sub" id="cSub">—</div></div>
+      <button class="btn" id="nextC">Próximo ›</button>
+      <button class="btn" id="focoC">Dia em foco</button>
+      <div class="spacer"></div>
+      <button class="btn" id="copyCiclo">Copiar ciclo</button>
+      <button class="btn danger" id="resetCiclo">Refazer ciclo</button>
+    </div>
+    <div class="days" id="days"></div>
+  </section>
+
+  <section class="panel" id="tab-postos">
+    <div class="cyclebar">
+      <button class="btn" id="prevP">‹</button><div class="lbl" id="pLbl">—</div><button class="btn" id="nextP">›</button>
+      <div class="spacer"></div><span class="sub" id="pSub"></span>
+    </div>
+    <div class="tblwrap"><table id="tPostos"></table></div>
+    <div class="card" style="margin-top:16px">
+      <h3>Resumo do ciclo</h3>
+      <p class="hint">Quantas vezes cada agente passou por cada posto. Laranja marca repetição dentro do ciclo.</p>
+      <div class="tblwrap"><table id="tResumo"></table></div>
+    </div>
+  </section>
+
+  <section class="panel" id="tab-cal">
+    <div class="cyclebar">
+      <label class="sub">De <input type="month" id="calDe" style="width:auto;display:inline-block"></label>
+      <label class="sub">até <input type="month" id="calAte" style="width:auto;display:inline-block"></label>
+      <div class="spacer"></div><span class="sub">T trabalha · F folga · A ausente</span>
+    </div>
+    <div id="calBox"></div>
+  </section>
+
+  <section class="panel" id="tab-equipe">
+    <div class="card">
+      <h3>Agentes</h3>
+      <p class="hint">A escala de cada um é projetada a partir do regime e das folgas que você informar.</p>
+      <div class="list" id="agList"></div>
+      <div style="margin-top:12px"><button class="btn pri" id="agNovo">Cadastrar agente</button></div>
+      <div id="agForm"></div>
+    </div>
+  </section>
+
+  <section class="panel" id="tab-aus">
+    <div class="grid2">
+      <div class="card">
+        <h3>Ausência</h3>
+        <p class="hint">Entra no bloco de folgas como <code class="k">🚫 Ausente</code> e o dia é remontado mexendo só no necessário.</p>
+        <div class="form">
+          <div class="f"><label>Agente</label><select id="ausWho"></select></div>
+          <div class="f"><label>De</label><input type="date" id="ausDe"></div>
+          <div class="f"><label>Até (opcional)</label><input type="date" id="ausAte"></div>
+          <div class="f"><button class="btn pri" id="ausAdd" style="width:100%">Adicionar</button></div>
+        </div>
+        <div class="list" id="ausList"></div>
+      </div>
+      <div class="card">
+        <h3>Exame periódico</h3>
+        <p class="hint" id="exHint"></p>
+        <div class="form">
+          <div class="f"><label>Agente</label><select id="exWho"></select></div>
+          <div class="f"><label>Data</label><input type="date" id="exDia"></div>
+          <div class="f"><button class="btn pri" id="exAdd" style="width:100%">Adicionar</button></div>
+        </div>
+        <div class="list" id="exList"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="tab-config"><div id="cfgBox"></div></section>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ===================== base ===================== */
+const DIA=86400000;
+const DOW=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+const DOWC=['D','S','T','Q','Q','S','S'];
+const d2k=d=>d.toISOString().slice(0,10);
+const k2d=k=>{const[a,b,c]=k.split('-').map(Number);return new Date(Date.UTC(a,b-1,c))};
+const addD=(k,n)=>d2k(new Date(k2d(k).getTime()+n*DIA));
+const dow=k=>k2d(k).getUTCDay();
+const diff=(a,b)=>Math.round((k2d(a)-k2d(b))/DIA);
+const br=k=>{const[a,b,c]=k.split('-');return `${c}/${b}/${a}`};
+const hojeK=()=>{const n=new Date();return d2k(new Date(Date.UTC(n.getFullYear(),n.getMonth(),n.getDate())))};
+const rng=s=>{let a=s>>>0;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}};
+const hash=s=>{let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0};
+const uid=()=>Math.random().toString(36).slice(2,9);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ===================== formatos de escala ===================== */
+const PRESETS={
+ '6x2':[[6,2]], '5x2':[[5,2]], '4x2':[[4,2]], '6x1':[[6,1]],
+ '5x2;6x1':[[5,2],[6,1]],
+ '6x2;6x1;5x2;5x1':[[6,2],[6,1],[5,2],[5,1]],
+ '2x2 (12h)':[[2,2]],
+ '2x2;3x2;2x3 (12h)':[[2,2],[3,2],[2,3]],
+ '5x2 (administrativo)':[[5,2]],
+};
+function blocosParaPadrao(bl){return bl.map(([w,o])=>'F'.repeat(o)+'T'.repeat(w)).join('')}
+function parseBlocos(txt){
+ const out=[];
+ String(txt).split(/[;,]/).forEach(p=>{
+  const m=p.trim().match(/^(\d+)\s*[xX×]\s*(\d+)$/);
+  if(m)out.push([+m[1],+m[2]]);
+ });
+ return out;
+}
+function padraoDe(fmt){
+ if(PRESETS[fmt])return blocosParaPadrao(PRESETS[fmt]);
+ const bl=parseBlocos(fmt);
+ return bl.length?blocosParaPadrao(bl):'FFTTTTTT';
+}
+
+/* ===================== estado ===================== */
+function estadoPadrao(){return{
+ estacao:{nome:'BFU',turno:'Manhã',inicioCiclo:hojeK(),tamCiclo:0,rodape:'🚆 _Operação assistida pela CPTM._'},
+ postos:[],prioUtil:[],prioFer:[],excedente:'',
+ rodizio:{posto:'',intervalo:4,exameBloqueia:true},
+ cobertura:{posto:'',separar:true},
+ cafe:{inicio:480,duracao:15,espaco:30,qtd:3,espacoRed:15,qtdRed:4,
+       horarios:['15h00','15h30','16h00'],reduzido:['15h00','15h15','15h30','15h45'],limite:4,min:3,titulo:'☕ *CAFÉ* _(15 min)_'},
+ janta:{nome:'Almoço',inicio:660,duracao:60,qtd:3,extraAntes:true,
+        turnos:['18h–19h','19h–20h','20h–21h'],extra:'17h–18h',limite:4,min:3,perfil:'cedoCheio'},
+ agentes:[],ausencias:{},exames:{},feriados:{},aslCob:{},manuais:{},
+ pronto:false,
+}}
+let S=(()=>{try{const r=localStorage.getItem('gbd-bfu-manha-noite-v1');if(r)return{...estadoPadrao(),...JSON.parse(r)}}catch(e){}return estadoPadrao()})();
+function salvar(){try{localStorage.setItem('gbd-bfu-manha-noite-v1',JSON.stringify(S))}catch(e){}}
+
+
+/* turnos que este criador atende: a tarde tem o montador próprio */
+const TURNOS_OK={manha:{rot:'Manhã',cafe:480,ref:660,refNome:'Almoço',vira:'às 14h'},noite:{rot:'Noite',cafe:1410,ref:60,refNome:'Janta',vira:'às 6h'}};
+function turnoId(t){t=String(t==null?(S&&S.estacao&&S.estacao.turno):t||'').toLowerCase();return t.startsWith('n')?'noite':'manha'}
+function padraoTurno(id,cafe,janta){const T=TURNOS_OK[id];cafe.inicio=T.cafe;janta.inicio=T.ref;janta.nome=T.refNome;}
+/* horários montados por hora de início, duração e espaçamento */
+const hhmm=m=>{m=((m%1440)+1440)%1440;return`${String(Math.floor(m/60)).padStart(2,'0')}h${String(m%60).padStart(2,'0')}`};
+const hCurta=m=>{m=((m%1440)+1440)%1440;return m%60?`${Math.floor(m/60)}h${String(m%60).padStart(2,'0')}`:`${Math.floor(m/60)}h`};
+function parseHora(t){
+ const m=String(t).trim().match(/^(\d{1,2})\s*[h:]?\s*(\d{0,2})$/i);
+ if(!m)return null;
+ const h=+m[1],mi=+(m[2]||0);
+ if(h>23||mi>59)return null;
+ return h*60+mi;
+}
+function gerarIntervalos(cfg){
+ const c=cfg.cafe,j=cfg.janta;
+ c.horarios=Array.from({length:Math.max(1,c.qtd)},(_,i)=>hhmm(c.inicio+i*c.espaco));
+ c.reduzido=Array.from({length:Math.max(1,c.qtdRed)},(_,i)=>hhmm(c.inicio+i*c.espacoRed));
+ c.titulo=c.duracao>0?`☕ *CAFÉ* _(${c.duracao} min)_`:'☕ *CAFÉ*';
+ j.turnos=Array.from({length:Math.max(1,j.qtd)},(_,i)=>`${hCurta(j.inicio+i*j.duracao)}–${hCurta(j.inicio+(i+1)*j.duracao)}`);
+ j.extra=j.extraAntes?`${hCurta(j.inicio-j.duracao)}–${hCurta(j.inicio)}`:'';
+ return cfg;
+}
+
+const AG=id=>S.agentes.find(a=>a.id===id);
+const nome=id=>{const a=AG(id);return a?a.nome:id};
+const operacionais=()=>S.agentes.filter(a=>a.funcao==='AAS').map(a=>a.id);
+const apoios=()=>S.agentes.filter(a=>a.funcao==='ASL').map(a=>a.id);
+const POSTO=id=>S.postos.find(p=>p.id===id);
+const rotPosto=id=>{const p=POSTO(id);return p?p.nome:id};
+const abPosto=id=>{const p=POSTO(id);return p?(p.ab||p.nome):id};
+
+/* ===================== escala ===================== */
+function regimeEm(id,k){
+ const a=AG(id);if(!a)return null;
+ const l=(a.regimes||[]).slice().sort((x,y)=>x.de<y.de?-1:1);
+ let r=null;for(const x of l)if(x.de<=k)r=x;
+ return r||l[0]||null;
+}
+function trabalha(id,k){
+ const r=regimeEm(id,k);if(!r)return false;
+ const pad=padraoDe(r.fmt),L=pad.length;
+ return pad[((diff(k,r.ref)%L)+L)%L]==='T';
+}
+const ausente=(id,k)=>(S.ausencias[k]||[]).includes(id);
+const emExame=(id,k)=>(S.exames[k]||[]).includes(id);
+const disponiveis=k=>operacionais().filter(id=>trabalha(id,k)&&!ausente(id,k));
+const folgando=k=>operacionais().filter(id=>!trabalha(id,k));
+const ausentesDo=k=>operacionais().filter(id=>trabalha(id,k)&&ausente(id,k));
+
+/* encaixar o padrão a partir das folgas observadas */
+function ajustarRef(fmt,folgas,trabalhados){
+ const pad=padraoDe(fmt),L=pad.length;
+ const base=(folgas[0]||trabalhados[0]||hojeK());
+ let melhor={ref:base,acertos:-1};
+ for(let off=0;off<L;off++){
+  const ref=addD(base,-off);
+  let ac=0,tot=0;
+  folgas.forEach(d=>{tot++;if(pad[((diff(d,ref)%L)+L)%L]==='F')ac++});
+  trabalhados.forEach(d=>{tot++;if(pad[((diff(d,ref)%L)+L)%L]==='T')ac++});
+  if(ac>melhor.acertos)melhor={ref,acertos:ac,total:tot};
+ }
+ return melhor;
+}
+
+/* ===================== feriados ===================== */
+function pascoa(y){const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),
+ g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,
+ m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),da=((h+l-7*m+114)%31)+1;
+ return d2k(new Date(Date.UTC(y,mo-1,da)))}
+const _fc={};
+function feriadosAno(y){
+ if(_fc[y])return _fc[y];
+ const P=pascoa(y),o={};
+ o[`${y}-01-01`]='Confraternização Universal';
+ o[addD(P,-48)]='Carnaval';o[addD(P,-47)]='Carnaval';
+ o[addD(P,-2)]='Sexta-feira Santa';
+ o[`${y}-04-21`]='Tiradentes';o[`${y}-05-01`]='Dia do Trabalho';
+ o[addD(P,60)]='Corpus Christi';
+ o[`${y}-09-07`]='Independência';o[`${y}-10-12`]='Nossa Senhora Aparecida';
+ o[`${y}-11-02`]='Finados';o[`${y}-11-15`]='Proclamação da República';
+ o[`${y}-11-20`]='Consciência Negra';o[`${y}-12-25`]='Natal';
+ _fc[y]=o;return o;
+}
+const feriado=k=>S.feriados[k]||feriadosAno(+k.slice(0,4))[k]||null;
+const domOuFer=k=>dow(k)===0||!!feriado(k);
+
+/* ===================== ciclos ===================== */
+function tamCiclo(){return S.estacao.tamCiclo>0?S.estacao.tamCiclo:Math.max(1,operacionais().length)}
+function inicioCicloDe(k){
+ const N=tamCiclo(),base=S.estacao.inicioCiclo||hojeK();
+ const d=diff(k,base);
+ return addD(base,Math.floor(d/N)*N);
+}
+const diasDoCiclo=ini=>Array.from({length:tamCiclo()},(_,i)=>addD(ini,i));
+
+/* ===================== motor ===================== */
+const CACHE={};let resolvidoAte=null;
+function limparCache(desde){
+ for(const k of Object.keys(CACHE))if(!desde||k>=desde)delete CACHE[k];
+ if(desde){const i=inicioCicloDe(desde);if(resolvidoAte===null||resolvidoAte>=i)resolvidoAte=addD(i,-tamCiclo())}
+ else resolvidoAte=null;
+}
+function garantirAte(ini){
+ const N=tamCiclo();
+ let cur=resolvidoAte?addD(resolvidoAte,N):inicioCicloDe(addD(ini,-N*8));
+ if(cur>ini&&CACHE[ini])return;
+ if(cur>ini)cur=inicioCicloDe(addD(ini,-N*8));
+ let g=0;
+ while(cur<=ini&&g++<400){resolverCiclo(cur);resolvidoAte=cur;cur=addD(cur,N)}
+}
+function dia(k){
+ if(CACHE[k])return CACHE[k];
+ const i=inicioCicloDe(k);garantirAte(i);
+ if(!CACHE[k])resolverCiclo(i);
+ return CACHE[k]||null;
+}
+function postoDe(d,id){
+ if(!d||!d.postos)return null;
+ for(const p of S.postos)if((d.postos[p.id]||[]).includes(id))return p.id;
+ return null;
+}
+function ultimoDia(id,k,campo){
+ for(let i=1;i<=60;i++){
+  const kk=addD(k,-i),d=CACHE[kk];if(!d)continue;
+  if(campo==='posto'){const p=postoDe(d,id);if(p)return{k:kk,v:p}}
+  else if(d[campo]&&d[campo][id])return{k:kk,v:d[campo][id]};
+ }
+ return null;
+}
+function ultimoNoPosto(id,k,posto){
+ for(let i=1;i<=90;i++){const kk=addD(k,-i),d=CACHE[kk];if(d&&(d.postos[posto]||[]).includes(id))return kk}
+ return null;
+}
+function prioridade(k){
+ const lista=domOuFer(k)?S.prioFer:S.prioUtil;
+ return (lista&&lista.length?lista:S.postos.map(p=>p.id)).filter(id=>POSTO(id));
+}
+/* postos que o dia consegue cobrir: os marcados como "sempre coberto" entram
+   antes dos outros, mesmo passando à frente de um de prioridade maior */
+function postosDoDia(k,n){
+ const pr=prioridade(k);
+ const cap=Math.min(pr.length,n===undefined?disponiveis(k).length:n);
+ const obrig=pr.filter(p=>{const P=POSTO(p);return P&&P.sempre});
+ if(!obrig.length)return pr.slice(0,cap);
+ const esc=[];
+ for(const p of obrig){if(esc.length<cap)esc.push(p)}
+ for(const p of pr){if(esc.length>=cap)break;if(!esc.includes(p))esc.push(p)}
+ return pr.filter(p=>esc.includes(p));
+}
+/* postos que nunca devem ficar vagos ao mesmo tempo num intervalo */
+function postosCriticos(){
+ const s=[];
+ if(S.rodizio.posto)s.push(S.rodizio.posto);
+ if(S.cobertura.posto&&!s.includes(S.cobertura.posto))s.push(S.cobertura.posto);
+ S.postos.forEach(p=>{if(p.sempre&&!s.includes(p.id))s.push(p.id)});
+ return s;
+}
+
+/* --- plano do posto de rodízio --- */
+function planoRodizio(dias){
+ const R=S.rodizio.posto;if(!R)return {};
+ const ini=dias[0],INT=Math.max(0,+S.rodizio.intervalo||0);
+ const fixos={};
+ for(const k of dias){const m=S.manuais[k];if(m&&m.p&&m.p[R]&&m.p[R][0])fixos[k]=m.p[R][0]}
+ const livres=dias.filter(k=>!fixos[k]&&prioridade(k).includes(R)&&postosDoDia(k).includes(R));
+ const antes={};operacionais().forEach(id=>antes[id]=ultimoNoPosto(id,ini,R));
+ const cand={};
+ for(const k of livres)cand[k]=disponiveis(k).filter(id=>{
+  if(S.rodizio.exameBloqueia&&emExame(id,k))return false;
+  if(antes[id]&&diff(k,antes[id])<INT)return false;
+  return true;
+ });
+ const intervaloOk=(id,k,at)=>{
+  if(antes[id]&&diff(k,antes[id])<INT)return false;
+  for(const kk in fixos)if(fixos[kk]===id&&kk!==k&&Math.abs(diff(k,kk))<INT)return false;
+  for(const kk in at)if(at[kk]===id&&kk!==k&&Math.abs(diff(k,kk))<INT)return false;
+  return true;
+ };
+ // no ciclo cada um passa uma vez só
+ const inedito=(id,at)=>!Object.values(fixos).includes(id)&&!Object.values(at).includes(id);
+ const gapOk=(id,k,at)=>intervaloOk(id,k,at)&&inedito(id,at);
+ const usados=new Set(Object.values(fixos));
+ const precisam=operacionais().filter(id=>!usados.has(id)&&dias.some(k=>disponiveis(k).includes(id)));
+ const ordem=livres.slice().sort((a,b)=>cand[a].length-cand[b].length);
+ let melhor=null,nos=0;
+ (function bt(i,at,resto){
+  if(nos++>200000)return;
+  if(melhor&&melhor.cob===precisam.length)return;
+  if(i===ordem.length){
+   const cob=precisam.filter(id=>Object.values(at).includes(id)).length;
+   if(!melhor||cob>melhor.cob)melhor={cob,at:{...at}};
+   return;
+  }
+  const k=ordem[i];
+  const op=cand[k].filter(id=>resto.has(id)&&gapOk(id,k,at));
+  for(const id of (op.length?op:[null])){
+   if(id){resto.delete(id);at[k]=id}
+   bt(i+1,at,resto);
+   if(id){resto.add(id);delete at[k]}
+   if(melhor&&melhor.cob===precisam.length)return;
+  }
+ })(0,{},new Set(precisam));
+ const plano={...fixos,...(melhor?melhor.at:{})};
+ plano._repete=[];
+ const antigo=(a,b,k)=>((antes[b]?diff(k,antes[b]):9999)-(antes[a]?diff(k,antes[a]):9999));
+ for(const k of livres){
+  if(plano[k])continue;
+  let pool=cand[k].filter(id=>gapOk(id,k,plano));
+  let repete=false;
+  if(!pool.length){pool=cand[k].filter(id=>intervaloOk(id,k,plano));repete=true}
+  if(!pool.length)continue;
+  pool.sort((a,b)=>antigo(a,b,k));
+  plano[k]=pool[0];
+  if(repete)plano._repete.push(k);
+ }
+ plano._faltou=precisam.filter(id=>!Object.values(plano).includes(id));
+ return plano;
+}
+/* --- plano dos postos de uma vez por ciclo --- */
+function planoUmaVez(dias,planoR){
+ const res={};
+ for(const P of S.postos.filter(p=>p.max1)){
+  const livres=dias.filter(k=>postosDoDia(k).includes(P.id));
+  if(!livres.length)continue;
+  const fixos={};
+  for(const k of livres){const m=S.manuais[k];if(m&&m.p&&m.p[P.id]&&m.p[P.id][0])fixos[k]=m.p[P.id][0]}
+  const abertos=livres.filter(k=>!fixos[k]);
+  const primeiro={};
+  operacionais().forEach(id=>{for(const k of dias)if(disponiveis(k).includes(id)){primeiro[id]=k;break}});
+  const cand={};
+  for(const k of abertos)cand[k]=disponiveis(k).filter(id=>{
+   if(planoR[k]===id)return false;
+   if(Object.values(res).some(m=>m[k]===id))return false;
+   if(primeiro[id]===k){const ld=ultimoDia(id,k,'posto');if(ld&&ld.v===P.id)return false}
+   return true;
+  });
+  const pool=operacionais().filter(id=>!Object.values(fixos).includes(id));
+  const ordem=abertos.slice().sort((a,b)=>cand[a].length-cand[b].length);
+  let melhor=null,nos=0;
+  (function bt(i,at,resto){
+   if(nos++>120000)return;
+   if(i===ordem.length){const c=Object.keys(at).length;if(!melhor||c>melhor.c)melhor={c,at:{...at}};return}
+   const k=ordem[i];
+   const op=cand[k].filter(id=>resto.has(id));
+   op.sort((a,b)=>((planoR[addD(k,1)]===b)-(planoR[addD(k,1)]===a)));
+   for(const id of (op.length?op:[null])){
+    if(id){resto.delete(id);at[k]=id}
+    bt(i+1,at,resto);
+    if(id){resto.add(id);delete at[k]}
+    if(melhor&&melhor.c===ordem.length)return;
+   }
+  })(0,{},new Set(pool));
+  const plano={...fixos,...(melhor?melhor.at:{})};
+  plano._repete=[];
+  const naoUsado=id=>!Object.values(fixos).includes(id)&&!Object.entries(plano).some(([kk,v])=>kk[0]!=='_'&&v===id);
+  const antigo=(a,b,k)=>{const ua=ultimoNoPosto(a,k,P.id),ub=ultimoNoPosto(b,k,P.id);
+   return (ub?diff(k,ub):9999)-(ua?diff(k,ua):9999)};
+  for(const k of abertos){
+   if(plano[k])continue;
+   let op=cand[k].filter(naoUsado),repete=false;
+   if(!op.length){op=cand[k].slice();repete=true}
+   if(!op.length)continue;
+   op.sort((a,b)=>antigo(a,b,k));
+   plano[k]=op[0];
+   if(repete)plano._repete.push(k);
+  }
+  res[P.id]=plano;
+ }
+ return res;
+}
+
+function permutar(arr,cb){
+ const n=arr.length,a=arr.slice(),c=new Array(n).fill(0);
+ cb(a.slice());let i=0;
+ while(i<n){
+  if(c[i]<i){const j=i%2?c[i]:0;const t=a[i];a[i]=a[j];a[j]=t;cb(a.slice());c[i]++;i=0}
+  else{c[i]=0;i++}
+ }
+}
+
+function resolverDia(k,ctx){
+ const man=S.manuais[k];
+ const disp=disponiveis(k);
+ const aslAtivo=apoios().filter(id=>trabalha(id,k)&&!ausente(id,k));
+ const asl=aslAtivo.length?aslAtivo.map(nome).join(', '):((S.aslCob&&S.aslCob[k])||'A definir');
+ const base={k,asl,folgas:folgando(k),ausentes:ausentesDo(k),avisos:[],travado:false};
+ if(man&&man.p){
+  const postos={};for(const p of S.postos)if(man.p[p.id]&&man.p[p.id].length)postos[p.id]=man.p[p.id].slice();
+  const d={...base,postos,travado:true};
+  d.cafe=man.c?{...man.c}:montarCafe(k,disp,postos);
+  d.janta=man.j?{...man.j}:montarJanta(k,disp,postos,aslAtivo.length>0);
+  if(man.asl)d.asl=man.asl;
+  return d;
+ }
+ if(!disp.length)return{...base,postos:{},cafe:{},janta:{}};
+ const prio=prioridade(k);
+ let slots=postosDoDia(k,disp.length);
+ const extra=disp.length-prio.length;
+ if(extra>0){
+  const alvo=S.excedente&&slots.includes(S.excedente)?S.excedente:slots[slots.length-1];
+  for(let i=0;i<extra;i++)slots.push(alvo);
+ }
+ const ult={},noCiclo={};
+ for(const id of disp){
+  const ld=ultimoDia(id,k,'posto');ult[id]=ld?ld.v:null;
+  noCiclo[id]=new Set();
+  for(const kk of ctx.dias){if(kk>=k)break;const p=postoDe(CACHE[kk],id);if(p)noCiclo[id].add(p)}
+ }
+ const umaVezUsados={};
+ const umaVez=S.postos.filter(p=>p.max1).map(p=>p.id);
+ if(S.rodizio.posto&&!umaVez.includes(S.rodizio.posto))umaVez.push(S.rodizio.posto);
+ for(const pid of umaVez){
+  umaVezUsados[pid]=new Set();
+  for(const kk of ctx.dias){if(kk>=k)break;(CACHE[kk]&&CACHE[kk].postos[pid]||[]).forEach(x=>umaVezUsados[pid].add(x))}
+ }
+ const R=S.rodizio.posto,INT=Math.max(0,+S.rodizio.intervalo||0);
+ function score(mapa){
+  let s=0;const av=[];
+  const por={};for(const[p,ids]of Object.entries(mapa))ids.forEach(id=>por[id]=p);
+  for(const[id,p]of Object.entries(por)){
+   if(ult[id]===p){s+=1000;av.push(['e',`${nome(id)} repetiria ${abPosto(p)} do último dia trabalhado`])}
+   if(noCiclo[id]&&noCiclo[id].has(p))s+=45;
+   if(p===R){
+    if(S.rodizio.exameBloqueia&&emExame(id,k)){s+=1000;av.push(['e',`${nome(id)} em ${abPosto(R)} no dia do exame`])}
+    const u=ultimoNoPosto(id,k,R);if(u&&diff(k,u)<INT){s+=1000;av.push(['e',`${nome(id)} em ${abPosto(R)} com ${diff(k,u)} dias de intervalo`])}
+   }
+   if(umaVezUsados[p]&&umaVezUsados[p].has(id)){s+=1000;av.push(['e',`${nome(id)} faria ${abPosto(p)} duas vezes no ciclo`])}
+   if(p===R&&ctx.proxR&&id===ctx.proxR)s-=10;
+  }
+  return{s,av};
+ }
+ function buscar(fixar){
+  let ag=disp.slice(),sl=slots.slice();const fx={};
+  const fix=(posto,id)=>{if(!id||!ag.includes(id)||!sl.includes(posto))return;fx[posto]=id;ag=ag.filter(x=>x!==id);sl.splice(sl.indexOf(posto),1)};
+  if(fixar.R)fix(R,ctx.rod[k]);
+  if(fixar.U)for(const P of S.postos.filter(p=>p.max1)){const pl=ctx.umaVez[P.id];if(pl&&pl[k])fix(P.id,pl[k])}
+  let b=null;
+  permutar(ag,perm=>{
+   const mapa={};for(const p in fx)mapa[p]=[fx[p]];
+   for(let i=0;i<sl.length;i++){const p=sl[i];(mapa[p]=mapa[p]||[]).push(perm[i])}
+   const r=score(mapa);
+   if(!b||r.s<b.s)b={s:r.s,av:r.av,mapa};
+  });
+  if(!b){const mapa={};for(const p in fx)mapa[p]=[fx[p]];b={s:0,av:[],mapa}}
+  return b;
+ }
+ let best=buscar({R:true,U:true});
+ if(best.s>=1000){const x=buscar({R:true,U:false});x.s+=60;if(x.s<best.s)best=x}
+ if(best.s>=1000){const x=buscar({R:false,U:true});x.s+=120;if(x.s<best.s)best=x}
+ if(best.s>=1000){const x=buscar({R:false,U:false});x.s+=180;if(x.s<best.s)best=x}
+ const postos={};
+ for(const p of S.postos)if(best.mapa[p.id])postos[p.id]=best.mapa[p.id].slice();
+ const d={...base,postos};
+ d.avisos=best.av.map(([t,m])=>({t,m}));
+ const vazios=prio.filter(p=>!postos[p]);
+ if(vazios.length){
+  const obrigVazio=vazios.filter(p=>{const P=POSTO(p);return P&&P.sempre});
+  if(obrigVazio.length)d.avisos.push({t:'e',m:`${obrigVazio.map(abPosto).join(', ')} ${obrigVazio.length===1?'está marcado como sempre coberto e ficou':'estão marcados como sempre cobertos e ficaram'} sem ninguém — não há efetivo para todos os obrigatórios.`});
+  const resto=vazios.filter(p=>!obrigVazio.includes(p));
+  if(resto.length)d.avisos.push({t:'i',m:`Sem efetivo para ${resto.map(abPosto).join(', ')} — ${resto.length===1?'cedeu':'cederam'} a vez pela prioridade do dia.`});
+ }
+ d.cafe=montarCafe(k,disp,postos);
+ d.janta=montarJanta(k,disp,postos,aslAtivo.length>0);
+ const minMaior=Math.max(+S.cafe.min||0,+S.janta.min||0);
+ if(disp.length<=minMaior)d.avisos.push({t:'w',m:`Com ${disp.length} em serviço não dá para manter ${minMaior} no posto durante os intervalos. Sai um por vez, o mínimo possível.`});
+ colisoesCriticas(d).forEach(m=>d.avisos.push({t:'w',m:m+' — não deu para separar com esse efetivo.'}));
+ return d;
+}
+
+function balancear(n,k,max,perfil){
+ const base=Math.floor(n/k),rem=n%k;
+ let caps=Array.from({length:k},(_,i)=>base+(i<rem?1:0));
+ if(perfil==='cedoCheio'){caps.sort((a,b)=>a-b)}            // menos saídas no começo
+ else if(perfil==='cedoVazio'){caps.sort((a,b)=>b-a)}       // mais saídas no começo
+ let ov=0;caps=caps.map(c=>{if(c>max){ov+=c-max;return max}return c});
+ for(let i=caps.length-1;i>=0&&ov>0;i--){const r=max-caps[i];const a=Math.min(r,ov);caps[i]+=a;ov-=a}
+ return caps;
+}
+function variantes(canon,max){
+ const vs=[],vis=new Set();
+ const add=v=>{const t=v.join();if(!vis.has(t)&&v.every(c=>c<=max)){vis.add(t);vs.push(v)}};
+ add(canon);permutar(canon.map((_,i)=>i),p=>add(p.map(i=>canon[i])));
+ return vs;
+}
+function distribuir(disp,slots,canon,max,penal){
+ let best=null;
+ variantes(canon,max).forEach((caps,vi)=>{
+  const exp=[];slots.forEach((s,i)=>{for(let j=0;j<(caps[i]||0);j++)exp.push(s)});
+  if(exp.length!==disp.length)return;
+  permutar(disp,perm=>{
+   const m={};perm.forEach((id,i)=>m[id]=exp[i]);
+   const s=penal(m)+vi*9;
+   if(!best||s<best.s)best={s,m};
+  });
+ });
+ return best?best.m:{};
+}
+function penalizador(k,disp,postos,campo){
+ const ult={};disp.forEach(id=>{const l=ultimoDia(id,k,campo);ult[id]=l?l.v:null});
+ const crit=S.cobertura.separar?postosCriticos().map(p=>(postos[p]||[])[0]).filter(Boolean):[];
+ return m=>{
+  let s=0;
+  disp.forEach(id=>{if(ult[id]&&ult[id]===m[id])s+=100});
+  for(let i=0;i<crit.length;i++)for(let j=i+1;j<crit.length;j++)if(m[crit[i]]===m[crit[j]])s+=200;
+  return s;
+ };
+}
+function colisoesCriticas(d){
+ if(!S.cobertura.separar)return[];
+ const crit=postosCriticos().filter(p=>(d.postos[p]||[]).length);
+ const out=[];
+ for(let i=0;i<crit.length;i++)for(let j=i+1;j<crit.length;j++){
+  const a=(d.postos[crit[i]]||[])[0],b=(d.postos[crit[j]]||[])[0];
+  if(!a||!b)continue;
+  if(d.cafe&&d.cafe[a]&&d.cafe[a]===d.cafe[b])out.push(`${abPosto(crit[i])} e ${abPosto(crit[j])} saem juntos no café das ${d.cafe[a]}`);
+  if(d.janta&&d.janta[a]&&d.janta[a]===d.janta[b])out.push(`${abPosto(crit[i])} e ${abPosto(crit[j])} saem juntos na janta das ${d.janta[a]}`);
+ }
+ return out;
+}
+function montarCafe(k,disp,postos){
+ const n=disp.length;if(!n)return{};
+ const cfg=S.cafe,penal=penalizador(k,disp,postos,'cafe');
+ if(n<=cfg.limite){
+  const sl=cfg.reduzido.slice(0,Math.max(n,1));
+  if(sl.length>=n)return distribuir(disp,sl,sl.map(()=>1),1,penal);
+ }
+ const max=Math.max(1,n-(+cfg.min||0));
+ return distribuir(disp,cfg.horarios,balancear(n,cfg.horarios.length,max,'equilibrado'),max,penal);
+}
+function montarJanta(k,disp,postos,comApoio){
+ const n=disp.length;if(!n)return{};
+ const cfg=S.janta,penal0=penalizador(k,disp,postos,'janta');
+ const ontem=CACHE[addD(k,-1)],prim=new Set();
+ const t0=cfg.turnos[0];
+ if(ontem&&ontem.janta)for(const[id,t]of Object.entries(ontem.janta))if(t===t0)prim.add(id);
+ const penal=m=>{
+  let s=penal0(m);
+  const g=disp.filter(id=>m[id]===t0);
+  if(g.length&&g.every(id=>prim.has(id)))s+=30;
+  return s;
+ };
+ if(n<=cfg.limite){
+  const ts=[cfg.extra,...cfg.turnos].filter(Boolean).slice(0,Math.max(n,1));
+  if(ts.length>=n)return distribuir(disp,ts,ts.map(()=>1),1,penal);
+ }
+ const max=Math.max(1,n-(+cfg.min||0));
+ const perfil=comApoio?'equilibrado':cfg.perfil;
+ return distribuir(disp,cfg.turnos,balancear(n,cfg.turnos.length,max,perfil),max,penal);
+}
+
+function resolverCiclo(ini){
+ const dias=diasDoCiclo(ini);
+ const ctx={dias};
+ ctx.rod=planoRodizio(dias);
+ ctx.umaVez=planoUmaVez(dias,ctx.rod);
+ for(const k of dias){ctx.proxR=ctx.rod[addD(k,1)];CACHE[k]=resolverDia(k,ctx)}
+ if(ctx.rod._faltou&&ctx.rod._faltou.length&&S.rodizio.posto)
+  CACHE[dias[0]].avisos.push({t:'w',m:`No ciclo não sobrou dia de ${abPosto(S.rodizio.posto)} para ${ctx.rod._faltou.map(nome).join(', ')}.`});
+ (ctx.rod._repete||[]).forEach(k=>{
+  const id=(CACHE[k].postos[S.rodizio.posto]||[])[0];
+  if(id)CACHE[k].avisos.push({t:'w',m:`${nome(id)} repete ${abPosto(S.rodizio.posto)} no ciclo — ninguém mais podia assumir o posto neste dia.`});
+ });
+ for(const pid in ctx.umaVez)(ctx.umaVez[pid]._repete||[]).forEach(k=>{
+  const id=(CACHE[k].postos[pid]||[])[0];
+  if(id)CACHE[k].avisos.push({t:'w',m:`${nome(id)} repete ${abPosto(pid)} no ciclo — não sobrou mais ninguém livre para o posto.`});
+ });
+}
+
+/* ===================== texto ===================== */
+function lista(a){return a.length<=1?(a[0]||'—'):a.slice(0,-1).join(', ')+' e '+a[a.length-1]}
+function textoGBD(k){
+ const d=dia(k);if(!d)return'';
+ const E=S.estacao,L=[];
+ L.push(`🚉 *GBD | ${E.nome||'ESTAÇÃO'}${E.turno?' – '+E.turno.toUpperCase():''}*`);
+ L.push(`📅 *${DOW[dow(k)]}, ${br(k)}*`);
+ if(apoios().length)L.push(`👤 *ASL:* ${d.asl}`);
+ L.push('');
+ L.push('━━━━━━━━━━━━━━');L.push('📍 *POSTOS*');L.push('━━━━━━━━━━━━━━');
+ for(const p of S.postos){
+  const ids=d.postos[p.id];if(!ids||!ids.length)continue;
+  L.push(`${p.ico||'▪️'} *${p.nome}* ▸ ${lista(ids.map(nome))}`);
+ }
+ const cs={};for(const[id,s]of Object.entries(d.cafe||{}))(cs[s]=cs[s]||[]).push(id);
+ if(Object.keys(cs).length){
+  L.push('');L.push('━━━━━━━━━━━━━━');L.push(S.cafe.titulo||'☕ *CAFÉ*');L.push('━━━━━━━━━━━━━━');
+  const chH=x=>{const m=parseHora(x);return m==null?0:(turnoId()==='noite'&&m<720?m+1440:m)};/* na noite, 0h vem depois das 23h */
+  const ordem=[...S.cafe.reduzido,...S.cafe.horarios].filter((v,i,a)=>a.indexOf(v)===i).sort((x,y)=>chH(x)-chH(y));
+  ordem.forEach(s=>{if(cs[s])L.push(`🕒 ${s} ▸ ${lista(cs[s].map(nome))}`)});
+ }
+ const js={};for(const[id,t]of Object.entries(d.janta||{}))(js[t]=js[t]||[]).push(id);
+ if(Object.keys(js).length){
+  L.push('');L.push('━━━━━━━━━━━━━━');L.push(`🍽️ *${String(S.janta.nome||'Janta').toUpperCase()}*`);L.push('━━━━━━━━━━━━━━');
+  const ico=['🕔','🕕','🕖','🕗','🕘'];
+  [S.janta.extra,...S.janta.turnos].filter(Boolean).forEach((t,i)=>{if(js[t])L.push(`${ico[i]||'🕐'} ${t} ▸ ${lista(js[t].map(nome))}`)});
+ }
+ L.push('');L.push('━━━━━━━━━━━━━━');L.push('🏠 *FOLGAS*');L.push('━━━━━━━━━━━━━━');
+ const fg=d.folgas.map(nome);
+ apoios().forEach(id=>{if(!trabalha(id,k))fg.unshift(nome(id)+' (ASL)')});
+ L.push(fg.length?fg.join(' • '):'—');
+ if(d.ausentes.length)L.push(`🚫 *Ausente:* ${d.ausentes.map(nome).join(' • ')}`);
+ if(S.estacao.rodape){L.push('');L.push(S.estacao.rodape)}
+ return L.join('\n');
+}
+
+/* ===================== UI base ===================== */
+const HORA_VIRADA=22;
+const $=s=>document.querySelector(s);
+const el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!==undefined)e.textContent=x;return e};
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),1900)}
+async function copiar(txt,msg){
+ try{await navigator.clipboard.writeText(txt)}catch(e){
+  const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';
+  document.body.appendChild(ta);ta.select();try{document.execCommand('copy')}catch(_){}ta.remove();
+ }
+ toast(msg||'Copiado');
+}
+function diaFoco(){const h=new Date().getHours();
+ if(turnoId()==='noite')return h<6?addD(hojeK(),-1):hojeK();   /* das 0h às 6h ainda é o turno que começou ontem */
+ return h>=14?addD(hojeK(),1):hojeK();}
+
+/* lista clicável de ícones para os postos */
+const ICONES=['🎙️','💳','🤝','🚧','🚶','🚉','🚆','🚇','🎫','🪪','🛗','♿','🚪','🚦','🛤️','📣','📻','🖥️','📞','📋','🧭','👀','🔑','🧰','🧯','🚑','⛑️','🚨','🧹','🏢','🅿️','🧾','🛠️','🕵️','🚻','🧑‍✈️'];
+function seletorIcone(host,atual,onPick){
+ const box=el('div','icons'),bs=[];
+ let sel=atual||ICONES[0];
+ const marcar=()=>bs.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.ico===sel)));
+ ICONES.forEach(ic=>{
+  const b=el('button',null,ic);b.type='button';b.dataset.ico=ic;b.title=ic;
+  b.onclick=()=>{sel=ic;marcar();if(onPick)onPick(ic)};
+  bs.push(b);box.appendChild(b);
+ });
+ marcar();host.appendChild(box);
+ return ()=>sel;
+}
+let cicloAtual=null,cicloPostos=null,focoAtual=null;
+
+/* ===================== wizard ===================== */
+let wz={passo:0,tmp:null};
+function iniciarWizard(){
+ wz.passo=0;
+ wz.tmp=wz.tmp||{
+  estacao:{...estadoPadrao().estacao},
+  postos:[],excedente:'',rodizio:{...estadoPadrao().rodizio},cobertura:{...estadoPadrao().cobertura},
+  cafe:{...estadoPadrao().cafe},janta:{...estadoPadrao().janta},
+  prioFerIgual:false,prioFer:[],agentes:[],
+ };
+ renderWizard();
+}
+const PASSOS=[passoEstacao,passoPostos,passoIntervalos,passoAgentes,passoFim];
+function renderWizard(){
+ const box=$('#wizard');box.innerHTML='';
+ $('#nav').style.display=S.pronto?'flex':'none';
+ document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+ if(S.pronto){box.style.display='none';return}
+ box.style.display='block';
+ const w=el('div','wz');
+ const st=el('div','wzsteps');
+ for(let i=0;i<PASSOS.length;i++){const d=el('div');if(i<=wz.passo)d.classList.add('on');st.appendChild(d)}
+ w.appendChild(st);
+ const c=el('div','card');
+ PASSOS[wz.passo](c);
+ w.appendChild(c);
+ box.appendChild(w);
+}
+/* bloco reutilizável: monta café e janta por hora, duração e espaçamento */
+function formIntervalos(host,cfg,aoMudar){
+ host.innerHTML='';
+ const aplica=()=>{gerarIntervalos(cfg);desenha();if(aoMudar)aoMudar()};
+ const num=(g,lbl,val,set,mn,mx)=>{
+  const d=el('div','f');d.appendChild(el('label',null,lbl));
+  const i=el('input');i.type='number';i.value=val;if(mn!==undefined)i.min=String(mn);if(mx!==undefined)i.max=String(mx);
+  i.onchange=()=>{let v=+i.value;if(isNaN(v))return;if(mn!==undefined)v=Math.max(mn,v);if(mx!==undefined)v=Math.min(mx,v);set(v);aplica()};
+  d.appendChild(i);g.appendChild(d);
+ };
+ const hora=(g,lbl,val,set)=>{
+  const d=el('div','f');d.appendChild(el('label',null,lbl));
+  const i=el('input');i.type='text';i.value=hhmm(val);i.placeholder='15h00';
+  i.onchange=()=>{const v=parseHora(i.value);if(v===null){i.value=hhmm(val);return toast('Hora inválida — use 15h00')}set(v);aplica()};
+  d.appendChild(i);g.appendChild(d);
+ };
+ function desenha(){
+  host.innerHTML='';
+  const c=cfg.cafe,j=cfg.janta;
+  const b1=el('div');b1.appendChild(el('h4',null,'Café'));
+  const g1=el('div','form');g1.style.marginTop='8px';
+  hora(g1,'Primeiro horário',c.inicio,v=>c.inicio=v);
+  num(g1,'Duração (min)',c.duracao,v=>c.duracao=v,0,120);
+  num(g1,'De quanto em quanto (min)',c.espaco,v=>c.espaco=v,5,120);
+  num(g1,'Quantos horários',c.qtd,v=>c.qtd=v,1,8);
+  b1.appendChild(g1);
+  const g1b=el('div','form');g1b.style.marginTop='8px';
+  num(g1b,'Com efetivo curto: de quanto em quanto',c.espacoRed,v=>c.espacoRed=v,5,120);
+  num(g1b,'Com efetivo curto: quantos horários',c.qtdRed,v=>c.qtdRed=v,1,10);
+  num(g1b,'Mínimo no posto durante o café',c.min,v=>c.min=v,0,20);
+  b1.appendChild(g1b);
+  b1.appendChild(el('div','prev',`${c.titulo}   →   ${c.horarios.join(' · ')}\nefetivo curto: ${c.reduzido.join(' · ')}`));
+  host.appendChild(b1);
+  const b2=el('div');b2.style.marginTop='16px';b2.appendChild(el('h4',null,j.nome||'Refeição'));
+  {const gN=el('div','form');gN.style.marginTop='8px';const dN=el('div','f');dN.appendChild(el('label',null,'Nome da refeição no GBD'));
+   const iN=el('input');iN.type='text';iN.value=j.nome||'';iN.placeholder='Almoço, Janta…';iN.onchange=()=>{j.nome=iN.value.trim()||'Refeição';aplica()};
+   dN.appendChild(iN);gN.appendChild(dN);b2.appendChild(gN);}
+  const g2=el('div','form');g2.style.marginTop='8px';
+  hora(g2,'Primeiro turno começa às',j.inicio,v=>j.inicio=v);
+  num(g2,'Duração do turno (min)',j.duracao,v=>j.duracao=v,15,240);
+  num(g2,'Quantos turnos',j.qtd,v=>j.qtd=v,1,6);
+  num(g2,'Mínimo no posto durante a refeição',j.min,v=>j.min=v,0,20);
+  b2.appendChild(g2);
+  const g2b=el('div','form');g2b.style.marginTop='8px';
+  const dP=el('div','f');dP.appendChild(el('label',null,'Distribuição'));
+  const sP=el('select');
+  [['cedoCheio','mais gente trabalhando no começo'],['equilibrado','equilibrada'],['cedoVazio','esvazia mais cedo']]
+   .forEach(([v,t])=>sP.appendChild(new Option(t,v)));
+  sP.value=j.perfil;sP.onchange=()=>{j.perfil=sP.value;aplica()};
+  dP.appendChild(sP);g2b.appendChild(dP);
+  const dL=el('div','f');dL.appendChild(el('label',null,'Efetivo curto a partir de (ou menos)'));
+  const iL=el('input');iL.type='number';iL.min='1';iL.value=j.limite;
+  iL.onchange=()=>{const v=Math.max(1,+iL.value||1);j.limite=v;c.limite=v;aplica()};
+  dL.appendChild(iL);g2b.appendChild(dL);
+  const dE=el('div','f');
+  const lb=el('label','sub');lb.style.display='flex';lb.style.gap='6px';lb.style.alignItems='center';lb.style.marginTop='18px';
+  const cb=el('input');cb.type='checkbox';cb.checked=j.extraAntes;cb.style.width='auto';
+  cb.onchange=()=>{j.extraAntes=cb.checked;aplica()};
+  lb.append(cb,document.createTextNode('abrir um turno antes quando o efetivo for curto'));
+  dE.appendChild(lb);g2b.appendChild(dE);
+  b2.appendChild(g2b);
+  b2.appendChild(el('div','prev',`${j.turnos.join(' · ')}${j.extra?`\nefetivo curto acrescenta ${j.extra}`:''}`));
+  host.appendChild(b2);
+ }
+ gerarIntervalos(cfg);desenha();
+}
+function passoIntervalos(c){
+ const T=wz.tmp;
+ c.appendChild(el('h3',null,'3. Café e janta'));
+ c.appendChild(el('p','hint','Os horários são montados a partir da hora de início, da duração e do espaçamento. A duração do café entra no título do bloco do GBD.'));
+ const box=el('div');c.appendChild(box);
+ formIntervalos(box,{cafe:T.cafe,janta:T.janta});
+ navWz(c,true,'Continuar ›',()=>{wz.passo=3;renderWizard()});
+}
+function navWz(c,podeAvancar,rotulo,aoAvancar){
+ const f=el('div','wzfoot');
+ if(wz.passo>0){const b=el('button','btn','‹ Voltar');b.onclick=()=>{wz.passo--;renderWizard()};f.appendChild(b)}
+ f.appendChild(el('div','spacer'));
+ const n=el('button','btn pri',rotulo||'Continuar ›');
+ if(!podeAvancar)n.setAttribute('disabled','');
+ n.onclick=aoAvancar;
+ f.appendChild(n);c.appendChild(f);
+}
+function passoEstacao(c){
+ const t=wz.tmp.estacao;
+ c.appendChild(el('h3',null,'1. A estação'));
+ c.appendChild(el('p','hint','Este criador monta o GBD da BFU nos turnos da manhã e da noite. A tarde tem o montador próprio.'));
+ const g=el('div','form');
+ const campo=(lbl,val,set,ph,tipo)=>{
+  const d=el('div','f');d.appendChild(el('label',null,lbl));
+  const i=el('input');i.type=tipo||'text';i.value=val||'';if(ph)i.placeholder=ph;
+  i.oninput=()=>{set(i.value);const b=c.querySelector('.wzfoot .pri');if(b){t.nome.trim()?b.removeAttribute('disabled'):b.setAttribute('disabled','')}};
+  d.appendChild(i);g.appendChild(d);return i;
+ };
+ t.nome='BFU';
+ {const i=campo('Nome da estação',t.nome,v=>{},'BFU');i.readOnly=true;i.title='Este criador é da BFU';}
+ {const d=el('div','f');d.appendChild(el('label',null,'Turno'));
+  const sT=el('select');[['manha','Manhã · 06h às 14h'],['noite','Noite · 22h às 06h']].forEach(([v,r])=>sT.appendChild(new Option(r,v)));
+  sT.value=turnoId(t.turno);
+  const aplica=()=>{t.turno=TURNOS_OK[sT.value].rot;padraoTurno(sT.value,wz.tmp.cafe,wz.tmp.janta);};
+  if(!TURNOS_OK[turnoId(t.turno)]||!/^(Manhã|Noite)$/.test(t.turno))aplica();
+  sT.onchange=aplica;d.appendChild(sT);g.appendChild(d);}
+ campo('Início da contagem dos ciclos',t.inicioCiclo,v=>t.inicioCiclo=v,'','date');
+ c.appendChild(g);
+ const g2=el('div','form');g2.style.marginTop='10px';
+ const d=el('div','f');d.appendChild(el('label',null,'Rodapé do GBD'));
+ const i=el('input');i.type='text';i.value=t.rodape;i.oninput=()=>t.rodape=i.value;
+ d.appendChild(i);g2.appendChild(d);c.appendChild(g2);
+ c.appendChild(el('p','hint','O ciclo tem o tamanho do número de agentes operacionais, para que todos passem uma vez pelo posto de rodízio. A data acima é só o ponto de partida da contagem.'));
+ navWz(c,!!t.nome.trim(),'Continuar ›',()=>{wz.passo=1;renderWizard()});
+}
+function passoPostos(c){
+ const T=wz.tmp;
+ c.appendChild(el('h3',null,'2. Os postos'));
+ c.appendChild(el('p','hint','Cadastre na ordem de prioridade: o primeiro é o que sempre tem que ser coberto, o último é o que fica vazio quando falta efetivo.'));
+ const g=el('div','form');
+ const fNome=el('div','f');fNome.appendChild(el('label',null,'Nome do posto'));
+ const iNome=el('input');iNome.type='text';iNome.placeholder='SSO';fNome.appendChild(iNome);
+ const fAb=el('div','f');fAb.appendChild(el('label',null,'Abreviação (tabelas)'));
+ const iAb=el('input');iAb.type='text';iAb.placeholder='SSO';fAb.appendChild(iAb);
+ const fAdd=el('div','f');const bAdd=el('button','btn pri','Adicionar');bAdd.style.width='100%';fAdd.appendChild(bAdd);
+ g.append(fNome,fAb,fAdd);c.appendChild(g);
+ const dIco=el('div');dIco.style.marginTop='10px';
+ const lbl=el('label',null,'Ícone do posto');
+ lbl.style.fontSize='12.5px';lbl.style.color='var(--tx2)';lbl.style.display='block';
+ dIco.appendChild(lbl);
+ const pegaIco=seletorIcone(dIco,T.icoNovo||ICONES[0],ic=>T.icoNovo=ic);
+ c.appendChild(dIco);
+ bAdd.onclick=()=>{
+  const n=iNome.value.trim();if(!n)return toast('Dê um nome ao posto');
+  T.postos.push({id:uid(),nome:n,ab:iAb.value.trim()||n,ico:pegaIco(),max1:false});
+  iNome.value='';iAb.value='';renderWizard();
+ };
+ const L=el('div','list');
+ if(!T.postos.length)L.appendChild(el('div','empty','Nenhum posto ainda. Comece pelo de maior prioridade.'));
+ T.postos.forEach((p,i)=>{
+  const it=el('div','item');
+  const o=el('div','ord');
+  const up=el('button',null,'↑');up.onclick=()=>{if(i>0){[T.postos[i-1],T.postos[i]]=[T.postos[i],T.postos[i-1]];renderWizard()}};
+  const dn=el('button',null,'↓');dn.onclick=()=>{if(i<T.postos.length-1){[T.postos[i+1],T.postos[i]]=[T.postos[i],T.postos[i+1]];renderWizard()}};
+  o.append(up,dn);it.appendChild(o);
+  it.appendChild(el('span','sub',`${i+1}º`));
+  const pane=el('div','icopane');
+  const bIco=el('button','icobtn',p.ico);bIco.title='Trocar o ícone';
+  bIco.onclick=()=>{
+   const abrir=!pane.classList.contains('on');
+   pane.classList.toggle('on',abrir);
+   if(abrir){pane.innerHTML='';seletorIcone(pane,p.ico,ic=>{p.ico=ic;bIco.textContent=ic})}
+  };
+  it.appendChild(bIco);
+  it.appendChild(el('strong',null,p.nome));
+  const lb=el('label','sub');lb.style.display='flex';lb.style.gap='5px';lb.style.alignItems='center';
+  const cb=el('input');cb.type='checkbox';cb.checked=p.max1;cb.style.width='auto';
+  cb.onchange=()=>{p.max1=cb.checked};
+  lb.append(cb,document.createTextNode('no máximo 1× por ciclo'));
+  it.appendChild(lb);
+  const lb2=el('label','sub');lb2.style.display='flex';lb2.style.gap='5px';lb2.style.alignItems='center';
+  const cb2=el('input');cb2.type='checkbox';cb2.checked=!!p.sempre;cb2.style.width='auto';
+  cb2.onchange=()=>{p.sempre=cb2.checked};
+  lb2.append(cb2,document.createTextNode('sempre coberto'));
+  it.appendChild(lb2);
+  const x=el('div','x');
+  const rm=el('button','btn sm danger','Remover');rm.onclick=()=>{T.postos.splice(i,1);renderWizard()};
+  x.appendChild(rm);it.appendChild(x);
+  it.appendChild(pane);
+  L.appendChild(it);
+ });
+ c.appendChild(L);
+ if(T.postos.length){
+  const sel=(lbl,hint,val,set,vazio)=>{
+   const d=el('div','card');d.style.margin='14px 0 0';d.style.background='var(--bg3)';
+   d.appendChild(el('h4',null,lbl));d.appendChild(el('p','hint',hint));
+   const s=el('select');
+   if(vazio)s.appendChild(new Option(vazio,''));
+   T.postos.forEach(p=>s.appendChild(new Option(p.nome,p.id)));
+   s.value=val||'';s.onchange=()=>set(s.value);
+   d.appendChild(s);c.appendChild(d);return s;
+  };
+  sel('Posto de rodízio','Todos os agentes operacionais passam por ele uma vez a cada ciclo. É o que define o tamanho do ciclo.',
+      T.rodizio.posto,v=>T.rodizio.posto=v,'— nenhum —');
+  if(T.rodizio.posto){
+   const d=el('div','form');d.style.marginTop='10px';
+   const f=el('div','f');f.appendChild(el('label',null,'Intervalo mínimo entre duas passagens (dias)'));
+   const i=el('input');i.type='number';i.min='0';i.value=T.rodizio.intervalo;i.onchange=()=>T.rodizio.intervalo=+i.value||0;
+   f.appendChild(i);d.appendChild(f);
+   const f2=el('div','f');const lb=el('label','sub');lb.style.display='flex';lb.style.gap='6px';lb.style.alignItems='center';
+   const cb=el('input');cb.type='checkbox';cb.checked=T.rodizio.exameBloqueia;cb.style.width='auto';
+   cb.onchange=()=>T.rodizio.exameBloqueia=cb.checked;
+   lb.append(cb,document.createTextNode('não escalar nele no dia do exame periódico'));
+   f2.appendChild(lb);d.appendChild(f2);
+   c.appendChild(d);
+  }
+  sel('Posto que cobre o de rodízio','Esse agente não sai no mesmo horário de café nem no mesmo turno de janta que o do rodízio.',
+      T.cobertura.posto,v=>T.cobertura.posto=v,'— nenhum —');
+  sel('Em caso de mais agentes do que postos, os demais vão para','Esta é a pergunta do excedente: quando sobrar gente, todos vão para este posto.',
+      T.excedente,v=>T.excedente=v,'— o último da prioridade —');
+  const dd=el('div','card');dd.style.margin='14px 0 0';dd.style.background='var(--bg3)';
+  dd.appendChild(el('h4',null,'Domingos e feriados'));
+  dd.appendChild(el('p','hint','Se a prioridade muda nesses dias, reordene aqui. Se não muda, deixe igual.'));
+  if(!T.prioFer.length)T.prioFer=T.postos.map(p=>p.id);
+  T.prioFer=T.prioFer.filter(id=>T.postos.some(p=>p.id===id));
+  T.postos.forEach(p=>{if(!T.prioFer.includes(p.id))T.prioFer.push(p.id)});
+  const LF=el('div','list');
+  T.prioFer.forEach((pid,i)=>{
+   const p=T.postos.find(x=>x.id===pid);if(!p)return;
+   const it=el('div','item');it.style.background='var(--bg2)';
+   const o=el('div','ord');
+   const up=el('button',null,'↑');up.onclick=()=>{if(i>0){[T.prioFer[i-1],T.prioFer[i]]=[T.prioFer[i],T.prioFer[i-1]];renderWizard()}};
+   const dn=el('button',null,'↓');dn.onclick=()=>{if(i<T.prioFer.length-1){[T.prioFer[i+1],T.prioFer[i]]=[T.prioFer[i],T.prioFer[i+1]];renderWizard()}};
+   o.append(up,dn);it.appendChild(o);
+   it.appendChild(el('span','sub',`${i+1}º`));
+   it.appendChild(el('strong',null,`${p.ico} ${p.nome}`));
+   LF.appendChild(it);
+  });
+  dd.appendChild(LF);c.appendChild(dd);
+ }
+ navWz(c,T.postos.length>0,'Continuar ›',()=>{wz.passo=2;renderWizard()});
+}
+function passoAgentes(c){
+ const T=wz.tmp;
+ c.appendChild(el('h3',null,'4. A equipe'));
+ c.appendChild(el('p','hint','Cadastre cada agente com o regime e as últimas folgas. O sistema encaixa o padrão nessas datas e projeta os anos seguintes.'));
+ const L=el('div','list');
+ if(!T.agentes.length)L.appendChild(el('div','empty','Nenhum agente ainda.'));
+ T.agentes.forEach((a,i)=>{
+  const it=el('div','item');
+  it.appendChild(el('strong',null,a.nome));
+  it.appendChild(el('span','sub',`${a.funcao} · ${a.regimes[0].fmt} · 1ª folga ${br(a.regimes[0].ref)}`));
+  const x=el('div','x');
+  const rm=el('button','btn sm danger','Remover');rm.onclick=()=>{T.agentes.splice(i,1);renderWizard()};
+  x.appendChild(rm);it.appendChild(x);L.appendChild(it);
+ });
+ c.appendChild(L);
+ const box=el('div');box.style.marginTop='14px';
+ formAgente(box,null,novo=>{T.agentes.push(novo);renderWizard()});
+ c.appendChild(box);
+ const nAAS=T.agentes.filter(a=>a.funcao==='AAS').length;
+ if(nAAS)c.appendChild(el('p','hint',`Com ${nAAS} agente${nAAS>1?'s':''} operaciona${nAAS>1?'is':'l'}, o ciclo fica com ${nAAS} dia${nAAS>1?'s':''}.`));
+ navWz(c,nAAS>0,'Continuar ›',()=>{wz.passo=4;renderWizard()});
+}
+function passoFim(c){
+ const T=wz.tmp;
+ const nAAS=T.agentes.filter(a=>a.funcao==='AAS').length;
+ c.appendChild(el('h3',null,'5. Pronto'));
+ c.appendChild(el('p','hint','Confira e comece a usar. Tudo isso continua editável depois, na aba Configuração.'));
+ const u=el('div','kv');
+ u.innerHTML=`<b>${esc(T.estacao.nome)}</b> — turno ${esc(T.estacao.turno||'—')}<br>
+ <b>${T.postos.length}</b> posto${T.postos.length>1?'s':''}: ${T.postos.map(p=>esc(p.nome)).join(' → ')}<br>
+ Rodízio: <b>${T.rodizio.posto?esc(T.postos.find(p=>p.id===T.rodizio.posto).nome):'nenhum'}</b>${T.rodizio.posto?`, intervalo de ${T.rodizio.intervalo} dias`:''}<br>
+ Excedente vai para: <b>${T.excedente?esc(T.postos.find(p=>p.id===T.excedente).nome):'o último da prioridade'}</b><br>
+ <b>${nAAS}</b> operacionais e <b>${T.agentes.filter(a=>a.funcao!=='AAS').length}</b> de apoio · ciclo de <b>${nAAS}</b> dias<br>
+ Sempre cobertos: <b>${T.postos.filter(p=>p.sempre).map(p=>esc(p.nome)).join(', ')||'nenhum em especial'}</b><br>
+ Café: <b>${T.cafe.horarios.join(' · ')}</b>${T.cafe.duracao?` (${T.cafe.duracao} min)`:''}<br>
+ Janta: <b>${T.janta.turnos.join(' · ')}</b>`;
+ c.appendChild(u);
+ navWz(c,true,'Montar os GBDs',()=>{
+  S.estacao={...S.estacao,...T.estacao};
+  S.postos=T.postos;S.prioUtil=T.postos.map(p=>p.id);S.prioFer=T.prioFer.slice();
+  S.excedente=T.excedente;S.rodizio={...T.rodizio};S.cobertura={...T.cobertura};
+  S.cafe={...T.cafe};S.janta={...T.janta};gerarIntervalos(S);
+  S.agentes=T.agentes;S.pronto=true;
+  salvar();limparCache();
+  cicloAtual=inicioCicloDe(diaFoco());cicloPostos=cicloAtual;
+  renderWizard();aplicarCabecalho();mostrarAba('ciclo');renderTudo();
+  toast('Pronto — GBDs montados');
+ });
+}
+/* formulário de agente, usado no wizard e na aba Equipe */
+function formAgente(box,existente,onSalvar){
+ box.innerHTML='';
+ const a=existente?JSON.parse(JSON.stringify(existente)):{id:uid(),nome:'',mat:'',funcao:'AAS',regimes:[{de:'2000-01-01',fmt:'6x2',ref:hojeK()}]};
+ const r=a.regimes[0];
+ const card=el('div','card');card.style.background='var(--bg3)';card.style.margin='0';
+ card.appendChild(el('h4',null,existente?'Editar agente':'Novo agente'));
+ const g=el('div','form');g.style.marginTop='10px';
+ const mk=(lbl,node)=>{const d=el('div','f');d.appendChild(el('label',null,lbl));d.appendChild(node);g.appendChild(d);return node};
+ const iN=mk('Nome',el('input'));iN.type='text';iN.value=a.nome;iN.placeholder='Só o primeiro nome';
+ const iM=mk('Matrícula',el('input'));iM.type='text';iM.value=a.mat;
+ const sF=mk('Função',el('select'));
+ [['AAS','Operacional (entra em posto)'],['ASL','Apoio / ASL (não entra em posto)'],['SAS','Supervisão (não entra em posto)']]
+  .forEach(([v,t])=>sF.appendChild(new Option(t,v)));
+ sF.value=a.funcao;
+ const sR=mk('Regime',el('select'));
+ Object.keys(PRESETS).forEach(f=>sR.appendChild(new Option(f,f)));
+ sR.appendChild(new Option('Personalizado…','__custom'));
+ sR.value=PRESETS[r.fmt]?r.fmt:'__custom';
+ card.appendChild(g);
+ const gc=el('div','form');gc.style.marginTop='10px';
+ const dCustom=el('div','f');dCustom.appendChild(el('label',null,'Padrão personalizado (dias trabalhados x folga)'));
+ const iCustom=el('input');iCustom.type='text';iCustom.placeholder='6x2; 6x1; 5x2';
+ iCustom.value=PRESETS[r.fmt]?'':r.fmt;
+ dCustom.appendChild(iCustom);gc.appendChild(dCustom);
+ card.appendChild(gc);
+ const atualizaCustom=()=>{gc.style.display=sR.value==='__custom'?'grid':'none'};
+ sR.onchange=()=>{atualizaCustom();previa()};atualizaCustom();
+
+ card.appendChild(el('p','hint','Clique nos dias do calendário para marcar as folgas da pessoa. Um toque marca folga, outro marca dia trabalhado, o terceiro limpa. O sistema testa todos os encaixes do padrão e fica com o que mais acerta.'));
+ let folgas=(a.obsFolgas||[]).slice(),trabs=(a.obsTrab||[]).slice();
+ let mes=(folgas[0]||trabs[0]||hojeK()).slice(0,7);
+ const calBox=el('div','mcal');card.appendChild(calBox);
+ const lgd=el('div','legend');
+ lgd.innerHTML=`<span><i class="sw" style="background:color-mix(in srgb,var(--tx3) 30%,var(--bg));border:1px solid var(--tx3)"></i>folga marcada</span>
+ <span><i class="sw" style="background:color-mix(in srgb,var(--ok) 30%,var(--bg));border:1px solid var(--ok)"></i>trabalhado marcado</span>
+ <span><i class="sw" style="border:1px solid var(--err)"></i>marcação que não bate com o padrão</span>
+ <span>letra pequena sem marcação = o que o padrão calculado prevê</span>`;
+ card.appendChild(lgd);
+ const prevBox=el('div','prev');card.appendChild(prevBox);
+ function fmtAtual(){return sR.value==='__custom'?(iCustom.value.trim()||'6x2'):sR.value}
+ function ciclaDia(k){
+  if(folgas.includes(k)){folgas=folgas.filter(x=>x!==k);trabs.push(k)}
+  else if(trabs.includes(k))trabs=trabs.filter(x=>x!==k);
+  else folgas.push(k);
+  previa();
+ }
+ function previa(){
+  const f=fmtAtual(),pad=padraoDe(f),L=pad.length;
+  folgas.sort();trabs.sort();
+  let fit=null,ref;
+  if(folgas.length||trabs.length){fit=ajustarRef(f,folgas,trabs);ref=fit.ref}
+  else ref=iRef.value||hojeK();
+  r.fmt=f;r.ref=ref;
+  const proj=k=>pad[((diff(k,ref)%L)+L)%L]==='T'?'T':'F';
+  calBox.innerHTML='';
+  const hd=el('div','mcalhd');
+  const bp=el('button','btn sm','‹');bp.type='button';
+  bp.onclick=()=>{const[y,m]=mes.split('-').map(Number);mes=d2k(new Date(Date.UTC(y,m-2,1))).slice(0,7);previa()};
+  const bn=el('button','btn sm','›');bn.type='button';
+  bn.onclick=()=>{const[y,m]=mes.split('-').map(Number);mes=d2k(new Date(Date.UTC(y,m,1))).slice(0,7);previa()};
+  const[yy,mm]=mes.split('-').map(Number);
+  const nm=new Date(Date.UTC(yy,mm-1,1)).toLocaleDateString('pt-BR',{month:'long',year:'numeric',timeZone:'UTC'});
+  const tt=el('div','m',nm[0].toUpperCase()+nm.slice(1));
+  hd.append(bp,tt,bn);calBox.appendChild(hd);
+  const g=el('div','mgrid');
+  DOWC.forEach(w=>g.appendChild(el('div','wd',w)));
+  const primeiro=`${mes}-01`,nd=new Date(Date.UTC(yy,mm,0)).getUTCDate();
+  for(let i=0;i<dow(primeiro);i++){const b=el('button','vazio');b.type='button';g.appendChild(b)}
+  for(let d=1;d<=nd;d++){
+   const k=`${mes}-${String(d).padStart(2,'0')}`;
+   const mF=folgas.includes(k),mT=trabs.includes(k),p=proj(k);
+   let cls=mF?'marcF':mT?'marcT':(p==='T'?'prevT':'prevF');
+   if((mF&&p!=='F')||(mT&&p!=='T'))cls+=' conflito';
+   if(k===hojeK())cls+=' hoje';
+   const b=el('button',cls);b.type='button';
+   b.appendChild(el('div',null,String(d)));
+   b.appendChild(el('span',null,mF?'FOLGA':mT?'TRAB':p.toLowerCase()));
+   b.onclick=()=>ciclaDia(k);
+   g.appendChild(b);
+  }
+  calBox.appendChild(g);
+  if(fit){
+   const ok=fit.acertos===fit.total;
+   prevBox.innerHTML=`<span class="${ok?'ok':'bad'}">${fit.acertos} de ${fit.total} marcações batem</span> · padrão ${esc(f)} de ${L} dias · 1º dia de folga do ciclo: ${br(ref)}`
+    +(ok?'':'<br>As marcações em vermelho não cabem nesse padrão. Confira as datas ou o regime.');
+  } else {
+   prevBox.innerHTML=`Padrão ${esc(f)} de ${L} dias. Marque ao menos uma folga, ou informe o 1º dia de folga abaixo.`;
+  }
+ }
+ iCustom.oninput=previa;
+ const g4=el('div','form');g4.style.marginTop='10px';
+ const dRef=el('div','f');dRef.appendChild(el('label',null,'Ou informe direto o 1º dia de folga do padrão'));
+ const iRef=el('input');iRef.type='date';iRef.value=r.ref;
+ iRef.onchange=()=>{r.ref=iRef.value;folgas=[];trabs=[];previa()};
+ dRef.appendChild(iRef);g4.appendChild(dRef);card.appendChild(g4);
+ previa();
+ const foot=el('div','wzfoot');
+ if(existente){const canc=el('button','btn','Cancelar');canc.onclick=()=>{box.innerHTML=''};foot.appendChild(canc)}
+ foot.appendChild(el('div','spacer'));
+ const b=el('button','btn pri',existente?'Salvar agente':'Adicionar agente');
+ b.onclick=()=>{
+  if(!iN.value.trim())return toast('Dê um nome ao agente');
+  const f=fmtAtual();
+  const ref=(folgas.length||trabs.length)?ajustarRef(f,folgas,trabs).ref:(iRef.value||hojeK());
+  onSalvar({id:a.id,nome:iN.value.trim(),mat:iM.value.trim(),funcao:sF.value,
+   regimes:[{de:'2000-01-01',fmt:f,ref}],obsFolgas:folgas,obsTrab:trabs});
+  box.innerHTML='';
+ };
+ foot.appendChild(b);card.appendChild(foot);
+ box.appendChild(card);
+}
+
+/* ===================== abas ===================== */
+function aplicarCabecalho(){
+ $('#hdTit').textContent=S.estacao.nome?`GBD | ${S.estacao.nome}`:'Montador de GBD';
+ $('#hdSub').textContent=S.estacao.nome?`${S.estacao.turno||''} · ciclo de ${tamCiclo()} dias`:'';
+}
+function mostrarAba(t){
+ document.querySelectorAll('#nav button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===t)));
+ document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on',p.id==='tab-'+t));
+ if(t==='postos')renderPostos();
+ if(t==='cal')renderCal();
+ if(t==='equipe')renderEquipe();
+ if(t==='aus')renderAus();
+ if(t==='config')renderConfig();
+}
+$('#nav').addEventListener('click',e=>{const b=e.target.closest('button[data-tab]');if(b)mostrarAba(b.dataset.tab)});
+
+function renderFoco(){
+ const k=diaFoco();focoAtual=k;
+ const box=$('#foco');box.innerHTML='';
+ const d=dia(k);if(!d)return;
+ const c=el('div','foco'),h=el('div','fh'),ag=new Date();
+ h.appendChild(el('span','q',k>hojeK()?'GBD de amanhã':k<hojeK()?'GBD de ontem, turno em andamento':'GBD de hoje'));
+ h.appendChild(el('span','dd',`${DOW[dow(k)]}, ${br(k)}`));
+ const fer=feriado(k);if(fer)h.appendChild(el('span','tag fer',fer));
+ h.appendChild(el('span','spacer'));
+ const bc=el('button','btn pri sm','Copiar para o WhatsApp');
+ bc.onclick=()=>copiar(textoGBD(k),'GBD de '+br(k)+' copiado');h.appendChild(bc);
+ const bv=el('button','btn sm','Ver no ciclo');
+ bv.onclick=()=>{cicloAtual=inicioCicloDe(k);renderCiclo();const a=document.querySelector('.day.foconow');if(a)a.scrollIntoView({behavior:'smooth',block:'center'})};
+ h.appendChild(bv);c.appendChild(h);
+ const fb=el('div','fb'),pre=el('pre','gbd');pre.textContent=textoGBD(k);fb.appendChild(pre);
+ const side=el('div','fside');
+ side.appendChild(el('h4',null,'Resumo'));
+ const R=S.rodizio.posto,C=S.cobertura.posto;
+ const kv=el('div','kv');
+ kv.innerHTML=`<b>${disponiveis(k).length}</b> em serviço${apoios().length?` · apoio <b>${esc(d.asl)}</b>`:''}<br>
+ ${R?`${esc(abPosto(R))}: <b>${(d.postos[R]||[]).map(nome).join(', ')||'—'}</b>`:''}${C&&R?` · coberto por <b>${(d.postos[C]||[]).map(nome).join(', ')||'—'}</b>`:''}<br>
+ Folgas: ${d.folgas.length?d.folgas.map(nome).join(', '):'nenhuma'}${d.ausentes.length?`<br>Ausente: <b>${d.ausentes.map(nome).join(', ')}</b>`:''}`;
+ side.appendChild(kv);
+ if(d.avisos&&d.avisos.length){
+  side.appendChild(el('h4',null,'Conferência'));
+  d.avisos.forEach(a=>side.appendChild(el('div','aviso '+a.t,(a.t==='e'?'⚠ ':a.t==='w'?'• ':'ℹ ')+a.m)));
+ }
+ side.appendChild(el('div','kv',turnoId()==='noite'?'O GBD da noite vale das 22h às 6h; até as 6h o destaque continua no turno que começou na véspera.':'Depois das 14h o destaque vira para o dia seguinte.'));
+ fb.appendChild(side);c.appendChild(fb);box.appendChild(c);
+}
+setInterval(()=>{if(S.pronto&&diaFoco()!==focoAtual){renderFoco();renderCiclo()}},60000);
+
+function renderCiclo(){
+ if(!S.pronto)return;
+ if(!cicloAtual)cicloAtual=inicioCicloDe(diaFoco());
+ const dias=diasDoCiclo(cicloAtual);
+ $('#cLbl').textContent=`Ciclo de ${br(dias[0])} a ${br(dias[dias.length-1])}`;
+ const R=S.rodizio.posto;
+ $('#cSub').textContent=R?`${abPosto(R)}: `+dias.map(k=>{const v=(dia(k).postos[R]||[])[0];return `${k.slice(8)} ${v?nome(v):'—'}`}).join(' · '):`${dias.length} dias`;
+ const box=$('#days');box.innerHTML='';
+ const fk=diaFoco();
+ for(const k of dias){
+  const d=dia(k);
+  const card=el('div','day'+(k===fk?' foconow':'')+(d.travado?' locked':''));
+  const h=el('div','dh');
+  h.appendChild(el('span','dd',`${DOW[dow(k)]}, ${br(k)}`));
+  const fer=feriado(k);if(fer)h.appendChild(el('span','tag fer',fer));
+  if(k===fk)h.appendChild(el('span','tag','em foco'));
+  if(d.travado)h.appendChild(el('span','tag real','fixado'));
+  card.appendChild(h);
+  const pre=el('pre','gbd');pre.textContent=textoGBD(k);card.appendChild(pre);
+  if(d.avisos&&d.avisos.length){
+   const av=el('div','avisos');
+   d.avisos.forEach(a=>av.appendChild(el('div','aviso '+a.t,(a.t==='e'?'⚠ ':a.t==='w'?'• ':'ℹ ')+a.m)));
+   card.appendChild(av);
+  }
+  const ac=el('div','dactions');
+  const bc=el('button','btn pri sm','Copiar');bc.onclick=()=>copiar(textoGBD(k),'GBD de '+br(k)+' copiado');
+  const be=el('button','btn sm','Editar postos');
+  const bt=el('button','btn sm','Trocar dois');
+  const bf=el('button','btn sm','Ausência');
+  ac.append(bc,be,bt,bf);
+  if(d.travado){const bl=el('button','btn sm danger','Soltar');
+   bl.onclick=()=>{delete S.manuais[k];salvar();limparCache(k);renderCiclo()};ac.appendChild(bl)}
+  card.appendChild(ac);
+  const ed=el('div','editor');
+  const abrir=fn=>{const ja=ed.classList.contains('on')&&ed.dataset.modo===fn.name;
+   ed.classList.toggle('on',!ja);ed.dataset.modo=ja?'':fn.name;if(!ja)fn(ed,k)};
+  be.onclick=()=>abrir(edPostos);bt.onclick=()=>abrir(edTroca);bf.onclick=()=>abrir(edAusencia);
+  card.appendChild(ed);box.appendChild(card);
+ }
+ if(!renderCiclo._f){renderCiclo._f=true;try{renderFoco()}finally{renderCiclo._f=false}}
+}
+function edPostos(ed,k){
+ ed.innerHTML='';
+ const d=dia(k),disp=disponiveis(k),prio=prioridade(k);
+ const atual={};S.postos.forEach(p=>(d.postos[p.id]||[]).forEach(id=>atual[id]=p.id));
+ let iAsl=null;
+ if(apoios().length){
+  const r=el('div','erow');r.appendChild(el('label',null,'Apoio do dia'));
+  iAsl=el('input');iAsl.type='text';
+  const fixo=apoios().some(id=>trabalha(id,k)&&!ausente(id,k));
+  iAsl.value=fixo||d.asl==='A definir'?'':d.asl;
+  iAsl.placeholder=fixo?d.asl:'A definir';
+  r.appendChild(iAsl);ed.appendChild(r);
+ }
+ const sels={};
+ disp.forEach(id=>{
+  const r=el('div','erow');r.appendChild(el('label',null,nome(id)));
+  const s=el('select');s.appendChild(new Option('— sem posto —',''));
+  prio.forEach(pid=>s.appendChild(new Option(rotPosto(pid),pid)));
+  s.value=atual[id]||'';sels[id]=s;r.appendChild(s);ed.appendChild(r);
+ });
+ ed.appendChild(el('div','aviso i','Mude quantos quiser. Nada é aplicado até salvar — aí o dia fica fixado e o resto do ciclo é remontado.'));
+ const foot=el('div','erow');
+ const esq=el('div');esq.style.display='flex';esq.style.gap='6px';
+ const bc=el('button','btn sm','Cancelar');bc.onclick=()=>{ed.classList.remove('on');ed.dataset.modo=''};
+ esq.appendChild(bc);
+ const bs=el('button','btn pri sm','Salvar e recalcular');
+ bs.onclick=()=>{
+  const mapa={};disp.forEach(id=>{const p=sels[id].value;if(p)(mapa[p]=mapa[p]||[]).push(id)});
+  const sem=disp.filter(id=>!sels[id].value);
+  const dobra=Object.entries(mapa).filter(([p,ids])=>ids.length>1&&p!==S.excedente).map(([p])=>abPosto(p));
+  S.manuais[k]={p:mapa};
+  if(iAsl){S.aslCob=S.aslCob||{};if(iAsl.value.trim())S.aslCob[k]=iAsl.value.trim();else delete S.aslCob[k]}
+  salvar();limparCache(k);renderCiclo();
+  const obs=[];if(sem.length)obs.push(`${sem.map(nome).join(', ')} sem posto`);
+  if(dobra.length)obs.push(`dois em ${dobra.join(', ')}`);
+  toast(obs.length?`Salvo com ${obs.join(' e ')}`:'Salvo — ciclo recalculado');
+ };
+ foot.append(esq,bs);ed.appendChild(foot);
+}
+function edTroca(ed,k){
+ ed.innerHTML='';
+ const d=dia(k),disp=disponiveis(k).filter(id=>postoDe(d,id));
+ if(disp.length<2){ed.appendChild(el('div','aviso i','Não há dois agentes em posto nesse dia.'));return}
+ const mk=lbl=>{const r=el('div','erow');r.appendChild(el('label',null,lbl));const s=el('select');
+  disp.forEach(id=>s.appendChild(new Option(`${nome(id)} — ${rotPosto(postoDe(d,id))}`,id)));
+  r.appendChild(s);ed.appendChild(r);return s};
+ const s1=mk('Primeiro'),s2=mk('Segundo');if(disp[1])s2.value=disp[1];
+ const r=el('div','erow');r.appendChild(el('span'));
+ const b=el('button','btn pri sm','Trocar os dois');
+ b.onclick=()=>{
+  const x=s1.value,y=s2.value;if(x===y)return toast('Escolha dois agentes diferentes');
+  const mapa={};S.postos.forEach(p=>{if(d.postos[p.id])mapa[p.id]=d.postos[p.id].slice()});
+  const px=postoDe(d,x),py=postoDe(d,y);
+  if(px)mapa[px][mapa[px].indexOf(x)]=y;
+  if(py)mapa[py][mapa[py].indexOf(y)]=x;
+  S.manuais[k]={p:mapa};salvar();limparCache(k);renderCiclo();
+  toast(`${nome(x)} e ${nome(y)} trocados — o resto do ciclo se reajustou`);
+ };
+ r.appendChild(b);ed.appendChild(r);
+ ed.appendChild(el('div','aviso i','O dia fica fixado e os dias seguintes são remontados em cima da troca.'));
+}
+function edAusencia(ed,k){
+ ed.innerHTML='';
+ ausentesDo(k).forEach(id=>{
+  const r=el('div','erow');r.appendChild(el('label',null,nome(id)+' — ausente'));
+  const b=el('button','btn sm danger','Desfazer');
+  b.onclick=()=>{S.ausencias[k]=(S.ausencias[k]||[]).filter(v=>v!==id);if(!S.ausencias[k].length)delete S.ausencias[k];
+   salvar();limparCache(k);renderCiclo();toast('Ausência removida')};
+  r.appendChild(b);ed.appendChild(r);
+ });
+ const disp=disponiveis(k);
+ if(!disp.length){ed.appendChild(el('div','aviso i','Ninguém escalado nesse dia.'));return}
+ const r=el('div','erow');r.appendChild(el('label',null,'Marcar ausente'));
+ const s=el('select');disp.forEach(id=>s.appendChild(new Option(nome(id),id)));
+ r.appendChild(s);ed.appendChild(r);
+ const r2=el('div','erow');r2.appendChild(el('span'));
+ const b=el('button','btn pri sm','Registrar');
+ b.onclick=()=>{S.ausencias[k]=Array.from(new Set([...(S.ausencias[k]||[]),s.value]));
+  salvar();limparCache(k);renderCiclo();toast(`${nome(s.value)} ausente — dia remontado`)};
+ r2.appendChild(b);ed.appendChild(r2);
+ ed.appendChild(el('div','aviso i','Os outros ficam onde estão; só o posto que vagou é remanejado.'));
+}
+$('#prevC').onclick=()=>{cicloAtual=addD(cicloAtual,-tamCiclo());renderCiclo()};
+$('#nextC').onclick=()=>{cicloAtual=addD(cicloAtual,tamCiclo());renderCiclo()};
+$('#focoC').onclick=()=>{cicloAtual=inicioCicloDe(diaFoco());renderCiclo();
+ const a=document.querySelector('.day.foconow');if(a)a.scrollIntoView({behavior:'smooth',block:'center'})};
+$('#copyCiclo').onclick=()=>copiar(diasDoCiclo(cicloAtual).map(textoGBD).join('\n\n'),'Ciclo inteiro copiado');
+$('#resetCiclo').onclick=()=>{
+ let n=0;diasDoCiclo(cicloAtual).forEach(k=>{if(S.manuais[k]){delete S.manuais[k];n++}});
+ salvar();limparCache(cicloAtual);renderCiclo();toast(n?`${n} dia(s) soltos e refeitos`:'Ciclo refeito');
+};
+
+function renderPostos(){
+ if(!S.pronto)return;
+ if(!cicloPostos)cicloPostos=cicloAtual||inicioCicloDe(diaFoco());
+ const dias=diasDoCiclo(cicloPostos);
+ $('#pLbl').textContent=`${br(dias[0])} a ${br(dias[dias.length-1])}`;
+ $('#pSub').textContent=S.postos.map(p=>p.nome).join(' · ');
+ const t=$('#tPostos');t.innerHTML='';
+ const th=el('thead'),tr=el('tr');tr.appendChild(el('th',null,'Agente'));
+ dias.forEach(k=>{const e=el('th','c');e.innerHTML=`${DOW[dow(k)].slice(0,3)}<br><span style="font-weight:400;color:var(--tx2)">${k.slice(8)}/${k.slice(5,7)}</span>`;tr.appendChild(e)});
+ th.appendChild(tr);t.appendChild(th);
+ const tb=el('tbody');
+ operacionais().forEach(id=>{
+  const r=el('tr');r.appendChild(el('td',null,nome(id)));
+  dias.forEach(k=>{
+   const d=dia(k),td=el('td','c');
+   let txt,cls='';
+   if(!trabalha(id,k)){txt='Folga';cls='folga'}
+   else if(ausente(id,k)){txt='Ausente';cls='aus'}
+   else{const p=postoDe(d,id);txt=p?abPosto(p):'—';if(!p)cls='folga'}
+   td.appendChild(el('span','pill '+cls,txt));r.appendChild(td);
+  });
+  tb.appendChild(r);
+ });
+ if(apoios().length){
+  const r=el('tr');r.appendChild(el('td',null,'Apoio'));
+  dias.forEach(k=>{const td=el('td','c');td.appendChild(el('span','pill',dia(k).asl));r.appendChild(td)});
+  tb.appendChild(r);
+ }
+ t.appendChild(tb);
+ const t2=$('#tResumo');t2.innerHTML='';
+ const th2=el('thead'),tr2=el('tr');tr2.appendChild(el('th',null,'Agente'));
+ S.postos.forEach(p=>tr2.appendChild(el('th','c',p.ab||p.nome)));
+ tr2.appendChild(el('th','c','Folgas'));th2.appendChild(tr2);t2.appendChild(th2);
+ const tb2=el('tbody');
+ operacionais().forEach(id=>{
+  const r=el('tr');r.appendChild(el('td',null,nome(id)));
+  S.postos.forEach(p=>{
+   const n=dias.filter(k=>(dia(k).postos[p.id]||[]).includes(id)).length;
+   const td=el('td','c',n||'');if(n>1)td.style.color='var(--warn)';r.appendChild(td);
+  });
+  r.appendChild(el('td','c',String(dias.filter(k=>!trabalha(id,k)).length)));
+  tb2.appendChild(r);
+ });
+ t2.appendChild(tb2);
+}
+$('#prevP').onclick=()=>{cicloPostos=addD(cicloPostos,-tamCiclo());renderPostos()};
+$('#nextP').onclick=()=>{cicloPostos=addD(cicloPostos,tamCiclo());renderPostos()};
+
+function renderCal(){
+ if(!S.pronto)return;
+ const de=$('#calDe').value||hojeK().slice(0,7);
+ const ate=$('#calAte').value||addD(hojeK(),730).slice(0,7);
+ const box=$('#calBox');box.innerHTML='';
+ let[y,m]=de.split('-').map(Number);const[ya,ma]=ate.split('-').map(Number);
+ let g=0;
+ while((y<ya||(y===ya&&m<=ma))&&g++<60){box.appendChild(mesCal(y,m));m++;if(m>12){m=1;y++}}
+ const lg=el('div','legend');
+ lg.innerHTML=`<span><i class="sw" style="background:color-mix(in srgb,var(--ok) 16%,transparent)"></i>trabalha</span>
+ <span><i class="sw" style="background:var(--bg3)"></i>folga</span>
+ <span><i class="sw" style="background:color-mix(in srgb,var(--err) 20%,transparent)"></i>ausente</span>
+ <span style="color:var(--warn)">dia em laranja = feriado</span>`;
+ box.appendChild(lg);
+}
+function mesCal(y,m){
+ const c=el('div','cal');
+ const nm=new Date(Date.UTC(y,m-1,1)).toLocaleDateString('pt-BR',{month:'long',year:'numeric',timeZone:'UTC'});
+ c.appendChild(el('h3',null,nm[0].toUpperCase()+nm.slice(1)));
+ const nd=new Date(Date.UTC(y,m,0)).getUTCDate();
+ const g=el('div','calgrid'),t=el('table'),th=el('thead'),tr=el('tr');
+ tr.appendChild(el('th','nome','Agente'));
+ for(let d=1;d<=nd;d++){
+  const k=`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`,w=dow(k);
+  const e=el('th',feriado(k)?'fer':(w===0||w===6?'fds':'wk'));
+  e.innerHTML=`${d}<br><span style="font-weight:400;opacity:.65">${DOWC[w]}</span>`;
+  if(feriado(k))e.title=feriado(k);
+  tr.appendChild(e);
+ }
+ th.appendChild(tr);t.appendChild(th);
+ const tb=el('tbody');
+ S.agentes.forEach(a=>{
+  const r=el('tr'),tn=el('td','nome');
+  tn.innerHTML=`${esc(a.nome)} <span style="color:var(--tx3);font-size:10.5px">${esc(a.funcao)}</span>`;
+  r.appendChild(tn);
+  for(let d=1;d<=nd;d++){
+   const k=`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+   const td=el('td'),tr2=trabalha(a.id,k),au=ausente(a.id,k);
+   td.appendChild(el('span','cel '+(au?'a':tr2?'t':'f'),au?'A':tr2?'T':'F'));
+   r.appendChild(td);
+  }
+  tb.appendChild(r);
+ });
+ t.appendChild(tb);g.appendChild(t);c.appendChild(g);return c;
+}
+
+function renderEquipe(){
+ const L=$('#agList');L.innerHTML='';
+ if(!S.agentes.length)L.appendChild(el('div','empty','Nenhum agente cadastrado.'));
+ S.agentes.forEach((a,i)=>{
+  const it=el('div','item');
+  it.appendChild(el('strong',null,a.nome));
+  it.appendChild(el('span','sub',`${a.funcao}${a.mat?' · '+a.mat:''} · ${a.regimes[0].fmt} · 1ª folga ${br(a.regimes[0].ref)}`));
+  const x=el('div','x');
+  const ed=el('button','btn sm','Editar');
+  ed.onclick=()=>formAgente($('#agForm'),a,novo=>{S.agentes[i]=novo;salvar();limparCache();renderEquipe();renderTudo();toast('Agente atualizado')});
+  const rm=el('button','btn sm danger','Remover');
+  rm.onclick=()=>{S.agentes.splice(i,1);salvar();limparCache();renderEquipe();renderTudo();aplicarCabecalho();toast('Agente removido')};
+  x.append(ed,rm);it.appendChild(x);L.appendChild(it);
+ });
+ const n=operacionais().length;
+ L.appendChild(el('div','empty',`Ciclo atual: ${tamCiclo()} dias (${n} operaciona${n===1?'l':'is'}).`));
+}
+$('#agNovo').onclick=()=>formAgente($('#agForm'),null,novo=>{
+ S.agentes.push(novo);salvar();limparCache();renderEquipe();renderTudo();aplicarCabecalho();toast('Agente cadastrado');
+});
+
+function opAg(sel){sel.innerHTML='';S.agentes.forEach(a=>sel.appendChild(new Option(a.nome+(a.funcao!=='AAS'?` (${a.funcao})`:''),a.id)))}
+function renderAus(){
+ opAg($('#ausWho'));opAg($('#exWho'));
+ $('#exHint').textContent=S.rodizio.posto&&S.rodizio.exameBloqueia
+  ?`Ninguém entra em ${abPosto(S.rodizio.posto)} no dia do próprio exame.`
+  :'Registro informativo: a regra de bloqueio está desligada na configuração.';
+ const L=$('#ausList');L.innerHTML='';
+ const ks=Object.keys(S.ausencias).sort();
+ if(!ks.length)L.appendChild(el('div','empty','Nenhuma ausência.'));
+ ks.forEach(k=>(S.ausencias[k]||[]).forEach(id=>{
+  const it=el('div','item');it.appendChild(el('strong',null,nome(id)));
+  it.appendChild(el('span','sub',`${br(k)} · ${DOW[dow(k)]}`));
+  const x=el('button','btn sm danger x','Remover');
+  x.onclick=()=>{S.ausencias[k]=S.ausencias[k].filter(v=>v!==id);if(!S.ausencias[k].length)delete S.ausencias[k];
+   salvar();limparCache(k);renderAus();renderCiclo()};
+  it.appendChild(x);L.appendChild(it);
+ }));
+ const E=$('#exList');E.innerHTML='';
+ const eks=Object.keys(S.exames).sort();
+ if(!eks.length)E.appendChild(el('div','empty','Nenhum exame.'));
+ eks.forEach(k=>(S.exames[k]||[]).forEach(id=>{
+  const it=el('div','item');it.appendChild(el('strong',null,nome(id)));
+  it.appendChild(el('span','sub',br(k)));
+  const x=el('button','btn sm danger x','Remover');
+  x.onclick=()=>{S.exames[k]=S.exames[k].filter(v=>v!==id);if(!S.exames[k].length)delete S.exames[k];
+   salvar();limparCache(k);renderAus();renderCiclo()};
+  it.appendChild(x);E.appendChild(it);
+ }));
+}
+$('#ausAdd').onclick=()=>{
+ const id=$('#ausWho').value,de=$('#ausDe').value;if(!de)return toast('Informe a data');
+ const ate=$('#ausAte').value||de;let k=de,n=0;
+ while(k<=ate&&n<120){S.ausencias[k]=Array.from(new Set([...(S.ausencias[k]||[]),id]));k=addD(k,1);n++}
+ salvar();limparCache(de);renderAus();renderCiclo();toast('Ausência registrada');
+};
+$('#exAdd').onclick=()=>{
+ const id=$('#exWho').value,k=$('#exDia').value;if(!k)return toast('Informe a data');
+ S.exames[k]=Array.from(new Set([...(S.exames[k]||[]),id]));
+ salvar();limparCache(k);renderAus();renderCiclo();toast('Exame registrado');
+};
+
+function renderConfig(){
+ const box=$('#cfgBox');box.innerHTML='';
+ // estação
+ const c1=el('div','card');c1.appendChild(el('h3',null,'Estação'));
+ const g1=el('div','form');
+ const mk=(p,lbl,tipo)=>{const d=el('div','f');d.appendChild(el('label',null,lbl));
+  const i=el('input');i.type=tipo||'text';i.value=S.estacao[p]||'';
+  i.onchange=()=>{S.estacao[p]=i.value;salvar();limparCache();aplicarCabecalho();renderTudo()};
+  d.appendChild(i);g1.appendChild(d)};
+ {const d=el('div','f');d.appendChild(el('label',null,'Estação'));const i=el('input');i.value='BFU';i.readOnly=true;d.appendChild(i);g1.appendChild(d);}
+ {const d=el('div','f');d.appendChild(el('label',null,'Turno'));const sT=el('select');
+  [['manha','Manhã'],['noite','Noite']].forEach(([v,r])=>sT.appendChild(new Option(r,v)));sT.value=turnoId();
+  sT.onchange=()=>{S.estacao.turno=TURNOS_OK[sT.value].rot;salvar();limparCache();aplicarCabecalho();renderTudo()};
+  d.appendChild(sT);g1.appendChild(d);}
+ mk('inicioCiclo','Início da contagem dos ciclos','date');mk('rodape','Rodapé');
+ const dT=el('div','f');dT.appendChild(el('label',null,'Tamanho do ciclo (0 = nº de operacionais)'));
+ const iT=el('input');iT.type='number';iT.min='0';iT.value=S.estacao.tamCiclo||0;
+ iT.onchange=()=>{S.estacao.tamCiclo=+iT.value||0;salvar();limparCache();aplicarCabecalho();renderTudo()};
+ dT.appendChild(iT);g1.appendChild(dT);
+ c1.appendChild(g1);
+ c1.appendChild(el('p','hint',`Hoje o ciclo tem ${tamCiclo()} dias.`));
+ box.appendChild(c1);
+ // postos
+ const c2=el('div','card');c2.appendChild(el('h3',null,'Postos e prioridade'));
+ c2.appendChild(el('p','hint','A ordem vale para dias úteis e sábados: falta efetivo, caem os de baixo. Posto marcado como sempre coberto nunca cai, e não fica vago junto com outro sempre coberto durante os intervalos.'));
+ const L=el('div','list');
+ S.prioUtil.forEach((pid,i)=>{
+  const p=POSTO(pid);if(!p)return;
+  const it=el('div','item');const o=el('div','ord');
+  const up=el('button',null,'↑');up.onclick=()=>{if(i>0){[S.prioUtil[i-1],S.prioUtil[i]]=[S.prioUtil[i],S.prioUtil[i-1]];salvar();limparCache();renderConfig();renderTudo()}};
+  const dn=el('button',null,'↓');dn.onclick=()=>{if(i<S.prioUtil.length-1){[S.prioUtil[i+1],S.prioUtil[i]]=[S.prioUtil[i],S.prioUtil[i+1]];salvar();limparCache();renderConfig();renderTudo()}};
+  o.append(up,dn);it.appendChild(o);
+  it.appendChild(el('span','sub',`${i+1}º`));
+  const pane=el('div','icopane');
+  const bIco=el('button','icobtn',p.ico);bIco.title='Trocar o ícone';
+  bIco.onclick=()=>{
+   const abrir=!pane.classList.contains('on');
+   pane.classList.toggle('on',abrir);
+   if(abrir){pane.innerHTML='';seletorIcone(pane,p.ico,ic=>{p.ico=ic;bIco.textContent=ic;salvar();limparCache();renderTudo()})}
+  };
+  it.appendChild(bIco);
+  it.appendChild(el('strong',null,p.nome));
+  const lb=el('label','sub');lb.style.display='flex';lb.style.gap='5px';lb.style.alignItems='center';
+  const cb=el('input');cb.type='checkbox';cb.checked=p.max1;cb.style.width='auto';
+  cb.onchange=()=>{p.max1=cb.checked;salvar();limparCache();renderTudo()};
+  lb.append(cb,document.createTextNode('1× por ciclo'));it.appendChild(lb);
+  const lb2=el('label','sub');lb2.style.display='flex';lb2.style.gap='5px';lb2.style.alignItems='center';
+  const cb2=el('input');cb2.type='checkbox';cb2.checked=!!p.sempre;cb2.style.width='auto';
+  cb2.onchange=()=>{p.sempre=cb2.checked;salvar();limparCache();renderTudo()};
+  lb2.append(cb2,document.createTextNode('sempre coberto'));it.appendChild(lb2);
+  it.appendChild(pane);
+  L.appendChild(it);
+ });
+ c2.appendChild(L);
+ const dd=el('div');dd.style.marginTop='14px';
+ dd.appendChild(el('h4',null,'Domingos e feriados'));
+ const LF=el('div','list');
+ S.prioFer.forEach((pid,i)=>{
+  const p=POSTO(pid);if(!p)return;
+  const it=el('div','item');const o=el('div','ord');
+  const up=el('button',null,'↑');up.onclick=()=>{if(i>0){[S.prioFer[i-1],S.prioFer[i]]=[S.prioFer[i],S.prioFer[i-1]];salvar();limparCache();renderConfig();renderTudo()}};
+  const dn=el('button',null,'↓');dn.onclick=()=>{if(i<S.prioFer.length-1){[S.prioFer[i+1],S.prioFer[i]]=[S.prioFer[i],S.prioFer[i+1]];salvar();limparCache();renderConfig();renderTudo()}};
+  o.append(up,dn);it.appendChild(o);
+  it.appendChild(el('span','sub',`${i+1}º`));it.appendChild(el('strong',null,`${p.ico} ${p.nome}`));
+  LF.appendChild(it);
+ });
+ dd.appendChild(LF);c2.appendChild(dd);
+ const g2=el('div','form');g2.style.marginTop='14px';
+ const selp=(lbl,val,set,vazio)=>{
+  const d=el('div','f');d.appendChild(el('label',null,lbl));
+  const s=el('select');if(vazio)s.appendChild(new Option(vazio,''));
+  S.postos.forEach(p=>s.appendChild(new Option(p.nome,p.id)));
+  s.value=val||'';s.onchange=()=>{set(s.value);salvar();limparCache();renderTudo()};
+  d.appendChild(s);g2.appendChild(d);
+ };
+ selp('Posto de rodízio',S.rodizio.posto,v=>S.rodizio.posto=v,'— nenhum —');
+ selp('Posto que cobre o rodízio',S.cobertura.posto,v=>S.cobertura.posto=v,'— nenhum —');
+ selp('Excedente vai para',S.excedente,v=>S.excedente=v,'— o último da prioridade —');
+ const dI=el('div','f');dI.appendChild(el('label',null,'Intervalo mínimo no rodízio (dias)'));
+ const iI=el('input');iI.type='number';iI.min='0';iI.value=S.rodizio.intervalo;
+ iI.onchange=()=>{S.rodizio.intervalo=+iI.value||0;salvar();limparCache();renderTudo()};
+ dI.appendChild(iI);g2.appendChild(dI);
+ c2.appendChild(g2);
+ const lb2=el('label','hint');lb2.style.display='flex';lb2.style.gap='6px';lb2.style.marginTop='10px';
+ const cb2=el('input');cb2.type='checkbox';cb2.checked=S.rodizio.exameBloqueia;cb2.style.width='auto';
+ cb2.onchange=()=>{S.rodizio.exameBloqueia=cb2.checked;salvar();limparCache();renderTudo()};
+ lb2.append(cb2,document.createTextNode('não escalar no rodízio no dia do exame periódico'));
+ c2.appendChild(lb2);
+ const lb3=el('label','hint');lb3.style.display='flex';lb3.style.gap='6px';
+ const cb3=el('input');cb3.type='checkbox';cb3.checked=S.cobertura.separar;cb3.style.width='auto';
+ cb3.onchange=()=>{S.cobertura.separar=cb3.checked;salvar();limparCache();renderTudo()};
+ lb3.append(cb3,document.createTextNode('rodízio e cobertura nunca saem no mesmo intervalo'));
+ c2.appendChild(lb3);
+ box.appendChild(c2);
+ // café e janta
+ const c3=el('div','card');c3.appendChild(el('h3',null,'Café e janta'));
+ c3.appendChild(el('p','hint','Os horários são montados a partir da hora de início, da duração e do espaçamento. A duração do café entra no título do bloco.'));
+ const bInt=el('div');c3.appendChild(bInt);
+ formIntervalos(bInt,S,()=>{salvar();limparCache();renderTudo()});
+ box.appendChild(c3);
+ // feriados e dados
+ const c4=el('div','card');c4.appendChild(el('h3',null,'Feriados locais'));
+ c4.appendChild(el('p','hint','Os nacionais já entram sozinhos, Páscoa móvel incluída. Acrescente os estaduais e municipais da sua cidade.'));
+ const g4=el('div','form');
+ const dD=el('div','f');dD.appendChild(el('label',null,'Data'));
+ const iD=el('input');iD.type='date';dD.appendChild(iD);
+ const dN=el('div','f');dN.appendChild(el('label',null,'Nome'));
+ const iNn=el('input');iNn.type='text';dN.appendChild(iNn);
+ const dB=el('div','f');const bB=el('button','btn pri','Adicionar');bB.style.width='100%';dB.appendChild(bB);
+ bB.onclick=()=>{if(!iD.value)return toast('Informe a data');
+  S.feriados[iD.value]=iNn.value.trim()||'Feriado';salvar();limparCache(iD.value);renderConfig();renderTudo();toast('Feriado adicionado')};
+ g4.append(dD,dN,dB);c4.appendChild(g4);
+ const LFer=el('div','list');
+ const fk=Object.keys(S.feriados).sort();
+ if(!fk.length)LFer.appendChild(el('div','empty','Só os automáticos.'));
+ fk.forEach(k=>{
+  const it=el('div','item');it.appendChild(el('strong',null,br(k)));it.appendChild(el('span','sub',S.feriados[k]));
+  const x=el('button','btn sm danger x','Remover');
+  x.onclick=()=>{delete S.feriados[k];salvar();limparCache(k);renderConfig();renderTudo()};
+  it.appendChild(x);LFer.appendChild(it);
+ });
+ c4.appendChild(LFer);box.appendChild(c4);
+ // página dos agentes
+ const cA=el('div','card');cA.appendChild(el('h3',null,'Página dos agentes'));
+ cA.appendChild(el('p','hint','Gera o conteúdo do arquivo gbd-dados.json, que a página de consulta dos agentes lê. Sempre que você alterar um GBD, gere de novo e substitua o arquivo na hospedagem — a página deles se atualiza sozinha.'));
+ const gA=el('div','form');
+ const mkn=(lbl,val)=>{const d=el('div','f');d.appendChild(el('label',null,lbl));
+  const i=el('input');i.type='number';i.min='0';i.max='400';i.value=String(val);d.appendChild(i);gA.appendChild(d);return i};
+ const iAtras=mkn('Dias para trás',30),iFrente=mkn('Dias para frente',120);
+ const dBA=el('div','f');const bA=el('button','btn pri','Gerar e copiar');bA.style.width='100%';dBA.appendChild(bA);gA.appendChild(dBA);
+ cA.appendChild(gA);
+ const infoA=el('div','aviso i','');infoA.style.marginTop='10px';cA.appendChild(infoA);
+ const taA=el('textarea');taA.style.cssText='display:none;height:140px;margin-top:10px;font:11.5px var(--mono)';cA.appendChild(taA);
+ bA.onclick=()=>{
+  const p=pacoteAgentes(+iAtras.value||0,+iFrente.value||0);
+  const txt=JSON.stringify(p);
+  taA.style.display='block';taA.value=txt;
+  infoA.textContent=`${Object.keys(p.dias).length} dias e ${Object.keys(p.ciclos).length} ciclos · ${(txt.length/1024).toFixed(0)} KB · salve como gbd-dados.json na mesma pasta da página dos agentes.`;
+  copiar(txt,'Dados copiados — salve como gbd-dados.json');
+ };
+ box.appendChild(cA);
+ // publicar direto na página dos agentes
+ {const cP=el('div','card');cP.appendChild(el('h3',null,'Publicar para os agentes'));
+  const rot=TURNOS_OK[turnoId()].rot;
+  cP.appendChild(el('p','hint',`Manda o GBD da ${rot.toLowerCase()} para o app BFU. Use a senha da ${rot.toLowerCase()}, que o AAS Gerson passa para o líder do turno. A senha fica guardada neste aparelho.`));
+  const gP=el('div','form');
+  const fS=el('div','f');fS.appendChild(el('label',null,'Senha de publicação'));
+  const iS=el('input');iS.type='password';iS.autocomplete='current-password';
+  try{iS.value=localStorage.getItem('gbd-pub-'+turnoId())||''}catch(e){}
+  fS.appendChild(iS);gP.appendChild(fS);
+  const mk2=(lbl,val)=>{const d=el('div','f');d.appendChild(el('label',null,lbl));const i=el('input');i.type='number';i.min='0';i.max='400';i.value=String(val);d.appendChild(i);gP.appendChild(d);return i};
+  const pA=mk2('Dias para trás',30),pF=mk2('Dias para frente',120);
+  const dB=el('div','f');const bP=el('button','btn pri','Publicar agora');bP.style.width='100%';dB.appendChild(bP);gP.appendChild(dB);
+  cP.appendChild(gP);
+  const infoP=el('div','aviso i','');infoP.style.marginTop='10px';cP.appendChild(infoP);
+  const naoDa=!/^https?:/.test(location.protocol)||/claude/i.test(location.hostname);
+  if(naoDa){bP.disabled=true;infoP.textContent='A publicação só funciona no endereço do app BFU.';}
+  bP.onclick=async()=>{
+   const senha=iS.value.trim();
+   if(!senha){infoP.className='aviso e';infoP.textContent='Digite a senha de publicação.';return}
+   const p=pacoteAgentes(+pA.value||0,+pF.value||0);const nd=Object.keys(p.dias).length;
+   if(!nd){infoP.className='aviso e';infoP.textContent='Nenhum dia para publicar.';return}
+   bP.disabled=true;infoP.className='aviso i';infoP.textContent='Publicando '+nd+' dias…';
+   try{
+    const r=await fetch('/api/publicar',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({senha,turno:turnoId(),dados:p})});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok)throw new Error(j.erro||('erro '+r.status));
+    try{localStorage.setItem('gbd-pub-'+turnoId(),senha)}catch(e){}
+    infoP.className='aviso ok';infoP.textContent=`Publicado: ${j.dias} dias da ${rot.toLowerCase()} no ar${j.commit?' (commit '+j.commit+')':''}. Os agentes veem no app, em GBD do dia.`;
+    toast('GBD publicado');
+   }catch(e){infoP.className='aviso e';infoP.textContent='Não publicou: '+e.message;}
+   finally{bP.disabled=false}
+  };
+  box.appendChild(cP);}
+
+ const c5=el('div','card');c5.appendChild(el('h3',null,'Dados'));
+ c5.appendChild(el('p','hint','Tudo fica salvo neste navegador. Exporte para levar para outro aparelho ou para outra pessoa da equipe.'));
+ const bar=el('div');bar.style.display='flex';bar.style.gap='8px';bar.style.flexWrap='wrap';
+ const ta=el('textarea');ta.style.display='none';ta.style.height='150px';ta.style.marginTop='10px';
+ const bE=el('button','btn','Exportar');bE.onclick=()=>{ta.style.display='block';ta.value=JSON.stringify(S,null,1);copiar(ta.value,'Dados copiados')};
+ const bI=el('button','btn','Importar');
+ bI.onclick=()=>{
+  if(ta.style.display==='none'){ta.style.display='block';ta.value='';ta.placeholder='Cole aqui e clique em Importar de novo';return}
+  try{S={...estadoPadrao(),...JSON.parse(ta.value)};salvar();limparCache();cicloAtual=null;cicloPostos=null;
+   aplicarCabecalho();renderWizard();if(S.pronto)mostrarAba('ciclo');renderTudo();toast('Dados importados')}
+  catch(e){toast('JSON inválido')}
+ };
+ let armado=false;
+ const bZ=el('button','btn danger','Começar do zero');
+ bZ.onclick=()=>{
+  if(!armado){armado=true;bZ.textContent='Confirmar: apagar tudo?';setTimeout(()=>{armado=false;bZ.textContent='Começar do zero'},5000);return}
+  S=estadoPadrao();salvar();limparCache();wz={passo:0,tmp:null};cicloAtual=null;cicloPostos=null;
+  aplicarCabecalho();iniciarWizard();toast('Zerado');
+ };
+ bar.append(bE,bI,bZ);c5.append(bar,ta);box.appendChild(c5);
+}
+
+/* ===================== pacote da página dos agentes ===================== */
+function pacoteAgentes(atras,frente){
+ const de=addD(hojeK(),-Math.abs(atras)),ate=addD(hojeK(),Math.abs(frente));
+ const dias={},ciclos={};
+ const R=S.rodizio.posto;
+ for(let k=de;k<=ate;k=addD(k,1)){
+  const d=dia(k);if(!d)continue;
+  const ini=inicioCicloDe(k);
+  dias[k]={txt:textoGBD(k),ciclo:ini};
+  const f=feriado(k);if(f)dias[k].feriado=f;
+  if(!ciclos[ini])ciclos[ini]={ini,fim:addD(ini,tamCiclo()-1),rod:{}};
+  if(R){const q=(d.postos[R]||[])[0];if(q)ciclos[ini].rod[k]=nome(q)}
+ }
+ return {v:1,
+  estacao:'BFU',turno:TURNOS_OK[turnoId()].rot,turnoId:turnoId(),
+  horaVirada:turnoId()==='noite'?6:14,
+  rodizio:{rotulo:R?abPosto(R):'rodízio'},
+  equipe:operacionais().map(nome),
+  gerado:new Date().toISOString(),ciclos,dias};
+}
+
+/* ===================== init ===================== */
+function renderTudo(){
+ if(!S.pronto)return;
+ renderFoco();renderCiclo();renderPostos();renderCal();renderEquipe();renderAus();
+}
+$('#calDe').value=hojeK().slice(0,7);
+$('#calAte').value=addD(hojeK(),730).slice(0,7);
+$('#calDe').onchange=renderCal;$('#calAte').onchange=renderCal;
+$('#ausDe').value=hojeK();$('#exDia').value=hojeK();
+aplicarCabecalho();
+if(S.pronto){cicloAtual=inicioCicloDe(diaFoco());cicloPostos=cicloAtual;renderWizard();mostrarAba('ciclo');renderTudo()}
+else iniciarWizard();
+</script>
+</body>
+</html>
