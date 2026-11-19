@@ -953,7 +953,7 @@ function passoRegras(c){
    d.appendChild(s);c.appendChild(d);return s;
   };
   sel('Posto de rodízio','Todos os agentes operacionais passam por ele uma vez a cada ciclo. É o que define o tamanho do ciclo.',
-      T.rodizio.posto,v=>T.rodizio.posto=v,'— nenhum —');
+      T.rodizio.posto,v=>{T.rodizio.posto=v;renderWizard()},'— nenhum —');
   if(T.rodizio.posto){
    const d=el('div','form');d.style.marginTop='10px';
    const f=el('div','f');f.appendChild(el('label',null,'Intervalo mínimo entre duas passagens (dias)'));
