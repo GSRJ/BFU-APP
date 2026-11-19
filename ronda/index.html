@@ -1678,7 +1678,7 @@ function pinSVG(p,P,o){
   const inA=!o.areaSel||p.area===o.areaSel;
   let g=`<g class="pin" data-id="${esc(p.id)}"${inA?'':' opacity=".38"'} transform="translate(${x} ${y}) scale(${k.toFixed(4)})">`;
   const isSel=o.sel===p.id&&!o.exp;
-  if(isSel)g+=`<circle r="34" fill="${P.sel}" fill-opacity=".22" stroke="${P.sel}" stroke-width="3"><animate attributeName="r" values="32;50;32" dur="1.5s" repeatCount="indefinite"/><animate attributeName="fill-opacity" values=".3;.05;.3" dur="1.5s" repeatCount="indefinite"/></circle>`;
+  if(isSel)g+=`<circle r="40" fill="${P.sel}" fill-opacity=".16" stroke="${P.sel}" stroke-width="3"/>`;
   if(o.areaSel&&inA&&o.sel!==p.id)g+=`<circle r="30" fill="${P.sel}" fill-opacity=".16" stroke="${P.sel}" stroke-width="2.5" stroke-dasharray="5 4"/>`;
   g+=`<circle r="24" fill="#000" fill-opacity="0"/>`;
   if(ty)g+=`<rect x="-16" y="-16" width="32" height="32" rx="8" fill="${fill}" stroke="${stroke}" stroke-width="2.8"/>`+(tint&&!st?`<rect x="-16" y="-16" width="32" height="32" rx="8" fill="${tint}" fill-opacity=".16"/>`:'');
@@ -1764,7 +1764,13 @@ function applyView(){
   const vh=view.w*stg.h/stg.w;
   svg.setAttribute('viewBox',`${(view.cx-view.w/2).toFixed(2)} ${(view.cy-vh/2).toFixed(2)} ${view.w.toFixed(2)} ${vh.toFixed(2)}`);
   const k=view.w/stg.w*(COARSE?0.8:0.85);
-  if(!pinK||Math.abs(k-pinK)/pinK>0.015){pinK=k;renderPins();renderGrid();}
+  if(!pinK||Math.abs(k-pinK)/pinK>0.015)redesenhaPins();
+}
+/* refazer os 99 ícones a cada quadro do zoom pesava no celular e deixava rastros na planta: no máximo a cada 90 ms, com um redesenho final */
+function redesenhaPins(){
+  const agora=performance.now(),faz=()=>{applyView.t=performance.now();pinK=view.w/stg.w*(COARSE?0.8:0.85);renderPins();renderGrid();};
+  clearTimeout(applyView.tm);
+  if(agora-(applyView.t||0)>90)faz();else applyView.tm=setTimeout(faz,100);
 }
 function toSvg(cx,cy){measure();return {x:view.cx-view.w/2+(cx-stg.l)/stg.w*view.w,y:view.cy-(view.w*stg.h/stg.w)/2+(cy-stg.t)/stg.h*(view.w*stg.h/stg.w)};}
 function toScreen(x,y){measure();const vh=view.w*stg.h/stg.w;return {x:stg.l+(x-(view.cx-view.w/2))/view.w*stg.w,y:stg.t+(y-(view.cy-vh/2))/vh*stg.h};}
