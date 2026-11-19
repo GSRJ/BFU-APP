@@ -31,3 +31,13 @@ manhã, tarde e noite. Só a tarde tem GBD publicado; manhã e noite explicam qu
 criadas, contam como funciona a ferramenta de montagem e orientam o líder do turno a procurar o
 AAS Gerson. No GBD, cada dia aparece como "previsto" até o responsável confirmar no montador;
 confirmado, a etiqueta vira "confirmado" na página dos agentes.
+
+Atualização 19/11 (montador e publicação): o montador de GBD está em /montador-dc199c01e878/, sem link
+na tela inicial e com noindex para não entrar em busca. Ele não guarda matrícula nem nome
+completo de ninguém: só os primeiros nomes. O botão "Publicar agora" manda o GBD para
+api/publicar.js, que grava gbd/gbd-dados.json no repositório. O token do GitHub fica só nas
+variáveis de ambiente da Vercel, nunca no celular e nunca neste repositório:
+  GITHUB_TOKEN    token fino, só neste repositório, Contents: Read and write
+  PUBLICAR_SENHA  senha digitada no montador, 12 caracteres ou mais
+Para conferir se as variáveis estão no ar: abra /api/publicar no navegador. Responde
+{"pronto":true} quando as duas existem.
