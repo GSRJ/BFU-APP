@@ -333,7 +333,8 @@ function cobreSSO(d){
 const CARTOES_DESDE='2026-11-26';
 
 const CAFE_SLOTS_3=['15h00','15h30','16h00'];
-const CAFE_SLOTS_4=['15h00','15h15','15h30','15h45'];
+/* pausa de 30 minutos: os horários andam de meia em meia hora */
+const CAFE_SLOTS_4=['15h00','15h30','16h00','16h30'];
 const JANTA_3=['18h–19h','19h–20h','20h–21h'];
 const JANTA_4=['17h–18h','18h–19h','19h–20h','20h–21h'];
 const JICO={'17h–18h':'🕔','18h–19h':'🕕','19h–20h':'🕖','20h–21h':'🕗'};
@@ -992,7 +993,7 @@ function textoGBD(k){
  }
  L.push('');
  L.push('━━━━━━━━━━━━━━');
- L.push('☕ *PAUSA*');
+ L.push('☕ *PAUSA* _(30 min)_');
  L.push('━━━━━━━━━━━━━━');
  const cs={};for(const[id,s]of Object.entries(d.cafe||{}))(cs[s]=cs[s]||[]).push(id);
  const slots=Object.keys(cs).sort();
