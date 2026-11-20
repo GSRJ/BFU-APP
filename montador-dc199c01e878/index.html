@@ -215,7 +215,7 @@ code.k{font:12.5px var(--mono);background:var(--bg3);padding:1px 5px;border-radi
       </div>
       <div class="card">
         <h3>Ausência parcial</h3>
-        <p class="hint">Para quem sai antes, chega depois ou se ausenta por parte do turno. A pessoa trabalha na Ronda ou nas Plataformas, fora da SSO, do Apoio SSO e da Linha de Bloqueio. Na SSO só entra se for a única chance de passar por ela no ciclo: aí o GBD mostra quem fica até o retorno e que ela assume ao voltar.</p>
+        <p class="hint">Para quem sai antes, chega depois ou se ausenta por parte do turno. A pessoa fica na Linha de Bloqueio, não entra na pausa e faz o intervalo no último horário. Na SSO só entra se for a única chance de passar por ela no ciclo: aí o GBD mostra quem fica até o retorno e que ela assume ao voltar.</p>
         <div class="form">
           <div class="f"><label>Agente</label><select id="exWho"></select></div>
           <div class="f"><label>Data</label><input type="date" id="exDia"></div>
@@ -327,7 +327,7 @@ const PRINCIPAIS=['SSO','CARTOES','APOIO','LB'];
 /* SSO com ausência parcial: um disponível fica até o retorno (o Apoio SSO, ou quem estiver na Ronda/Plataformas) */
 function cobreSSO(d){
  const s=(d.postos.SSO||[])[0];if(!s||!emExame(s,d.k))return null;
- for(const p of ['APOIO','RONDA','PLAT','LB','CARTOES'])for(const id of (d.postos[p]||[]))if(id!==s&&!emExame(id,d.k))return id;
+ for(const p of ['APOIO','RONDA','PLAT','CARTOES','LB'])for(const id of (d.postos[p]||[]))if(id!==s&&!emExame(id,d.k))return id;
  return null;
 }
 const CARTOES_DESDE='2026-11-26';
@@ -735,7 +735,7 @@ function manualValido(k,man){
  if(disp.some(id=>!noPosto.has(id)))return false;
  for(const id of noPosto)if(AAS.includes(id)&&!disp.includes(id))return false;
  for(const id of disp.filter(id=>emExame(id,k))){
-  for(const p of PRINCIPAIS)if(p!=='SSO'&&(man.p[p]||[]).includes(id))return false;
+  for(const p of ORDEM)if(p!=='SSO'&&p!=='LB'&&(man.p[p]||[]).includes(id))return false;
   if(man.c&&man.c[id])return false;
   if(man.j&&man.j[id]&&man.j[id]!=='20h–21h')return false;
  }
@@ -763,8 +763,13 @@ function resolverDia(k,ctx){
 
  if(recalc)base.avisos.push({t:'i',m:'Dia recalculado: a edição manual não batia com as folgas e ausências do dia.'});
  const prio=prioridade(k);
- let slots=prio.slice(0,Math.min(prio.length,disp.length));
- const extra=disp.length-prio.length;
+ /* ausência parcial: fica na Linha de Bloqueio (a não ser que seja a SSO do ciclo);
+    os demais postos são preenchidos pelos outros */
+ const parcLB=disp.filter(id=>emExame(id,k)&&id!==ctx.sso[k]);
+ const dispO=disp.filter(id=>!parcLB.includes(id));
+ const prioO=parcLB.length?prio.filter(p=>p!=='LB'):prio;
+ let slots=prioO.slice(0,Math.min(prioO.length,dispO.length));
+ const extra=dispO.length-prioO.length;
  if(extra>0)for(let i=0;i<extra;i++)slots.push('RONDA');
  if(!disp.length)return {...base,postos:{},cafe:{},janta:{}};
 
@@ -786,14 +791,14 @@ function resolverDia(k,ctx){
   const porAgente={};
   for(const[p,ids]of Object.entries(mapa))for(const id of ids)porAgente[id]=p;
   for(const[id,p]of Object.entries(porAgente)){
-   if(ult[id]===p){s+=1000;avisos.push(['e',`${nome(id)} repetiria ${POSTOS[p].ab} do último dia trabalhado`])}
+   if(ult[id]===p&&!(p==='LB'&&emExame(id,k))){s+=1000;avisos.push(['e',`${nome(id)} repetiria ${POSTOS[p].ab} do último dia trabalhado`])}
    if(semana[id]&&semana[id].has(p))s+=45;
    if(id==='gerson'){
     if(p==='RONDA'&&dow(k)!==0&&dow(k)!==6&&gp!=='RONDA'){s+=1000;avisos.push(['e','Gerson na Ronda em dia de semana'])}
     if(p==='SSO'&&(dow(k)===0||dow(k)===6)){s+=1000;avisos.push(['e','Gerson na SSO em fim de semana'])}
     if(gp&&p!==gp){s+=1000;avisos.push(['w',`Gerson deveria ficar em ${POSTOS[gp].ab} hoje pela regra do fim de semana`])}
    }
-   if(PRINCIPAIS.includes(p)&&emExame(id,k)&&!(p==='SSO'&&preSSO===id)){s+=1000;avisos.push(['e',`${nome(id)} em ${POSTOS[p].ab} no dia da ausência parcial`])}
+   if(emExame(id,k)&&p!=='LB'&&!(p==='SSO'&&preSSO===id)){s+=1000;avisos.push(['e',`${nome(id)} em ${POSTOS[p].ab} no dia da ausência parcial (deveria ficar na Linha de Bloqueio)`])}
    if(p==='CARTOES'){
     if(cartNoCiclo.has(id)){s+=1000;avisos.push(['e',`${nome(id)} faria Cartões duas vezes no ciclo`])}
     if(ssoAmanha&&id===ssoAmanha)s-=35;
@@ -806,7 +811,7 @@ function resolverDia(k,ctx){
  // tenta com SSO e Cartões já definidos pelo ciclo; se travar numa regra rígida,
  // afrouxa primeiro os Cartões e depois a SSO
  function buscar(fixSSO,fixCart,extra){
-  let ag=disp.slice(),sl=slots.slice();
+  let ag=dispO.slice(),sl=slots.slice();
   const fx={};
   const fixar=(posto,id)=>{
    if(!id||!ag.includes(id)||!sl.includes(posto))return;
@@ -817,13 +822,14 @@ function resolverDia(k,ctx){
   let b=null;
   permutar(ag,perm=>{
    const mapa={};
+   if(parcLB.length)mapa.LB=parcLB.slice();
    for(const p in fx)mapa[p]=[fx[p]];
    for(let i=0;i<sl.length;i++){const p=sl[i];(mapa[p]=mapa[p]||[]).push(perm[i])}
    const r=score(mapa);
    const s=r.s+extra;
    if(!b||s<b.s)b={s,avisos:r.avisos,mapa};
   });
-  if(!b){const mapa={};for(const p in fx)mapa[p]=[fx[p]];b={s:extra,avisos:[],mapa}}
+  if(!b){const mapa={};if(parcLB.length)mapa.LB=parcLB.slice();for(const p in fx)mapa[p]=[fx[p]];b={s:extra,avisos:[],mapa}}
   return b;
  }
  let best=buscar(true,true,0);
