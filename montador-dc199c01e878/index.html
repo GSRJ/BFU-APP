@@ -566,6 +566,18 @@ function planoSSO(dias,gersonPlan){
   if(m&&m.p&&m.p.SSO&&m.p.SSO[0]){fixos[k]=m.p.SSO[0];continue}
   if(S.fixarSSO&&S.fixarSSO[k]&&noGBD(k).includes(S.fixarSSO[k]))fixos[k]=S.fixarSSO[k];
  }
+ /* quem trabalhou no ciclo anterior e não passou pela SSO vai para a SSO no primeiro
+    dia deste ciclo, se estiver no GBD desse dia (Gerson não, se cair em fim de semana) */
+ let herdou=null;
+ {const ant=Array.from({length:7},(_,i)=>addD(inicio,i-7));
+  if(!fixos[inicio]&&ant.every(kk=>CACHE[kk])){
+   const passou=new Set();ant.forEach(kk=>(CACHE[kk].postos.SSO||[]).forEach(x=>passou.add(x)));
+   const faltou=AAS.filter(id=>!passou.has(id)&&ant.some(kk=>disponiveis(kk).includes(id)));
+   const fds=dow(inicio)===0||dow(inicio)===6;
+   const pode=faltou.filter(id=>noGBD(inicio).includes(id)&&!(id==='gerson'&&fds)&&!(id==='gerson'&&gersonPlan&&gersonPlan[inicio]));
+   pode.sort((a,b)=>(ultimoSSO(a,inicio)||'')<(ultimoSSO(b,inicio)||'')?-1:1);
+   if(pode.length){fixos[inicio]=pode[0];herdou=pode[0]}
+  }}
  const livres=dias.filter(k=>!fixos[k]);
  const antes={};
  for(const id of AAS)antes[id]=ultimoSSO(id,inicio);
@@ -628,6 +640,7 @@ function planoSSO(dias,gersonPlan){
   });
   plano[k]=pool[0];
  }
+ plano._herdou=herdou;
  return plano;
 }
 
@@ -977,6 +990,8 @@ function resolverCiclo(domK){
  ctx.sso=planoSSO(dias,ctx.gerson);
  ctx.cartoes=planoCartoes(dias,ctx.sso,ctx.gerson);
  for(const k of dias){ CACHE[k]=resolverDia(k,ctx); }
+ if(ctx.sso._herdou&&(CACHE[dias[0]].postos.SSO||[]).includes(ctx.sso._herdou))
+  CACHE[dias[0]].avisos.push({t:'i',m:`${nome(ctx.sso._herdou)} na SSO no primeiro dia do ciclo: não tinha passado pela SSO no ciclo anterior.`});
  // conferência do ciclo
  const passou=new Set();dias.forEach(k=>(CACHE[k].postos.SSO||[]).forEach(id=>passou.add(id)));
  const deviam=AAS.filter(id=>dias.some(k=>noGBD(k).includes(id)));
