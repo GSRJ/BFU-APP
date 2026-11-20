@@ -304,6 +304,7 @@ dialog::backdrop{background:rgba(10,18,30,.6);backdrop-filter:blur(3px)}
 .chip{border-radius:99px}
 #plDlg{position:relative;padding:0;margin:0;border:0;border-radius:0;width:100vw;max-width:none;height:100dvh;max-height:none;background:#EDE7DA}
 #plDlg[open]{display:flex;flex-direction:column}
+html.so-planta #plDlg::backdrop{background:#EDE7DA}
 #plDlg .plbar{flex:none;display:flex;align-items:center;gap:6px;padding:8px max(8px,env(safe-area-inset-right)) 8px max(8px,env(safe-area-inset-left));background:var(--head-bg)}
 #plDlg .pltabs{flex:1;display:flex;gap:5px;min-width:0}
 #plDlg .pltabs button{flex:1;min-height:40px;border-radius:10px;border:1.5px solid rgba(255,255,255,.35);background:transparent;color:#fff;font-weight:700;font-size:12.5px;line-height:1.1;cursor:pointer;padding:2px 4px}
@@ -3382,16 +3383,21 @@ function plNearest(cx,cy){
   for(const p of plPoints){const q=s.createSVGPoint();q.x=p.nx*plDims.w;q.y=p.ny*plDims.h;const z=q.matrixTransform(m),d=Math.hypot(z.x-cx,z.y-cy);if(d<bd){bd=d;best=p;}}
   return best;
 }
+/* clique em cima do desenho de uma escada, elevador, quiosque… marca o próprio item */
+async function plHitDesenho(sx,sy){
+  try{const cf=await plCfg(plK);const id=await withArea(plK,cf,newRonda(),async()=>{basePlan(PDF_PAL);return hitItem(sx,sy);});
+    return id?plPoints.find(p=>p.id===String(id))||null:null;}catch(_){return null;}
+}
 async function plChooseAt(e){
   if(plSuppressClick)return;const s=e.target.closest('svg');if(!s||!plDims)return;const m=s.getScreenCTM();if(!m)return;
-  const q=s.createSVGPoint();q.x=e.clientX;q.y=e.clientY;const z=q.matrixTransform(m.inverse()),vb=s.viewBox.baseVal;if(z.x<vb.x||z.x>vb.x+vb.width||z.y<vb.y||z.y>vb.y+vb.height)return;const nx=Math.max(-.14,Math.min(1.14,z.x/plDims.w)),ny=Math.max(-.14,Math.min(1.14,z.y/plDims.h)),near=plNearest(e.clientX,e.clientY),r=s.getBoundingClientRect(),fx=(e.clientX-r.left)/r.width,fy=(e.clientY-r.top)/r.height;
+  const q=s.createSVGPoint();q.x=e.clientX;q.y=e.clientY;const z=q.matrixTransform(m.inverse()),vb=s.viewBox.baseVal;if(z.x<vb.x||z.x>vb.x+vb.width||z.y<vb.y||z.y>vb.y+vb.height)return;const nx=Math.max(-.14,Math.min(1.14,z.x/plDims.w)),ny=Math.max(-.14,Math.min(1.14,z.y/plDims.h)),near=plNearest(e.clientX,e.clientY)||(await plHitDesenho(z.x,z.y)),r=s.getBoundingClientRect(),fx=(e.clientX-r.left)/r.width,fy=(e.clientY-r.top)/r.height;
   plMark={k:plK,nx,ny,p:near?{...near,free:false}:{id:'',name:'Local marcado na planta',nx,ny,free:true}};$('#plBalloonWhere').textContent=near?noPlat(near.name):KIND_LABEL[plK]+' · local marcado na planta';
   if(plZ===1){plZ=3.5;await renderPl([fx,fy]);}else{plDrawMark();plPositionBalloon();}
 }
 function plTransfer(reg){
   if(!plMark)return;const p=plMark.p||{id:'',name:'Local marcado na planta',nx:plMark.nx,ny:plMark.ny,free:true},payload={v:1,k:plK,reg,p};
   try{sessionStorage.setItem(PL_REPORT_KEY,JSON.stringify(payload));}catch(_){}
-  const u=new URL('../reporte-sso/',location.href);u.searchParams.set('bfuReport',reg);u.searchParams.set('area',plK);if(p.id)u.searchParams.set('item',p.id);u.searchParams.set('name',p.name);u.searchParams.set('nx',p.nx);u.searchParams.set('ny',p.ny);if(p.free)u.searchParams.set('free','1');location.assign(u.href);
+  const u=new URL('../reporte-sso/',location.href);u.searchParams.set('bfuReport',reg);u.searchParams.set('area',plK);if(p.id)u.searchParams.set('item',p.id);u.searchParams.set('name',p.name);u.searchParams.set('nx',p.nx);u.searchParams.set('ny',p.ny);if(p.free)u.searchParams.set('free','1');if(IN_FRAME){parent.postMessage({bfu:'report',q:u.search},location.origin);plMark=null;$('#plBalloon').hidden=true;return;}location.assign(u.href);
 }
 $('#plWrap').addEventListener('click',plChooseAt);
 $('#plWrap').addEventListener('scroll',plPositionBalloon,{passive:true});
@@ -3407,7 +3413,7 @@ function openPl(){plK=KIND;plZ=1;plMark=null;$('#plBalloon').hidden=true;$('#plL
 document.addEventListener('click',e=>{
   const d=$('#plDlg');if(!d||!d.open)return;
   const t=e.target.closest('[data-pl]');if(t){plK=t.dataset.pl;plZ=1;plMark=null;renderPl();return;}
-  if(e.target.id==='plClose'){plMark=null;$('#plBalloon').hidden=true;d.close();}
+  if(e.target.id==='plClose'){plMark=null;$('#plBalloon').hidden=true;d.close();if(SO_PLANTA)goHub();}
   else if(e.target.id==='plLeg'){const b=$('#plLegBox');b.hidden=!b.hidden;}
   else if(e.target.id==='plFit'){plZ=1;plMark=null;$('#plBalloon').hidden=true;renderPl();}
   else if(e.target.id==='plIn'||e.target.id==='plOut'){const w=$('#plWrap');if(!w.querySelector('svg'))return;const fx=(w.scrollLeft+w.clientWidth/2)/w.scrollWidth,fy=(w.scrollTop+w.clientHeight/2)/w.scrollHeight;plZ=Math.min(5,Math.max(1,plZ+(e.target.id==='plIn' ? .5 : -.5)));renderPl([fx,fy]);}
@@ -3797,6 +3803,9 @@ let tourW=innerWidth;addEventListener('resize',()=>{if(touring&&!tourBusy&&Math.
 const openTut=startTour;
 $('#mTut').onclick=startTour;
 
+/* aberto pela opção Planta da tela inicial: mostra só a planta */
+const SO_PLANTA=new URLSearchParams(location.search).has('planta');
+if(SO_PLANTA){document.documentElement.classList.add('so-planta');$('#plDlg').addEventListener('cancel',e=>{e.preventDefault();goHub();});}
 function plTakeTransfer(){
   let j=null;
   try{const raw=sessionStorage.getItem(PL_REPORT_KEY);if(raw){j=JSON.parse(raw);sessionStorage.removeItem(PL_REPORT_KEY);}}catch(_){}
@@ -3923,6 +3932,7 @@ document.body.classList.add('boot');setTimeout(()=>document.body.classList.remov
   renderAll();
   fitAll();
   let tStep=0;try{tStep=+(await kvGet('tourStep'))||0;if(tStep){await kvSet('tourStep',null);await kvSet('autoRep',null);}}catch(_){}
+  if(SO_PLANTA){openPl();return;}
   if(plJump){try{await kvSet('autoRep',null);}catch(_){}plBeginTransfer(plJump);}
   else if(tStep&&KIND===TOUR_K)tourResume(tStep);
   else{
