@@ -414,6 +414,7 @@ const PADRAO={
  confirmados:Object.fromEntries(Object.keys(REALIZADO).map(k=>[k,1])),
 };
 
+let APARELHO_NOVO=false;try{APARELHO_NOVO=!localStorage.getItem('gbd-bfu-v1')}catch(e){}
 let S=carregar();
 function carregar(){
  let base=JSON.parse(JSON.stringify(PADRAO));
@@ -436,7 +437,8 @@ function alternarConfirmado(k){
  salvar();renderFoco();renderCiclo();
  toast(confirmado(k)?'GBD de '+br(k)+' confirmado':'GBD de '+br(k)+' voltou a previsto');
 }
-function salvar(){try{localStorage.setItem('gbd-bfu-v1',JSON.stringify(S))}catch(e){}}
+function salvar(){S._mod=Date.now();gravarLocal()}
+function gravarLocal(){try{localStorage.setItem('gbd-bfu-v1',JSON.stringify(S))}catch(e){}}
 
 /* ============================ escala 6x2 e variantes ============================ */
 function regimeEm(id,k){
@@ -1545,7 +1547,7 @@ function montarCardPublicar(box){
  if(/claude/i.test(location.hostname))return;
  const c=el('div','card');
  c.appendChild(el('h3',null,'Publicar para os agentes'));
- c.appendChild(el('p','hint','Manda o GBD direto para a página dos agentes, sem passar pelo GitHub à mão. A senha fica guardada neste aparelho.'));
+ c.appendChild(el('p','hint','Manda o GBD para a página dos agentes e guarda os dados do montador (ausências, edições e confirmações). Em outro aparelho, com a mesma senha, o montador abre igual. A senha fica guardada neste aparelho.'));
  const g=el('div','form');
  const fs=el('div','f');fs.appendChild(el('label',null,'Senha de publicação'));
  const is=el('input');is.type='password';is.autocomplete='current-password';
@@ -1566,10 +1568,11 @@ function montarCardPublicar(box){
   b.disabled=true;info.className='aviso i';info.textContent='Publicando '+nd+' dias…';
   try{
    const r=await fetch('/api/publicar',{method:'POST',headers:{'content-type':'application/json'},
-    body:JSON.stringify({senha,dados:p})});
+    body:JSON.stringify({senha,dados:p,estado:S})});
    const j=await r.json().catch(()=>({}));
    if(!r.ok)throw new Error(j.erro||('erro '+r.status));
    try{localStorage.setItem('gbd-pub',senha)}catch(e){}
+   if(j.estadoEm){S._sinc=j.estadoEm;S._mod=Date.parse(j.estadoEm);gravarLocal()}
    info.className='aviso ok';
    info.textContent='Publicado: '+j.dias+' dias no ar'+(j.commit?' (commit '+j.commit+')':'')+'. Os celulares pegam na próxima abertura.';
    toast('GBD publicado para os agentes');
@@ -1577,7 +1580,55 @@ function montarCardPublicar(box){
    info.className='aviso e';info.textContent='Não publicou: '+e.message;
   }finally{b.disabled=false}
  };
+ const b2=el('button','btn','Trazer os dados da última publicação');b2.style.cssText='width:100%;margin-top:10px';
+ b2.onclick=async()=>{
+  const senha=is.value.trim();
+  if(!senha){info.className='aviso e';info.textContent='Digite a senha de publicação.';return}
+  if(!confirm('Trocar os dados deste aparelho pelos da última publicação? O que foi mudado aqui e não foi publicado se perde.'))return;
+  b2.disabled=true;info.className='aviso i';info.textContent='Buscando…';
+  try{
+   const r=await trazerEstado(senha);
+   try{localStorage.setItem('gbd-pub',senha)}catch(e){}
+   if(!r){info.className='aviso i';info.textContent='Ainda não há dados publicados do montador. Publique uma vez para começar.';return}
+   aplicarEstado(r);info.className='aviso ok';info.textContent='Dados da publicação de '+quando(r.em)+' carregados.';
+  }catch(e){info.className='aviso e';info.textContent='Não trouxe: '+e.message}
+  finally{b2.disabled=false}
+ };
+ c.appendChild(b2);
  box.appendChild(c);
+}
+
+/* ---- sincronização: o montador abre igual em qualquer aparelho com a senha ---- */
+const quando=iso=>{const d=new Date(iso);return isNaN(d)?'':d.toLocaleDateString('pt-BR')+' às '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})};
+async function trazerEstado(senha){
+ const r=await fetch('/api/publicar',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({acao:'ler-estado',senha})});
+ const j=await r.json().catch(()=>({}));
+ if(!r.ok)throw new Error(j.erro||('erro '+r.status));
+ return j.estado?{estado:j.estado,em:j.em}:null;
+}
+function aplicarEstado(r){
+ const novo={...JSON.parse(JSON.stringify(PADRAO)),...r.estado};
+ novo._sinc=r.em;novo._mod=Date.parse(r.em);
+ for(const k of Object.keys(S))delete S[k];Object.assign(S,novo);
+ gravarLocal();for(const k in CACHE)delete CACHE[k];
+ renderTudo();
+}
+async function sincronizarAoAbrir(){
+ if(!/^https?:/.test(location.protocol)||/claude/i.test(location.hostname))return;
+ let senha='';try{senha=localStorage.getItem('gbd-pub')||''}catch(e){}
+ if(!senha)return;
+ let r;try{r=await trazerEstado(senha)}catch(e){return}
+ if(!r||!r.em)return;
+ const remoto=Date.parse(r.em),sinc=S._sinc?Date.parse(S._sinc):0;
+ if(remoto<=sinc)return;                                   /* já está igual à última publicação */
+ const mexeuAqui=!APARELHO_NOVO&&(!S._sinc||(S._mod&&S._mod>sinc));         /* nunca sincronizou ou mudou aqui depois disso: pergunta */
+ if(!mexeuAqui){aplicarEstado(r);toast('Montador atualizado com a publicação de '+quando(r.em));return}
+ const bar=el('div','aviso w');bar.style.cssText='position:sticky;top:0;z-index:50;margin:0 0 10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center';
+ bar.appendChild(el('span',null,'Há uma publicação mais nova ('+quando(r.em)+'). '+(S._sinc?'Este aparelho tem mudanças que não foram publicadas.':'Este aparelho ainda não foi sincronizado e tem dados próprios.')));
+ const u=el('button','btn sm pri','Usar a publicada'),m=el('button','btn sm','Manter a deste aparelho');
+ u.onclick=()=>{aplicarEstado(r);bar.remove();toast('Dados da publicação carregados')};
+ m.onclick=()=>{S._sinc=r.em;gravarLocal();bar.remove();toast('Mantido. Publique para levar estas mudanças aos outros aparelhos')};
+ bar.append(u,m);document.body.prepend(bar);
 }
 
 /* ---- init ---- */
@@ -1588,6 +1639,7 @@ $('#calDe').value='2026-11';$('#calAte').value='2028-12';
 $('#calDe').onchange=renderCal;$('#calAte').onchange=renderCal;
 $('#ausDe').value=hojeK();$('#exDia').value=hojeK();$('#regDe').value=hojeK();$('#ferDia').value=hojeK();
 renderTudo();
+sincronizarAoAbrir();
 </script>
 </body>
 </html>
