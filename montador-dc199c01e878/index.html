@@ -726,9 +726,27 @@ function permutar(arr,cb){
  }
 }
 
+/* a edição manual de um dia vale enquanto respeitar quem está no dia:
+   todos os disponíveis em algum posto, ninguém de folga ou ausente, e quem tem ausência
+   parcial fora dos postos principais (a SSO pode), fora da pausa e no último intervalo */
+function manualValido(k,man){
+ const disp=disponiveis(k),noPosto=new Set();
+ for(const ids of Object.values(man.p||{}))(ids||[]).forEach(id=>noPosto.add(id));
+ if(disp.some(id=>!noPosto.has(id)))return false;
+ for(const id of noPosto)if(AAS.includes(id)&&!disp.includes(id))return false;
+ for(const id of disp.filter(id=>emExame(id,k))){
+  for(const p of PRINCIPAIS)if(p!=='SSO'&&(man.p[p]||[]).includes(id))return false;
+  if(man.c&&man.c[id])return false;
+  if(man.j&&man.j[id]&&man.j[id]!=='20h–21h')return false;
+ }
+ return true;
+}
 /* ----- resolver um dia ----- */
 function resolverDia(k,ctx){
- const man=S.manuais[k]||REALIZADO[k];
+ let man=S.manuais[k]||REALIZADO[k];
+ /* dia editado: se não bate mais com folgas, ausências ou ausência parcial do dia, é recalculado */
+ let recalc=false;
+ if(man&&man.p&&!REALIZADO[k]&&!manualValido(k,man)){man=null;recalc=true}
  const disp=disponiveis(k);
  const aslOk=trabalha('jhonatan',k)&&!ausente('jhonatan',k);
  const asl=aslOk?'Jhonatan':((S.aslCob&&S.aslCob[k])||'A definir');
@@ -743,6 +761,7 @@ function resolverDia(k,ctx){
   return d;
  }
 
+ if(recalc)base.avisos.push({t:'i',m:'Dia recalculado: a edição manual não batia com as folgas e ausências do dia.'});
  const prio=prioridade(k);
  let slots=prio.slice(0,Math.min(prio.length,disp.length));
  const extra=disp.length-prio.length;
@@ -816,7 +835,7 @@ function resolverDia(k,ctx){
  const postos={};
  for(const p of ORDEM) if(best.mapa[p]) postos[p]=best.mapa[p].slice();
  const d={...base,postos};
- d.avisos=best.avisos.map(([t,m])=>({t,m}));
+ d.avisos=[...base.avisos,...best.avisos.map(([t,m])=>({t,m}))];
  const naoPreenchidos=prio.filter(p=>!postos[p]);
  if(naoPreenchidos.length)d.avisos.push({t:'i',m:`Sem efetivo para ${naoPreenchidos.map(p=>POSTOS[p].ab).join(', ')} — ${naoPreenchidos.length===1?'é o último':'são os últimos'} da prioridade do dia.`});
  d.ssoCobre=cobreSSO(d);
