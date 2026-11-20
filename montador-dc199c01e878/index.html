@@ -871,8 +871,8 @@ function montarCafe(k,disp,postos,ctx){
 }
 /* ----- pausa e intervalo com ausência parcial -----
    os demais AAS são distribuídos como se quem tem ausência parcial não estivesse:
-   a cobertura mínima conta só com eles. Quem tem ausência parcial faz a pausa no horário
-   menos cheio (e diferente do último dia, se der) e o intervalo sempre no último turno (20h–21h). */
+   a cobertura mínima conta só com eles. Quem tem ausência parcial não entra na pausa
+   (não vai estar) e faz o intervalo junto com os outros ausentes no último turno (20h–21h). */
 function intervalos(k,disp,postos,aslOk,ctx,cobre){
  const parc=disp.filter(id=>emExame(id,k)),pres=disp.filter(id=>!emExame(id,k));
  if(!parc.length)return {cafe:montarCafe(k,disp,postos,ctx),janta:montarJanta(k,disp,postos,aslOk,ctx)};
@@ -888,8 +888,8 @@ function intervalos(k,disp,postos,aslOk,ctx,cobre){
   return mapa;
  };
  const cs=[...new Set(Object.values(cafe))].sort();
- for(const id of parc)janta[id]='20h–21h';   /* intervalo de quem tem ausência parcial: sempre o último */
- return {cafe:encaixa(cafe,cs.length?cs:CAFE_SLOTS_3,'cafe'),janta};
+ for(const id of parc)janta[id]='20h–21h';   /* quem tem ausência parcial: sem pausa, intervalo juntos no último turno */
+ return {cafe,janta};
 }
 /* ----- janta ----- */
 function montarJanta(k,disp,postos,comAsl,ctx){

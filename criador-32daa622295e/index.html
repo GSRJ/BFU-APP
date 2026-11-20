@@ -766,7 +766,7 @@ function colisoesCriticas(d){
  return out;
 }
 /* pausa e intervalo com ausência parcial: os demais são distribuídos sem contar com quem
-   tem ausência parcial; essa pessoa faz a pausa no horário menos cheio e o intervalo no último */
+   tem ausência parcial; essa pessoa não entra na pausa e faz o intervalo no último turno */
 function intervalos(k,disp,postos,comApoio,cobre){
  const parc=disp.filter(id=>emExame(id,k)),pres=disp.filter(id=>!emExame(id,k));
  if(!parc.length)return {cafe:montarCafe(k,disp,postos),janta:montarJanta(k,disp,postos,comApoio)};
@@ -778,9 +778,6 @@ function intervalos(k,disp,postos,comApoio,cobre){
  const js=[...new Set(Object.values(janta))].sort((a,b)=>hora(a)-hora(b));
  const ultimoJ=js.length?js[js.length-1]:S.janta.turnos[S.janta.turnos.length-1];
  for(const id of parc){
-  const l=ultimoDia(id,k,'cafe'),uv=l?l.v:null;
-  const ord=cOps.slice().sort((a,b)=>(uso(a)-uso(b))||((a===uv)-(b===uv))||(hora(a)-hora(b)));
-  if(ord.length)cafe[id]=ord[0];
   if(ultimoJ)janta[id]=ultimoJ;
  }
  return {cafe,janta};
