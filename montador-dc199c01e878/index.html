@@ -903,9 +903,9 @@ function montarCafe(k,disp,postos,ctx){
    (não vai estar) e faz o intervalo junto com os outros ausentes no último turno (20h–21h). */
 function intervalos(k,disp,postos,aslOk,ctx,cobre){
  const parc=disp.filter(id=>emExame(id,k)),pres=disp.filter(id=>!emExame(id,k));
- if(!parc.length)return {cafe:montarCafe(k,disp,postos,ctx),janta:montarJanta(k,disp,postos,aslOk,ctx)};
+ if(!parc.length){const c=montarCafe(k,disp,postos,ctx);return {cafe:c,janta:montarJanta(k,disp,postos,aslOk,ctx,c)}}
  const pp={...postos};if(cobre&&(postos.SSO||[]).some(id=>emExame(id,k)))pp.SSO=[cobre];
- const cafe=montarCafe(k,pres,pp,ctx),janta=montarJanta(k,pres,pp,aslOk,ctx);
+ const cafe=montarCafe(k,pres,pp,ctx),janta=montarJanta(k,pres,pp,aslOk,ctx,cafe);
  const encaixa=(mapa,slots,tipo)=>{
   for(const id of parc){
    const l=ultimoDia(id,k,tipo),uv=l?l.v:null;
@@ -920,7 +920,9 @@ function intervalos(k,disp,postos,aslOk,ctx,cobre){
  return {cafe,janta};
 }
 /* ----- janta ----- */
-function montarJanta(k,disp,postos,comAsl,ctx){
+/* intervalo: só 18h, 19h e 20h, na mesma ordem da pausa (quem pausou primeiro sai
+   primeiro para o intervalo, quem pausou por último sai por último) */
+function montarJanta(k,disp,postos,comAsl,ctx,cafe){
  const n=disp.length;if(!n)return {};
  const ult={};for(const id of disp){const l=ultimoDia(id,k,'janta');ult[id]=l?l.v:null}
  const sso=(postos.SSO||[])[0],apo=(postos.APOIO||[])[0];
@@ -935,18 +937,26 @@ function montarJanta(k,disp,postos,comAsl,ctx){
   if(g18.length&&g18.every(id=>ontem18.has(id)))s+=30;
   return s;
  };
- if(n<=4){
-  const turnos=JANTA_4.slice(0,n);
-  return melhorDistribuicao(disp,turnos,turnos.map(()=>1),1,penal);
- }
- const max=Math.max(1,n-3);
+ /* quantos saem em cada turno: mais gente trabalhando às 18h e 19h */
  let caps;
- if(comAsl)caps=n===5?[2,2,1]:n===6?[2,2,2]:balancear(n,3,max);
+ if(n<=3)caps=Array.from({length:3},(_,i)=>i<n?1:0);
+ else if(n===4)caps=[1,1,2];
+ else if(comAsl)caps=n===5?[2,2,1]:n===6?[2,2,2]:balancear(n,3,Math.max(1,n-3));
  else caps=n===5?[1,2,2]:n===6?[1,2,3]:[1,Math.ceil((n-1)/2),Math.floor((n-1)/2)];
- caps=caps.map(c=>Math.min(c,max));
  let falta=n-caps.reduce((a,b)=>a+b,0);
- for(let i=caps.length-1;i>=0&&falta>0;i--){const add=Math.min(max-caps[i],falta);caps[i]+=add;falta-=add}
- return melhorDistribuicao(disp,JANTA_3,caps,max,penal);
+ for(let i=caps.length-1;falta>0;i=(i+caps.length-1)%caps.length){caps[i]++;falta--}
+ const exp=[];JANTA_3.forEach((t,i)=>{for(let j=0;j<caps[i];j++)exp.push(t)});
+ /* ordem da pausa; quem pausou no mesmo horário pode trocar entre si */
+ const hc=id=>(cafe&&cafe[id])||'99h99';
+ const grupos=[];disp.slice().sort((a,b)=>hc(a)<hc(b)?-1:hc(a)>hc(b)?1:0).forEach(id=>{
+  const g=grupos[grupos.length-1];if(g&&hc(g[0])===hc(id))g.push(id);else grupos.push([id]);
+ });
+ let best=null;
+ (function rec(gi,ordem){
+  if(gi===grupos.length){const m={};ordem.forEach((id,i)=>m[id]=exp[i]);const sc=penal(m);if(!best||sc<best.s)best={s:sc,m};return}
+  permutar(grupos[gi],p=>rec(gi+1,ordem.concat(p)));
+ })(0,[]);
+ return best?best.m:{};
 }
 
 /* ----- ciclo ----- */
