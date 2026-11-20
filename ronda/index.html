@@ -1314,12 +1314,24 @@ function ownerOf(kind,cx,cy){
   return _own[key]=bd<400?best:null;
 }
 let LEGEND_MODE=false,LEG_ITEMS=[];
+/* desenhos da planta ligados a um item (escada, elevador, quiosque…): guarda a caixa de
+   cada desenho para que um toque em cima dele marque o próprio item */
+const HITS={};
+function caixaSVG(svg,dx,dy){
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  for(const m of svg.matchAll(/<rect x="([-\d.]+)" y="([-\d.]+)" width="([\d.]+)" height="([\d.]+)"/g)){
+    const x=+m[1]+dx,y=+m[2]+dy,w=+m[3],h=+m[4];x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x+w);y1=Math.max(y1,y+h);
+  }
+  return x1>x0?{x0,y0,x1,y1}:null;
+}
 function mv(kind,cx,cy,svg){
   if(cfg.bg||LEGEND_MODE)return svg;
   const o=ownerOf(kind,cx,cy);let out=svg;
   if(o){
     const q=cfg.points.find(p=>p.id===o.id);if(!q)return '';
     const dx=q.nx*VW()-o.x,dy=q.ny*VH()-o.y;
+    const bm=(cfg.baseMods||{})[kind+':'+Math.round(cx)+','+Math.round(cy)];
+    if(kind!=='gap'&&kind!=='stair'&&!(bm&&bm.del)){const b=caixaSVG(svg,dx+((bm&&bm.dx)||0),dy+((bm&&bm.dy)||0));if(b)(HITS[KIND]=HITS[KIND]||{})[kind+'|'+q.id]=Object.assign(b,{id:q.id});}
     if(!(Math.abs(dx)<.5&&Math.abs(dy)<.5))out=`<g transform="translate(${dx.toFixed(1)} ${dy.toFixed(1)})">${svg}</g>`;
   }
   return boWrap(kind+':'+Math.round(cx)+','+Math.round(cy),out);
@@ -1580,6 +1592,34 @@ function applyLoc(cf,k){
     if(w)p.where=w;
   });
   cf.locVer=LOCVER;return true;
+}
+/* toque em cima do desenho de um item: devolve o item (escada, elevador, quiosque, ATM, SSO…) */
+const _platHits={};
+function platHits(){
+  if(_platHits[KIND])return _platHits[KIND];
+  const K=PLATS[KIND],src=(K.fills||'')+(K.extra||'')+(K.base||''),out=[];
+  const AREA={'@R@':A_ROL,'@FX@':A_FIX,'@L2@':A_ELE};
+  for(const m of src.matchAll(/<rect x="([-\d.]+)" y="([-\d.]+)" width="([\d.]+)" height="([\d.]+)"[^>]*?fill="(@R@|@FX@|@L2@)"/g)){
+    const x=+m[1]-PLAT_OX,y=+m[2]-PLAT_OY,w=+m[3],h=+m[4];
+    const pts=cfg.points.filter(q=>q.area===AREA[m[5]]);
+    let best=null,bd=Infinity;
+    for(const q of pts){const d=Math.hypot(q.nx*VW()-(x+w/2),q.ny*VH()-(y+h/2));if(d<bd){bd=d;best=q;}}
+    if(best&&bd<Math.max(w,h))out.push({x0:x,y0:y,x1:x+w,y1:y+h,id:best.id});
+  }
+  /* desenhos importados sem retângulo simples: usa o tamanho típico do item em volta do ponto */
+  const TAM={[A_ROL]:[38,195],[A_FIX]:[45,170],[A_ELE]:[70,70]};
+  for(const q of cfg.points){const t=TAM[q.area];if(!t||out.some(b=>b.id===q.id))continue;
+    const x=q.nx*VW(),y=q.ny*VH();out.push({x0:x-t[0],y0:y-t[1],x1:x+t[0],y1:y+t[1],id:q.id});}
+  return _platHits[KIND]=out;
+}
+function hitItem(sx,sy){
+  if(cfg.bg)return null;
+  const lst=KIND==='mez'?Object.values(HITS[KIND]||{}):(PLATS[KIND]?platHits():[]);
+  const m=4*VW()/1000;let best=null,ba=Infinity;
+  for(const b of lst){
+    if(sx>=b.x0-m&&sx<=b.x1+m&&sy>=b.y0-m&&sy<=b.y1+m){const a=(b.x1-b.x0)*(b.y1-b.y0);if(a<ba){ba=a;best=b;}}
+  }
+  return best&&pointById(best.id)?best.id:null;
 }
 function locInfo(p){const r=refInfo(p.nx,p.ny);return {zone:r.zone,text:p.custom?(locArea(p.nx,p.ny)||r.text):''};}
 function gridSVG(P,u){
@@ -3793,16 +3833,21 @@ function plNearest(cx,cy){
   for(const p of plPoints){const q=s.createSVGPoint();q.x=p.nx*plDims.w;q.y=p.ny*plDims.h;const z=q.matrixTransform(m),d=Math.hypot(z.x-cx,z.y-cy);if(d<bd){bd=d;best=p;}}
   return best;
 }
+/* clique em cima do desenho de uma escada, elevador, quiosque… marca o próprio item */
+async function plHitDesenho(sx,sy){
+  try{const cf=await plCfg(plK);const id=await withArea(plK,cf,newRonda(),async()=>{basePlan(PDF_PAL);return hitItem(sx,sy);});
+    return id?plPoints.find(p=>p.id===String(id))||null:null;}catch(_){return null;}
+}
 async function plChooseAt(e){
   if(plSuppressClick)return;const s=e.target.closest('svg');if(!s||!plDims)return;const m=s.getScreenCTM();if(!m)return;
-  const q=s.createSVGPoint();q.x=e.clientX;q.y=e.clientY;const z=q.matrixTransform(m.inverse()),vb=s.viewBox.baseVal;if(z.x<vb.x||z.x>vb.x+vb.width||z.y<vb.y||z.y>vb.y+vb.height)return;const nx=Math.max(-.14,Math.min(1.14,z.x/plDims.w)),ny=Math.max(-.14,Math.min(1.14,z.y/plDims.h)),near=plNearest(e.clientX,e.clientY),r=s.getBoundingClientRect(),fx=(e.clientX-r.left)/r.width,fy=(e.clientY-r.top)/r.height;
+  const q=s.createSVGPoint();q.x=e.clientX;q.y=e.clientY;const z=q.matrixTransform(m.inverse()),vb=s.viewBox.baseVal;if(z.x<vb.x||z.x>vb.x+vb.width||z.y<vb.y||z.y>vb.y+vb.height)return;const nx=Math.max(-.14,Math.min(1.14,z.x/plDims.w)),ny=Math.max(-.14,Math.min(1.14,z.y/plDims.h)),near=plNearest(e.clientX,e.clientY)||(await plHitDesenho(z.x,z.y)),r=s.getBoundingClientRect(),fx=(e.clientX-r.left)/r.width,fy=(e.clientY-r.top)/r.height;
   plMark={k:plK,nx,ny,p:near?{...near,free:false}:{id:'',name:'Local marcado na planta',nx,ny,free:true}};$('#plBalloonWhere').textContent=near?noPlat(near.name):KIND_LABEL[plK]+' · local marcado na planta';
   if(plZ===1){plZ=3.5;await renderPl([fx,fy]);}else{plDrawMark();plPositionBalloon();}
 }
 function plTransfer(reg){
   if(!plMark)return;const p=plMark.p||{id:'',name:'Local marcado na planta',nx:plMark.nx,ny:plMark.ny,free:true},payload={v:1,k:plK,reg,p};
   try{sessionStorage.setItem(PL_REPORT_KEY,JSON.stringify(payload));}catch(_){}
-  const u=new URL('../reporte-sso/',location.href);u.searchParams.set('bfuReport',reg);u.searchParams.set('area',plK);if(p.id)u.searchParams.set('item',p.id);u.searchParams.set('name',p.name);u.searchParams.set('nx',p.nx);u.searchParams.set('ny',p.ny);if(p.free)u.searchParams.set('free','1');location.assign(u.href);
+  const u=new URL('../reporte-sso/',location.href);u.searchParams.set('bfuReport',reg);u.searchParams.set('area',plK);if(p.id)u.searchParams.set('item',p.id);u.searchParams.set('name',p.name);u.searchParams.set('nx',p.nx);u.searchParams.set('ny',p.ny);if(p.free)u.searchParams.set('free','1');if(IN_FRAME){parent.postMessage({bfu:'report',q:u.search},location.origin);plMark=null;$('#plBalloon').hidden=true;return;}location.assign(u.href);
 }
 $('#plWrap').addEventListener('click',plChooseAt);
 $('#plWrap').addEventListener('scroll',plPositionBalloon,{passive:true});
