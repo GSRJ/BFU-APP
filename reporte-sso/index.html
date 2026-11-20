@@ -1310,11 +1310,22 @@ function ownerOf(kind,cx,cy){
   return _own[key]=bd<400?best:null;
 }
 let LEGEND_MODE=false;
+/* desenhos da planta ligados a um item (escada, elevador, quiosque…): guarda a caixa de
+   cada desenho para que um toque em cima dele marque o próprio item */
+const HITS={};
+function caixaSVG(svg,dx,dy){
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  for(const m of svg.matchAll(/<rect x="([-\d.]+)" y="([-\d.]+)" width="([\d.]+)" height="([\d.]+)"/g)){
+    const x=+m[1]+dx,y=+m[2]+dy,w=+m[3],h=+m[4];x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x+w);y1=Math.max(y1,y+h);
+  }
+  return x1>x0?{x0,y0,x1,y1}:null;
+}
 function mv(kind,cx,cy,svg){
   if(cfg.bg||LEGEND_MODE)return svg;
   const o=ownerOf(kind,cx,cy);if(!o)return svg;
   const q=cfg.points.find(p=>p.id===o.id);if(!q)return '';
   const dx=q.nx*VW()-o.x,dy=q.ny*VH()-o.y;
+  if(kind!=='gap'&&kind!=='stair'){const b=caixaSVG(svg,dx,dy);if(b)(HITS[KIND]=HITS[KIND]||{})[kind+'|'+q.id]=Object.assign(b,{id:q.id});}
   return (Math.abs(dx)<.5&&Math.abs(dy)<.5)?svg:`<g transform="translate(${dx.toFixed(1)} ${dy.toFixed(1)})">${svg}</g>`;
 }
 function basePlan(P){return basePlan0(P)+shapesSVG(P);}
@@ -1514,6 +1525,34 @@ function applyLoc(cf,k){
     if(w)p.where=w;
   });
   cf.locVer=LOCVER;return true;
+}
+/* toque em cima do desenho de um item: devolve o item (escada, elevador, quiosque, ATM, SSO…) */
+const _platHits={};
+function platHits(){
+  if(_platHits[KIND])return _platHits[KIND];
+  const K=PLATS[KIND],src=(K.fills||'')+(K.extra||'')+(K.base||''),out=[];
+  const AREA={'@R@':A_ROL,'@FX@':A_FIX,'@L2@':A_ELE};
+  for(const m of src.matchAll(/<rect x="([-\d.]+)" y="([-\d.]+)" width="([\d.]+)" height="([\d.]+)"[^>]*?fill="(@R@|@FX@|@L2@)"/g)){
+    const x=+m[1]-PLAT_OX,y=+m[2]-PLAT_OY,w=+m[3],h=+m[4];
+    const pts=cfg.points.filter(q=>q.area===AREA[m[5]]);
+    let best=null,bd=Infinity;
+    for(const q of pts){const d=Math.hypot(q.nx*VW()-(x+w/2),q.ny*VH()-(y+h/2));if(d<bd){bd=d;best=q;}}
+    if(best&&bd<Math.max(w,h))out.push({x0:x,y0:y,x1:x+w,y1:y+h,id:best.id});
+  }
+  /* desenhos importados sem retângulo simples: usa o tamanho típico do item em volta do ponto */
+  const TAM={[A_ROL]:[38,195],[A_FIX]:[45,170],[A_ELE]:[70,70]};
+  for(const q of cfg.points){const t=TAM[q.area];if(!t||out.some(b=>b.id===q.id))continue;
+    const x=q.nx*VW(),y=q.ny*VH();out.push({x0:x-t[0],y0:y-t[1],x1:x+t[0],y1:y+t[1],id:q.id});}
+  return _platHits[KIND]=out;
+}
+function hitItem(sx,sy){
+  if(cfg.bg)return null;
+  const lst=KIND==='mez'?Object.values(HITS[KIND]||{}):(PLATS[KIND]?platHits():[]);
+  const m=4*VW()/1000;let best=null,ba=Infinity;
+  for(const b of lst){
+    if(sx>=b.x0-m&&sx<=b.x1+m&&sy>=b.y0-m&&sy<=b.y1+m){const a=(b.x1-b.x0)*(b.y1-b.y0);if(a<ba){ba=a;best=b;}}
+  }
+  return best&&pointById(best.id)?best.id:null;
 }
 function locInfo(p){const r=refInfo(p.nx,p.ny);return {zone:r.zone,text:p.custom?(locArea(p.nx,p.ny)||r.text):''};}
 function gridSVG(P,u){
@@ -1937,7 +1976,7 @@ function onTap(cx,cy){
   const s=toSvg(cx,cy),nx=Math.min(1+EDGE()/VW(),Math.max(-EDGE()/VW(),s.x/VW())),ny=Math.min(1+EDGE()/VH(),Math.max(-EDGE()/VH(),s.y/VH()));
   if(reporting){
     if(!expanded){setExpanded(true,cx,cy);return;}
-    const h0=hitPin(cx,cy);if(h0)reportPick(h0.id);else{addExtra(nx,ny);repAdd(sel);}
+    const h0=hitPin(cx,cy),it=h0?null:hitItem(s.x,s.y);if(h0)reportPick(h0.id);else if(it){reportPick(it);notify('Problema em '+ttl(pointById(it)));}else{addExtra(nx,ny);repAdd(sel);}
     setExpanded(false);const p=pointById(sel);if(p)setTimeout(()=>focusOn(p),60);return;}
   if(home&&mode!=='edit')return;
   if(placing){addExtra(nx,ny);return;}
