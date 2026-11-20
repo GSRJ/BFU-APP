@@ -367,6 +367,9 @@ function trabalha(id,k){
 const ausente=(id,k)=>(S.ausencias[k]||[]).includes(id);
 const emExame=(id,k)=>(S.exames[k]||[]).includes(id);
 const disponiveis=k=>operacionais().filter(id=>trabalha(id,k)&&!ausente(id,k));
+/* quem entra no GBD do dia: com a regra ligada, quem tem ausência parcial fica fora
+   (ao voltar, a SSO define posto, pausa e intervalo) */
+const noGBD=k=>disponiveis(k).filter(id=>!(S.rodizio.exameBloqueia&&emExame(id,k)));
 const folgando=k=>operacionais().filter(id=>!trabalha(id,k));
 const ausentesDo=k=>operacionais().filter(id=>trabalha(id,k)&&ausente(id,k));
 
@@ -462,7 +465,7 @@ function prioridade(k){
    antes dos outros, mesmo passando à frente de um de prioridade maior */
 function postosDoDia(k,n){
  const pr=prioridade(k);
- const cap=Math.min(pr.length,n===undefined?disponiveis(k).length:n);
+ const cap=Math.min(pr.length,n===undefined?noGBD(k).length:n);
  const obrig=pr.filter(p=>{const P=POSTO(p);return P&&P.sempre});
  if(!obrig.length)return pr.slice(0,cap);
  const esc=[];
@@ -489,7 +492,7 @@ function planoRodizio(dias){
  const antes={};operacionais().forEach(id=>antes[id]=ultimoNoPosto(id,ini,R));
  const cand={};
  const candEx={};
- for(const k of livres){candEx[k]=disponiveis(k).filter(id=>!(antes[id]&&diff(k,antes[id])<INT));
+ for(const k of livres){candEx[k]=noGBD(k).filter(id=>!(antes[id]&&diff(k,antes[id])<INT));
   cand[k]=candEx[k].filter(id=>!(S.rodizio.exameBloqueia&&emExame(id,k)));}
  const intervaloOk=(id,k,at)=>{
   if(antes[id]&&diff(k,antes[id])<INT)return false;
@@ -501,7 +504,7 @@ function planoRodizio(dias){
  const inedito=(id,at)=>!Object.values(fixos).includes(id)&&!Object.values(at).includes(id);
  const gapOk=(id,k,at)=>intervaloOk(id,k,at)&&inedito(id,at);
  const usados=new Set(Object.values(fixos));
- const precisam=operacionais().filter(id=>!usados.has(id)&&dias.some(k=>disponiveis(k).includes(id)));
+ const precisam=operacionais().filter(id=>!usados.has(id)&&dias.some(k=>noGBD(k).includes(id)));
  function rodar(C){
   const ordem=livres.slice().sort((a,b)=>C[a].length-C[b].length);
   let melhor=null,nos=0;
@@ -528,7 +531,6 @@ function planoRodizio(dias){
  }
  // quem tem ausência parcial só entra no rodízio se for necessário para o ciclo
  let melhor=rodar(cand);
- if(S.rodizio.exameBloqueia&&(!melhor||melhor.cob<precisam.length)){const m2=rodar(candEx);if(m2&&(!melhor||m2.cob>melhor.cob))melhor=m2;}
  const plano={...fixos,...(melhor?melhor.at:{})};
  plano._repete=[];
  const antigo=(a,b,k)=>((antes[b]?diff(k,antes[b]):9999)-(antes[a]?diff(k,antes[a]):9999));
@@ -555,9 +557,9 @@ function planoUmaVez(dias,planoR){
   for(const k of livres){const m=S.manuais[k];if(m&&m.p&&m.p[P.id]&&m.p[P.id][0])fixos[k]=m.p[P.id][0]}
   const abertos=livres.filter(k=>!fixos[k]);
   const primeiro={};
-  operacionais().forEach(id=>{for(const k of dias)if(disponiveis(k).includes(id)){primeiro[id]=k;break}});
+  operacionais().forEach(id=>{for(const k of dias)if(noGBD(k).includes(id)){primeiro[id]=k;break}});
   const cand={};
-  for(const k of abertos)cand[k]=disponiveis(k).filter(id=>{
+  for(const k of abertos)cand[k]=noGBD(k).filter(id=>{
    if(planoR[k]===id)return false;
    if(S.rodizio.exameBloqueia&&emExame(id,k)&&!postosLivres(k).includes(P.id))return false;
    if(Object.values(res).some(m=>m[k]===id))return false;
@@ -622,7 +624,7 @@ function cobreRod(d){
  return null;
 }
 function manualValido(k,man){
- const disp=disponiveis(k),noPosto=new Set(),ops=operacionais();
+ const disp=noGBD(k),noPosto=new Set(),ops=operacionais();
  for(const ids of Object.values(man.p||{}))(ids||[]).forEach(id=>noPosto.add(id));
  if(disp.some(id=>!noPosto.has(id)))return false;
  for(const id of noPosto)if(ops.includes(id)&&!disp.includes(id))return false;
@@ -643,7 +645,7 @@ function resolverDia(k,ctx){
  let man=S.manuais[k],recalc=false;
  /* dia editado: se não bate mais com folgas, ausências ou ausência parcial do dia, é recalculado */
  if(man&&man.p&&!manualValido(k,man)){man=null;recalc=true}
- const disp=disponiveis(k);
+ const disp=noGBD(k);
  const aslAtivo=apoios().filter(id=>trabalha(id,k)&&!ausente(id,k));
  const asl=aslAtivo.length?aslAtivo.map(nome).join(', '):((S.aslCob&&S.aslCob[k])||'A definir');
  const base={k,asl,folgas:folgando(k),ausentes:ausentesDo(k),avisos:[],travado:false};
@@ -891,7 +893,10 @@ function textoGBD(k){
  L.push(fg.length?fg.join(' • '):'—');
  if(d.ausentes.length)L.push(`🚫 *Ausente:* ${d.ausentes.map(nome).join(' • ')}`);
  {const parc=(S.exames[k]||[]).filter(id=>trabalha(id,k)&&!ausente(id,k));
-  if(parc.length)L.push(`⏳ *Ausência parcial:* ${parc.map(id=>{const m=motivoParcial(id,k);return m?`${nome(id)} (${m})`:nome(id)}).join(' • ')}`);}
+  if(parc.length){
+   L.push(`⏳ *Ausência parcial:* ${parc.map(id=>{const m=motivoParcial(id,k);return m?`${nome(id)} (${m})`:nome(id)}).join(' • ')}`);
+   if(S.rodizio.exameBloqueia)L.push(`↩️ _${parc.length>1?'Quando voltarem':'Quando voltar'}, a SSO define ${parc.length>1?'os postos':'o posto'} e os horários de pausa e intervalo._`);
+  }}
  if(S.estacao.rodape){L.push('');L.push(S.estacao.rodape)}
  return L.join('\n');
 }
@@ -1373,7 +1378,7 @@ function renderFoco(){
  side.appendChild(el('h4',null,'Resumo'));
  const R=S.rodizio.posto,C=S.cobertura.posto;
  const kv=el('div','kv');
- kv.innerHTML=`<b>${disponiveis(k).length}</b> em serviço${apoios().length?` · apoio <b>${esc(d.asl)}</b>`:''}<br>
+ kv.innerHTML=`<b>${noGBD(k).length}</b> em serviço${apoios().length?` · apoio <b>${esc(d.asl)}</b>`:''}<br>
  ${R?`${esc(abPosto(R))}: <b>${(d.postos[R]||[]).map(nome).join(', ')||'—'}</b>`:''}${C&&R?` · coberto por <b>${(d.postos[C]||[]).map(nome).join(', ')||'—'}</b>`:''}<br>
  Folgas: ${d.folgas.length?d.folgas.map(nome).join(', '):'nenhuma'}${d.ausentes.length?`<br>Ausente: <b>${d.ausentes.map(nome).join(', ')}</b>`:''}`;
  side.appendChild(kv);
@@ -1429,7 +1434,7 @@ function renderCiclo(){
 }
 function edPostos(ed,k){
  ed.innerHTML='';
- const d=dia(k),disp=disponiveis(k),prio=prioridade(k);
+ const d=dia(k),disp=noGBD(k),prio=prioridade(k);
  const atual={};S.postos.forEach(p=>(d.postos[p.id]||[]).forEach(id=>atual[id]=p.id));
  let iAsl=null;
  if(apoios().length){
@@ -1638,7 +1643,7 @@ function opAg(sel){sel.innerHTML='';S.agentes.forEach(a=>sel.appendChild(new Opt
 function renderAus(){
  opAg($('#ausWho'));opAg($('#exWho'));
  $('#exHint').textContent=S.rodizio.posto&&S.rodizio.exameBloqueia
-  ?`No dia da ausência parcial a pessoa fica no posto do excedente. Em ${abPosto(S.rodizio.posto)} só entra se o ciclo exigir, e aí outro agente cobre até ela voltar.`
+  ?'No dia da ausência parcial a pessoa fica fora do GBD; quando voltar, a SSO define o posto e os horários.'
   :'Registro informativo: a regra de bloqueio está desligada na configuração.';
  const L=$('#ausList');L.innerHTML='';
  const ks=Object.keys(S.ausencias).sort();
@@ -1922,8 +1927,8 @@ const EXPLICA={
  'sempre coberto':'O posto nunca fica vazio: não cai quando falta gente, e quem está nele não sai na mesma pausa nem no mesmo intervalo que quem está em outro posto sempre coberto. Use na SSO, por exemplo.',
  'Intervalo mínimo entre duas passagens (dias)':'Distância mínima, em dias, entre duas vezes da mesma pessoa no posto de rodízio. Com 4, quem passou no dia 7 só volta a partir do dia 11. Use 0 para não ter limite.',
  'Intervalo mínimo no rodízio (dias)':'Distância mínima, em dias, entre duas vezes da mesma pessoa no posto de rodízio. Com 4, quem passou no dia 7 só volta a partir do dia 11. Use 0 para não ter limite.',
- 'não escalar nele no dia de ausência parcial':'Quem tem ausência parcial no dia (sai antes, chega depois ou se ausenta por parte do turno) trabalha no posto do excedente, fora dos postos principais. No posto de rodízio só entra se for a única chance de passar por ele no ciclo: aí o GBD mostra quem cobre até o retorno e que a pessoa assume quando voltar.',
- 'não escalar no rodízio no dia de ausência parcial':'Quem tem ausência parcial no dia (sai antes, chega depois ou se ausenta por parte do turno) trabalha no posto do excedente, fora dos postos principais. No posto de rodízio só entra se for a única chance de passar por ele no ciclo: aí o GBD mostra quem cobre até o retorno e que a pessoa assume quando voltar.',
+ 'não escalar nele no dia de ausência parcial':'Quem tem ausência parcial no dia (sai antes, chega depois ou se ausenta por parte do turno) fica fora dos postos, da pausa e do intervalo do GBD. O dia é montado com os demais e o GBD avisa que, quando a pessoa voltar, a SSO define o posto e os horários.',
+ 'não escalar no rodízio no dia de ausência parcial':'Quem tem ausência parcial no dia (sai antes, chega depois ou se ausenta por parte do turno) fica fora dos postos, da pausa e do intervalo do GBD. O dia é montado com os demais e o GBD avisa que, quando a pessoa voltar, a SSO define o posto e os horários.',
  'rodízio e cobertura nunca saem no mesmo intervalo':'Quem está no posto de rodízio e quem o cobre nunca saem juntos na pausa nem no intervalo, para o posto não ficar sem ninguém.',
  'Primeiro horário':'Horário da primeira pausa do turno.',
  'Duração (min)':'Quanto tempo dura cada pausa. Aparece no título do bloco no GBD, como "PAUSA (15 min)".',
