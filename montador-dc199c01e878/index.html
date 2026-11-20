@@ -545,10 +545,18 @@ function ultimoSSO(id,k){
 /* ----- prioridade dos postos no dia ----- */
 function prioridade(k){
  const cart=k>=CARTOES_DESDE;
- if(domOuFer(k)) return cart?['SSO','CARTOES','RONDA','PLAT','APOIO','LB']:['SSO','RONDA','PLAT','APOIO','LB'];
+ /* a Linha de Bloqueio vem antes das Plataformas */
+ if(domOuFer(k)) return cart?['SSO','CARTOES','RONDA','LB','PLAT','APOIO']:['SSO','RONDA','LB','PLAT','APOIO'];
  return cart?['SSO','CARTOES','APOIO','LB','RONDA','PLAT']:['SSO','APOIO','LB','RONDA','PLAT'];
 }
 
+/* postos que o efetivo do dia cobre, na ordem de prioridade, sempre com pelo menos
+   um na Linha de Bloqueio (ou nos Cartões) quando há duas pessoas ou mais */
+function cobertos(prio,n){
+ let sl=prio.slice(0,Math.min(prio.length,n));
+ if(n>=2&&!sl.includes('LB')&&!sl.includes('CARTOES')&&prio.includes('LB'))sl=[...sl.slice(0,sl.length-1),'LB'];
+ return sl;
+}
 /* ----- plano de SSO do ciclo ----- */
 function planoSSO(dias,gersonPlan){
  const inicio=dias[0];
@@ -692,7 +700,7 @@ function ultimoCartoes(id,k){
 /* ----- plano de fim de semana do Gerson ----- */
 function postosDoDia(k){
  const disp=noGBD(k),prio=prioridade(k);
- return prio.slice(0,Math.min(prio.length,disp.length));
+ return cobertos(prio,disp.length);
 }
 function planoGerson(dias){
  const plano={};
@@ -773,7 +781,7 @@ function resolverDia(k,ctx){
  const parcLB=disp.filter(id=>emExame(id,k)&&id!==ctx.sso[k]);
  const dispO=disp.filter(id=>!parcLB.includes(id));
  const prioO=parcLB.length?prio.filter(p=>p!=='LB'):prio;
- let slots=prioO.slice(0,Math.min(prioO.length,dispO.length));
+ let slots=cobertos(prioO,dispO.length);
  const extra=dispO.length-prioO.length;
  if(extra>0)for(let i=0;i<extra;i++)slots.push('RONDA');
  if(!disp.length)return {...base,postos:{},cafe:{},janta:{}};
@@ -848,7 +856,7 @@ function resolverDia(k,ctx){
  const d={...base,postos};
  d.avisos=[...base.avisos,...best.avisos.map(([t,m])=>({t,m}))];
  const naoPreenchidos=prio.filter(p=>!postos[p]);
- if(naoPreenchidos.length)d.avisos.push({t:'i',m:`Sem efetivo para ${naoPreenchidos.map(p=>POSTOS[p].ab).join(', ')} — ${naoPreenchidos.length===1?'é o último':'são os últimos'} da prioridade do dia.`});
+ if(naoPreenchidos.length)d.avisos.push({t:'i',m:`Sem efetivo para ${naoPreenchidos.map(p=>POSTOS[p].ab).join(', ')} — ${naoPreenchidos.length===1?'cedeu':'cederam'} a vez pela prioridade do dia (a Linha de Bloqueio fica sempre com alguém).`});
  d.ssoCobre=cobreSSO(d);
  if((postos.SSO||[]).some(id=>emExame(id,k)))d.avisos.push({t:'i',m:`${nome(postos.SSO[0])} vai para a SSO pelo ciclo, mas tem ausência parcial: ${d.ssoCobre?nome(d.ssoCobre)+' fica na SSO até o retorno.':'falta alguém para cobrir até o retorno.'}`});
  {const iv=intervalos(k,disp,postos,aslOk,ctx,d.ssoCobre);d.cafe=iv.cafe;d.janta=iv.janta;}
