@@ -215,7 +215,7 @@ code.k{font:12.5px var(--mono);background:var(--bg3);padding:1px 5px;border-radi
       </div>
       <div class="card">
         <h3>Ausência parcial</h3>
-        <p class="hint">Para quem sai antes, chega depois ou se ausenta por parte do turno. A pessoa fica na Linha de Bloqueio, não entra na pausa e faz o intervalo no último horário. Na SSO só entra se for a única chance de passar por ela no ciclo: aí o GBD mostra quem fica até o retorno e que ela assume ao voltar.</p>
+        <p class="hint">Para quem sai antes, chega depois ou se ausenta por parte do turno. A pessoa fica fora dos postos, da pausa e do intervalo do GBD, e o dia é montado com os demais. No GBD aparece o motivo e o aviso de que, quando ela voltar, a SSO define o posto e os horários.</p>
         <div class="form">
           <div class="f"><label>Agente</label><select id="exWho"></select></div>
           <div class="f"><label>Data</label><input type="date" id="exDia"></div>
@@ -455,6 +455,9 @@ function trabalha(id,k){
 }
 function ausente(id,k){return (S.ausencias[k]||[]).includes(id)}
 function emExame(id,k){return (S.exames[k]||[]).includes(id)}
+/* quem entra no GBD do dia: os disponíveis sem ausência parcial (esses ficam fora;
+   ao voltarem, a SSO define posto, pausa e intervalo) */
+const noGBD=k=>disponiveis(k).filter(id=>!emExame(id,k));
 function disponiveis(k){return AAS.filter(id=>trabalha(id,k)&&!ausente(id,k))}
 function folgando(k){return AAS.filter(id=>!trabalha(id,k))}
 function ausentesDo(k){return AAS.filter(id=>trabalha(id,k)&&ausente(id,k))}
@@ -553,14 +556,14 @@ function planoSSO(dias,gersonPlan){
  for(const k of dias){
   const m=S.manuais[k]||REALIZADO[k];
   if(m&&m.p&&m.p.SSO&&m.p.SSO[0]){fixos[k]=m.p.SSO[0];continue}
-  if(S.fixarSSO&&S.fixarSSO[k]&&disponiveis(k).includes(S.fixarSSO[k]))fixos[k]=S.fixarSSO[k];
+  if(S.fixarSSO&&S.fixarSSO[k]&&noGBD(k).includes(S.fixarSSO[k]))fixos[k]=S.fixarSSO[k];
  }
  const livres=dias.filter(k=>!fixos[k]);
  const antes={};
  for(const id of AAS)antes[id]=ultimoSSO(id,inicio);
  const cand={},candEx={};
  for(const k of livres){
-  candEx[k]=disponiveis(k).filter(id=>{
+  candEx[k]=noGBD(k).filter(id=>{
    if(id==='gerson'&&(dow(k)===0||dow(k)===6))return false;
    if(id==='gerson'&&gersonPlan&&gersonPlan[k])return false;
    if(antes[id]&&diff(k,antes[id])<4)return false;
@@ -576,7 +579,7 @@ function planoSSO(dias,gersonPlan){
   return true;
  };
  const usadosFixos=new Set(Object.values(fixos));
- const precisam=AAS.filter(id=>!usadosFixos.has(id)&&dias.some(k=>disponiveis(k).includes(id)));
+ const precisam=AAS.filter(id=>!usadosFixos.has(id)&&dias.some(k=>noGBD(k).includes(id)));
  // primeiro sem quem tem ausência parcial; só se faltar alguém passar pela SSO no ciclo
  // é que essa pessoa entra (e um disponível cobre até ela voltar)
  function rodar(C){
@@ -605,7 +608,6 @@ function planoSSO(dias,gersonPlan){
   return melhor;
  }
  let melhor=rodar(cand);
- if(!melhor||melhor.cob<precisam.length){const m2=rodar(candEx);if(m2&&(!melhor||m2.cob>melhor.cob))melhor=m2;}
  const plano={...fixos,...(melhor?melhor.atrib:{})};
  // dias ainda sem SSO: quem passou há mais tempo, respeitando o intervalo
  for(const k of livres){
@@ -633,10 +635,10 @@ function planoCartoes(dias,ssoPlano,gersonPlan){
  const livres=uteis.filter(k=>!fixos[k]);
  // a véspera só é conhecida para o primeiro dia de cada agente no ciclo
  const primeiro={};
- for(const id of AAS)for(const k of dias)if(disponiveis(k).includes(id)){primeiro[id]=k;break}
+ for(const id of AAS)for(const k of dias)if(noGBD(k).includes(id)){primeiro[id]=k;break}
  const cand={};
  for(const k of livres){
-  cand[k]=disponiveis(k).filter(id=>{
+  cand[k]=noGBD(k).filter(id=>{
    if(ssoPlano[k]===id)return false;
    if(emExame(id,k))return false;
    if(id==='gerson'&&gersonPlan&&gersonPlan[k])return false;
@@ -689,7 +691,7 @@ function ultimoCartoes(id,k){
 
 /* ----- plano de fim de semana do Gerson ----- */
 function postosDoDia(k){
- const disp=disponiveis(k),prio=prioridade(k);
+ const disp=noGBD(k),prio=prioridade(k);
  return prio.slice(0,Math.min(prio.length,disp.length));
 }
 function planoGerson(dias){
@@ -713,7 +715,7 @@ function planoGerson(dias){
  }else{
   const sexta=dias[5];
   if(disponiveis(sexta).includes('gerson'))por(sexta,'RONDA');
-  const uteis=dias.slice(1,6).filter(k=>disponiveis(k).includes('gerson')&&!plano[k]&&cabe(k,'PLAT'));
+  const uteis=dias.slice(1,6).filter(k=>noGBD(k).includes('gerson')&&!plano[k]&&cabe(k,'PLAT'));
   if(uteis.length){const r=rng(hash(dias[0]+'g'));plano[uteis[Math.floor(r()*uteis.length)]]='PLAT'}
  }
  return plano;
@@ -733,7 +735,7 @@ function permutar(arr,cb){
    todos os disponíveis em algum posto, ninguém de folga ou ausente, e quem tem ausência
    parcial fora dos postos principais (a SSO pode), fora da pausa e no último intervalo */
 function manualValido(k,man){
- const disp=disponiveis(k),noPosto=new Set();
+ const disp=noGBD(k),noPosto=new Set();
  for(const ids of Object.values(man.p||{}))(ids||[]).forEach(id=>noPosto.add(id));
  if(disp.some(id=>!noPosto.has(id)))return false;
  for(const id of noPosto)if(AAS.includes(id)&&!disp.includes(id))return false;
@@ -750,7 +752,7 @@ function resolverDia(k,ctx){
  /* dia editado: se não bate mais com folgas, ausências ou ausência parcial do dia, é recalculado */
  let recalc=false;
  if(man&&man.p&&!REALIZADO[k]&&!manualValido(k,man)){man=null;recalc=true}
- const disp=disponiveis(k);
+ const disp=noGBD(k);
  const aslOk=trabalha('jhonatan',k)&&!ausente('jhonatan',k);
  const asl=aslOk?'Jhonatan':((S.aslCob&&S.aslCob[k])||'A definir');
  const base={k,asl,folgas:folgando(k),ausentes:ausentesDo(k),avisos:[],travado:false};
@@ -969,7 +971,7 @@ function resolverCiclo(domK){
  for(const k of dias){ CACHE[k]=resolverDia(k,ctx); }
  // conferência do ciclo
  const passou=new Set();dias.forEach(k=>(CACHE[k].postos.SSO||[]).forEach(id=>passou.add(id)));
- const deviam=AAS.filter(id=>dias.some(k=>disponiveis(k).includes(id)));
+ const deviam=AAS.filter(id=>dias.some(k=>noGBD(k).includes(id)));
  const faltou=deviam.filter(id=>!passou.has(id));
  if(faltou.length){
   CACHE[dias[0]].avisos.push({t:'w',m:`No ciclo não sobrou dia de SSO para ${faltou.map(nome).join(', ')}.`});
@@ -1023,7 +1025,10 @@ function textoGBD(k){
  L.push(fg.length?fg.join(' • '):'—');
  if(d.ausentes.length)L.push(`🚫 *Ausente:* ${d.ausentes.map(nome).join(' • ')}`);
  {const parc=(S.exames[k]||[]).filter(id=>trabalha(id,k)&&!ausente(id,k));
-  if(parc.length)L.push(`⏳ *Ausência parcial:* ${parc.map(id=>{const m=motivoParcial(id,k);return m?`${nome(id)} (${m})`:nome(id)}).join(' • ')}`);}
+  if(parc.length){
+   L.push(`⏳ *Ausência parcial:* ${parc.map(id=>{const m=motivoParcial(id,k);return m?`${nome(id)} (${m})`:nome(id)}).join(' • ')}`);
+   L.push(`↩️ _${parc.length>1?'Quando voltarem':'Quando voltar'}, a SSO define ${parc.length>1?'os postos':'o posto'} e os horários de pausa e intervalo._`);
+  }}
  L.push('');
  L.push('🚆 _Operação assistida pela CPTM._');
  return L.join('\n');
@@ -1091,7 +1096,7 @@ function renderFoco(){
  side.appendChild(el('h4',null,'Resumo'));
  const kv=el('div','kv');
  const sso=(d.postos.SSO||[])[0],apo=(d.postos.APOIO||[])[0];
- const nAAS=disponiveis(k).length;
+ const nAAS=noGBD(k).length;
  kv.innerHTML=`<b>${nAAS}</b> AAS em serviço · ASL <b>${d.asl}</b><br>
  SSO <b>${sso?nome(sso):'—'}</b>, coberta pelo Apoio <b>${apo?nome(apo):'—'}</b><br>
  Folgas: ${d.folgas.length?d.folgas.map(nome).join(', '):'nenhuma'}${d.ausentes.length?`<br>Ausente: <b>${d.ausentes.map(nome).join(', ')}</b>`:''}`;
@@ -1162,7 +1167,7 @@ function renderCiclo(){
 }
 function montarEditor(ed,k){
  ed.innerHTML='';
- const d=dia(k),disp=disponiveis(k);
+ const d=dia(k),disp=noGBD(k);
  const prio=prioridade(k);
  const atual={};for(const p of ORDEM)(d.postos[p]||[]).forEach(id=>atual[id]=p);
 
