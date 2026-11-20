@@ -3413,7 +3413,7 @@ function openPl(){plK=KIND;plZ=1;plMark=null;$('#plBalloon').hidden=true;$('#plL
 document.addEventListener('click',e=>{
   const d=$('#plDlg');if(!d||!d.open)return;
   const t=e.target.closest('[data-pl]');if(t){plK=t.dataset.pl;plZ=1;plMark=null;renderPl();return;}
-  if(e.target.id==='plClose'){plMark=null;$('#plBalloon').hidden=true;d.close();if(SO_PLANTA)goHub();}
+  if(e.target.id==='plClose'){plMark=null;$('#plBalloon').hidden=true;if(SO_PLANTA){plSaindo=true;goHub();}d.close();}
   else if(e.target.id==='plLeg'){const b=$('#plLegBox');b.hidden=!b.hidden;}
   else if(e.target.id==='plFit'){plZ=1;plMark=null;$('#plBalloon').hidden=true;renderPl();}
   else if(e.target.id==='plIn'||e.target.id==='plOut'){const w=$('#plWrap');if(!w.querySelector('svg'))return;const fx=(w.scrollLeft+w.clientWidth/2)/w.scrollWidth,fy=(w.scrollTop+w.clientHeight/2)/w.scrollHeight;plZ=Math.min(5,Math.max(1,plZ+(e.target.id==='plIn' ? .5 : -.5)));renderPl([fx,fy]);}
@@ -3805,7 +3805,12 @@ $('#mTut').onclick=startTour;
 
 /* aberto pela opção Planta da tela inicial: mostra só a planta */
 const SO_PLANTA=new URLSearchParams(location.search).has('planta');
-if(SO_PLANTA){document.documentElement.classList.add('so-planta');$('#plDlg').addEventListener('cancel',e=>{e.preventDefault();goHub();});}
+let plSaindo=false;
+if(SO_PLANTA){document.documentElement.classList.add('so-planta');
+  $('#plDlg').addEventListener('cancel',e=>{e.preventDefault();goHub();});
+  /* o botão voltar do celular fecha a planta por conta própria: volta ao início e deixa a planta aberta para a próxima vez */
+  $('#plDlg').addEventListener('close',()=>{if(!plSaindo)goHub();plSaindo=false;setTimeout(()=>{if(!$('#plDlg').open)openPl();},60);});
+  addEventListener('message',e=>{if(e.origin===location.origin&&e.data&&e.data.bfu==='show'&&!$('#plDlg').open)openPl();});}
 function plTakeTransfer(){
   let j=null;
   try{const raw=sessionStorage.getItem(PL_REPORT_KEY);if(raw){j=JSON.parse(raw);sessionStorage.removeItem(PL_REPORT_KEY);}}catch(_){}
