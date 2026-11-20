@@ -326,6 +326,13 @@ g.bosel{opacity:.85}
 #plDlg .plx{flex:none;width:42px;height:42px;border-radius:21px;border:1.5px solid rgba(255,255,255,.35);background:transparent;color:#fff;font-size:20px;cursor:pointer}
 #plWrap{flex:1;min-height:0;overflow:auto;background:#EDE7DA;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y}
 #plWrap svg{display:block;width:100%;height:100%;max-width:none}
+#plWrap .plhit{fill:transparent;stroke:transparent;stroke-width:3;vector-effect:non-scaling-stroke;pointer-events:all;cursor:pointer;outline:none}
+#plWrap .plhit:hover,#plWrap .plhit:focus-visible{fill:rgba(255,122,26,.2);stroke:#FF7A1A}
+#plActionDlg .menu-list{display:grid;gap:10px}
+#plActionDlg .big{display:flex;align-items:center;justify-content:center;min-height:54px;font-size:17px;font-weight:800;border-width:2px}
+#plActionProblem{background:#C62828;color:#fff;border-color:#C62828}
+#plActionInfo{background:#E0F2FE;color:#075985;border-color:#0284C7}
+#plActionCancel{background:#fff;color:#334155;border-color:#CBD5E1}
 #plDlg .plzoom{position:absolute;right:max(12px,env(safe-area-inset-right));top:72px;display:flex;flex-direction:column;gap:8px}
 #plDlg .plzoom button,#plDlg .plleg{width:52px;height:52px;border-radius:14px;border:1px solid var(--line);background:#fff;font-size:26px;font-weight:700;box-shadow:0 3px 10px rgba(0,0,0,.2);cursor:pointer;color:var(--ink)}
 #plDlg .plzoom button:disabled{opacity:.38;cursor:not-allowed}
@@ -630,7 +637,16 @@ body.in-hub .top::before{display:none!important}
   <div class="plzoom"><button id="plIn" type="button" aria-label="Aproximar">＋</button><button id="plOut" type="button" aria-label="Afastar">−</button></div>
   <button class="plleg" id="plLeg" type="button">ⓘ Legenda</button>
   <div id="plLegBox" hidden></div>
-  <div class="plnote">Desenho: AAS Gerson · sem escala</div>
+  <div class="plnote">Toque em um item para registrar · sem escala</div>
+</dialog>
+<dialog id="plActionDlg" aria-label="Registrar neste local">
+  <h2>Registrar neste local</h2>
+  <p><b id="plActionName"></b><br>Escolha como deseja abrir este local no Reporte SSO.</p>
+  <div class="menu-list">
+    <button class="big bad" id="plActionProblem" type="button">⚠ Reportar problema</button>
+    <button class="big plain" id="plActionInfo" type="button">ⓘ Criar informe</button>
+    <button class="big plain" id="plActionCancel" type="button">Cancelar</button>
+  </div>
 </dialog>
 <dialog id="menuDlg" aria-label="Menu">
   <h2>Menu</h2>
@@ -3695,7 +3711,8 @@ async function buildPdf(){
 
 
 /* ---------- ver plantas (menu) ---------- */
-let plK='mez',plZ=1;
+let plK='mez',plZ=1,plItems=new Map(),plChosen=null;
+const PL_REPORT_KEY='bfu-pl-report-v1';
 const PL_BASE_LEG=[
  ['<rect x="9" y="2" width="12" height="26" rx="2" fill="#D3EFE8" stroke="#0F766E" stroke-width="2"/><path d="M9 8H21M9 13H21M9 18H21M9 23H21" stroke="#0F766E" stroke-width="1"/>','Escada rolante'],
  ['<rect x="7" y="2" width="16" height="26" rx="2" fill="#ECEFF3" stroke="#A39A88" stroke-width="2"/><path d="M7 8H23M7 13H23M7 18H23M7 23H23" stroke="#A39A88" stroke-width="1"/>','Escada fixa'],
@@ -3739,20 +3756,37 @@ async function renderPl(keep){
     let base=cfg.bg?`<image href="${cfg.bg.d}" width="${Wd}" height="${Hd}" preserveAspectRatio="none"/>`:basePlan(P);
     base=base.replace(/id="([^"]+)"/g,'id="V_$1"').replace(/url\(#([^)]+)\)/g,'url(#V_$1)');
     const kk=Wd/430*(plZ>=2?1.6/plZ:1);const sv=sel;sel=null;const ic=homeIcons(P,kk);sel=sv;
+    const pts=allPoints().filter(p=>!p.custom),vh=B.h+B.y0-y0,w=$('#plWrap'),sc=Math.min(w.clientWidth*plZ/B.w,w.clientHeight*plZ/vh);
+    plItems=new Map(pts.map(p=>[String(p.id),{id:String(p.id),name:p.name,nx:p.nx,ny:p.ny}]));
     /* no computador, mostra sempre rótulos curtos; no celular, mostra ao ampliar */
     let lb='';
-    if(innerWidth>=760||plZ>=2){const vh=B.h+B.y0-y0,w=$('#plWrap'),sc=Math.min(w.clientWidth*plZ/B.w,w.clientHeight*plZ/vh),fs=8.5/Math.max(sc,.01),ih=15*.62*kk,boxes=[];
-      const pri=p=>/^Quiosque/i.test(p.name)?3:/^(Escada|Elevador)/i.test(p.name)?2:1,pts=allPoints().filter(p=>!p.custom).sort((a,b)=>pri(b)-pri(a));
-      lb=pts.map(p=>{const x=p.nx*Wd,y=p.ny*Hd+(typeOf(p)?ih+fs*1.05:fs*.35),suf=typeof acCurto==='function'?acCurto(p).replace(/^ → Plat\. /,'→P').replace(/^ → Mezanino$/,'→M').replace(/ e /g,'/'):'',raw=plNomeCurto(p)+suf,t=raw.length>18?raw.slice(0,17)+'…':raw,bw=t.length*fs*.58,b={x0:x-bw/2,x1:x+bw/2,y0:y-fs,y1:y+fs*.25};
+    if(innerWidth>=760||plZ>=2){const fs=8.5/Math.max(sc,.01),ih=15*.62*kk,boxes=[];
+      const pri=p=>/^Quiosque/i.test(p.name)?3:/^(Escada|Elevador)/i.test(p.name)?2:1,labPts=pts.slice().sort((a,b)=>pri(b)-pri(a));
+      lb=labPts.map(p=>{const x=p.nx*Wd,y=p.ny*Hd+(typeOf(p)?ih+fs*1.05:fs*.35),suf=typeof acCurto==='function'?acCurto(p).replace(/^ → Plat\. /,'→P').replace(/^ → Mezanino$/,'→M').replace(/ e /g,'/'):'',raw=plNomeCurto(p)+suf,t=raw.length>18?raw.slice(0,17)+'…':raw,bw=t.length*fs*.58,b={x0:x-bw/2,x1:x+bw/2,y0:y-fs,y1:y+fs*.25};
         if(plZ<2&&boxes.some(q=>b.x0<q.x1+fs*.25&&b.x1>q.x0-fs*.25&&b.y0<q.y1+fs*.25&&b.y1>q.y0-fs*.25))return '';boxes.push(b);
         return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" font-size="${fs.toFixed(1)}" font-weight="700" text-anchor="middle" fill="#1F2937" stroke="#FBF8F1" stroke-width="${(fs*.3).toFixed(1)}" paint-order="stroke" pointer-events="none">${esc(t)}</text>`;}).join('');}
+    const hitR=20/Math.max(sc,.01),hits=pts.map(p=>`<circle class="plhit" data-pl-id="${esc(p.id)}" tabindex="0" role="button" aria-label="Registrar em ${esc(noPlat(p.name))}" cx="${(p.nx*Wd).toFixed(1)}" cy="${(p.ny*Hd).toFixed(1)}" r="${hitR.toFixed(1)}"><title>${esc(noPlat(p.name))}</title></circle>`).join('');
     $('#plLegBox').innerHTML=plLegend();
-    return `<svg viewBox="${B.x0.toFixed(1)} ${y0.toFixed(1)} ${B.w.toFixed(1)} ${(B.h+B.y0-y0).toFixed(1)}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, Helvetica, Arial, sans-serif" role="img" aria-label="Planta ${esc(KIND_LABEL[KIND])}" style="width:${(plZ*100).toFixed(0)}%;height:${(plZ*100).toFixed(0)}%"><rect x="${B.x0}" y="${y0}" width="${B.w}" height="${B.h+B.y0-y0}" fill="${P.bg}"/>${base}${ic}${lb}</svg>`;
+    return `<svg viewBox="${B.x0.toFixed(1)} ${y0.toFixed(1)} ${B.w.toFixed(1)} ${(B.h+B.y0-y0).toFixed(1)}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, Helvetica, Arial, sans-serif" role="img" aria-label="Planta ${esc(KIND_LABEL[KIND])}" style="width:${(plZ*100).toFixed(0)}%;height:${(plZ*100).toFixed(0)}%"><rect x="${B.x0}" y="${y0}" width="${B.w}" height="${B.h+B.y0-y0}" fill="${P.bg}"/>${base}${ic}${lb}${hits}</svg>`;
   });
   const w=$('#plWrap');w.innerHTML=svg;
   $('#plOut').disabled=plZ<=1;$('#plIn').disabled=plZ>=5;
   if(keep){w.scrollLeft=keep[0]*w.scrollWidth-w.clientWidth/2;w.scrollTop=keep[1]*w.scrollHeight-w.clientHeight/2;}else w.scrollTop=0;
 }
+function plOpenAction(id){
+  const p=plItems.get(String(id));if(!p)return;plChosen=p;$('#plActionName').textContent=noPlat(p.name);$('#plActionDlg').showModal();
+}
+function plTransfer(reg){
+  if(!plChosen)return;const payload={v:1,k:plK,reg,p:plChosen};
+  try{sessionStorage.setItem(PL_REPORT_KEY,JSON.stringify(payload));}catch(_){}
+  const u=new URL('../reporte-sso/',location.href);u.searchParams.set('bfuReport',reg);u.searchParams.set('area',plK);u.searchParams.set('item',plChosen.id);u.searchParams.set('name',plChosen.name);u.searchParams.set('nx',plChosen.nx);u.searchParams.set('ny',plChosen.ny);location.assign(u.href);
+}
+$('#plWrap').addEventListener('click',e=>{const t=e.target.closest('[data-pl-id]');if(t){e.preventDefault();plOpenAction(t.dataset.plId);}});
+$('#plWrap').addEventListener('keydown',e=>{const t=e.target.closest('[data-pl-id]');if(t&&(e.key==='Enter'||e.key===' ')){e.preventDefault();plOpenAction(t.dataset.plId);}});
+$('#plActionProblem').onclick=()=>plTransfer('problema');
+$('#plActionInfo').onclick=()=>plTransfer('info');
+$('#plActionCancel').onclick=()=>$('#plActionDlg').close();
+$('#plActionDlg').addEventListener('close',()=>{plChosen=null;});
 function openPl(){plK=KIND;plZ=1;$('#plLegBox').hidden=true;$('#plDlg').showModal();renderPl();}
 document.addEventListener('click',e=>{
   const d=$('#plDlg');if(!d||!d.open)return;
