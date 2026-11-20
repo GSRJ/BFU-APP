@@ -630,8 +630,7 @@ function resolverDia(k,ctx){
  if(man&&man.p){
   const postos={};for(const p of S.postos)if(man.p[p.id]&&man.p[p.id].length)postos[p.id]=man.p[p.id].slice();
   const d={...base,postos,travado:true};
-  d.cafe=man.c?{...man.c}:montarCafe(k,disp,postos);
-  d.janta=man.j?{...man.j}:montarJanta(k,disp,postos,aslAtivo.length>0);
+  {const iv=intervalos(k,disp,postos,aslAtivo.length>0,cobreRod({k,postos}));d.cafe=man.c?{...man.c}:iv.cafe;d.janta=man.j?{...man.j}:iv.janta;}
   if(man.asl)d.asl=man.asl;
   d.rodCobre=cobreRod(d);
   return d;
@@ -709,8 +708,7 @@ function resolverDia(k,ctx){
   const a=postos[R][0];d.rodCobre=cobreRod(d);
   d.avisos.push({t:'i',m:`${nome(a)} vai para ${abPosto(R)} pelo ciclo, mas tem ausência parcial: ${d.rodCobre?nome(d.rodCobre)+' fica até o retorno.':'falta alguém para cobrir até o retorno.'}`});
  }
- d.cafe=montarCafe(k,disp,postos);
- d.janta=montarJanta(k,disp,postos,aslAtivo.length>0);
+ {const iv=intervalos(k,disp,postos,aslAtivo.length>0,d.rodCobre);d.cafe=iv.cafe;d.janta=iv.janta;}
  const minMaior=Math.max(+S.cafe.min||0,+S.janta.min||0);
  if(disp.length<=minMaior)d.avisos.push({t:'w',m:`Com ${disp.length} em serviço não dá para manter ${minMaior} no posto durante os intervalos. Sai um por vez, o mínimo possível.`});
  colisoesCriticas(d).forEach(m=>d.avisos.push({t:'w',m:m+' — não deu para separar com esse efetivo.'}));
@@ -766,6 +764,26 @@ function colisoesCriticas(d){
   if(d.janta&&d.janta[a]&&d.janta[a]===d.janta[b])out.push(`${abPosto(crit[i])} e ${abPosto(crit[j])} saem juntos no intervalo das ${d.janta[a]}`);
  }
  return out;
+}
+/* pausa e intervalo com ausência parcial: os demais são distribuídos sem contar com quem
+   tem ausência parcial; essa pessoa faz a pausa no horário menos cheio e o intervalo no último */
+function intervalos(k,disp,postos,comApoio,cobre){
+ const parc=disp.filter(id=>emExame(id,k)),pres=disp.filter(id=>!emExame(id,k));
+ if(!parc.length)return {cafe:montarCafe(k,disp,postos),janta:montarJanta(k,disp,postos,comApoio)};
+ const R=S.rodizio.posto,pp={...postos};if(R&&cobre&&(postos[R]||[]).some(id=>emExame(id,k)))pp[R]=[cobre];
+ const cafe=montarCafe(k,pres,pp),janta=montarJanta(k,pres,pp,comApoio);
+ const hora=x=>{const m=parseHora(x);return m==null?0:(turnoId()==='noite'&&m<720?m+1440:m)};
+ const cs=[...new Set(Object.values(cafe))],uso=s=>Object.values(cafe).filter(v=>v===s).length;
+ const cOps=cs.length?cs:[...S.cafe.horarios];
+ const js=[...new Set(Object.values(janta))].sort((a,b)=>hora(a)-hora(b));
+ const ultimoJ=js.length?js[js.length-1]:S.janta.turnos[S.janta.turnos.length-1];
+ for(const id of parc){
+  const l=ultimoDia(id,k,'cafe'),uv=l?l.v:null;
+  const ord=cOps.slice().sort((a,b)=>(uso(a)-uso(b))||((a===uv)-(b===uv))||(hora(a)-hora(b)));
+  if(ord.length)cafe[id]=ord[0];
+  if(ultimoJ)janta[id]=ultimoJ;
+ }
+ return {cafe,janta};
 }
 function montarCafe(k,disp,postos){
  const n=disp.length;if(!n)return{};

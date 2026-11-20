@@ -737,10 +737,9 @@ function resolverDia(k,ctx){
  if(man&&man.p){
   const postos={};for(const p of ORDEM)if(man.p[p])postos[p]=man.p[p].slice();
   const d={...base,postos,travado:true,realizado:!!REALIZADO[k]};
-  d.cafe=man.c?{...man.c}:montarCafe(k,disp,postos,ctx);
-  d.janta=man.j?{...man.j}:montarJanta(k,disp,postos,aslOk,ctx);
   if(man.asl)d.asl=man.asl;
   d.ssoCobre=cobreSSO(d);
+  {const iv=intervalos(k,disp,postos,aslOk,ctx,d.ssoCobre);d.cafe=man.c?{...man.c}:iv.cafe;d.janta=man.j?{...man.j}:iv.janta;}
   return d;
  }
 
@@ -822,8 +821,7 @@ function resolverDia(k,ctx){
  if(naoPreenchidos.length)d.avisos.push({t:'i',m:`Sem efetivo para ${naoPreenchidos.map(p=>POSTOS[p].ab).join(', ')} — ${naoPreenchidos.length===1?'é o último':'são os últimos'} da prioridade do dia.`});
  d.ssoCobre=cobreSSO(d);
  if((postos.SSO||[]).some(id=>emExame(id,k)))d.avisos.push({t:'i',m:`${nome(postos.SSO[0])} vai para a SSO pelo ciclo, mas tem ausência parcial: ${d.ssoCobre?nome(d.ssoCobre)+' fica na SSO até o retorno.':'falta alguém para cobrir até o retorno.'}`});
- d.cafe=montarCafe(k,disp,postos,ctx);
- d.janta=montarJanta(k,disp,postos,aslOk,ctx);
+ {const iv=intervalos(k,disp,postos,aslOk,ctx,d.ssoCobre);d.cafe=iv.cafe;d.janta=iv.janta;}
  return d;
 }
 
@@ -870,6 +868,28 @@ function montarCafe(k,disp,postos,ctx){
   return melhorDistribuicao(disp,slots,slots.map(()=>1),1,penal);
  }
  return melhorDistribuicao(disp,CAFE_SLOTS_3,balancear(n,3,Math.max(1,n-3)),Math.max(1,n-3),penal);
+}
+/* ----- pausa e intervalo com ausência parcial -----
+   os demais AAS são distribuídos como se quem tem ausência parcial não estivesse:
+   a cobertura mínima conta só com eles. Quem tem ausência parcial faz a pausa no horário
+   menos cheio (e diferente do último dia, se der) e o intervalo sempre no último turno (20h–21h). */
+function intervalos(k,disp,postos,aslOk,ctx,cobre){
+ const parc=disp.filter(id=>emExame(id,k)),pres=disp.filter(id=>!emExame(id,k));
+ if(!parc.length)return {cafe:montarCafe(k,disp,postos,ctx),janta:montarJanta(k,disp,postos,aslOk,ctx)};
+ const pp={...postos};if(cobre&&(postos.SSO||[]).some(id=>emExame(id,k)))pp.SSO=[cobre];
+ const cafe=montarCafe(k,pres,pp,ctx),janta=montarJanta(k,pres,pp,aslOk,ctx);
+ const encaixa=(mapa,slots,tipo)=>{
+  for(const id of parc){
+   const l=ultimoDia(id,k,tipo),uv=l?l.v:null;
+   const uso=s=>Object.values(mapa).filter(v=>v===s).length;
+   const ord=slots.slice().sort((a,b)=>(uso(a)-uso(b))||((a===uv)-(b===uv)));
+   if(ord.length)mapa[id]=ord[0];
+  }
+  return mapa;
+ };
+ const cs=[...new Set(Object.values(cafe))].sort();
+ for(const id of parc)janta[id]='20h–21h';   /* intervalo de quem tem ausência parcial: sempre o último */
+ return {cafe:encaixa(cafe,cs.length?cs:CAFE_SLOTS_3,'cafe'),janta};
 }
 /* ----- janta ----- */
 function montarJanta(k,disp,postos,comAsl,ctx){
