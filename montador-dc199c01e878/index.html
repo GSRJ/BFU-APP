@@ -411,7 +411,7 @@ const PADRAO={
  fixarSSO:{'2026-11-26':'gerson'},
  exMotivo:{'2026-11-09|josefa':'exame periódico','2026-11-10|gerson':'exame periódico','2026-11-11|hugo':'exame periódico','2026-11-12|jhonatan':'exame periódico','2026-11-13|jonathas':'exame periódico','2026-11-16|vanessa':'exame periódico','2026-11-17|william':'exame periódico'},
  manuais:JSON.parse(JSON.stringify(FECHADOS)),
- confirmados:Object.fromEntries([...Object.keys(REALIZADO),...Object.keys(FECHADOS)].map(k=>[k,1])),
+ confirmados:Object.fromEntries(Object.keys(REALIZADO).map(k=>[k,1])),
 };
 
 let S=carregar();
@@ -420,9 +420,18 @@ function carregar(){
  try{const r=localStorage.getItem('gbd-bfu-v1');if(r){const o=JSON.parse(r);base={...base,...o}}}catch(e){}
  return base;
 }
-function confirmado(k){return !!(S.confirmados&&S.confirmados[k])}
+/* o GBD fica previsto até as 13h do próprio dia; antes disso, só confirma quem monta a escala */
+function passou13(k){const [y,m,d]=k.split('-').map(Number);return Date.now()>=new Date(y,m-1,d,13,0,0).getTime()}
+function confirmado(k){return !!(S.confirmados&&S.confirmados[k])||passou13(k)}
+/* uma vez: os dias fechados de fábrica (FECHADOS) ainda por vir voltam a previsto */
+(function(){
+ if(S.conf13)return;S.conf13=1;
+ if(S.confirmados)for(const k of Object.keys(FECHADOS))if(!passou13(k))delete S.confirmados[k];
+ try{localStorage.setItem('gbd-bfu-v1',JSON.stringify(S))}catch(e){}
+})();
 function alternarConfirmado(k){
  if(!S.confirmados)S.confirmados={};
+ if(passou13(k)&&!S.confirmados[k])return toast('Depois das 13h do dia o GBD já fica confirmado');
  if(S.confirmados[k])delete S.confirmados[k];else S.confirmados[k]=1;
  salvar();renderFoco();renderCiclo();
  toast(confirmado(k)?'GBD de '+br(k)+' confirmado':'GBD de '+br(k)+' voltou a previsto');
@@ -1449,7 +1458,7 @@ function pacoteAgentes(atras,frente){
   const d=dia(k);if(!d)continue;
   const ini=domingoDe(k);
   dias[k]={txt:textoGBD(k),ciclo:ini};
-  if(confirmado(k))dias[k].conf=1;
+  if(S.confirmados&&S.confirmados[k])dias[k].conf=1;
   const f=feriado(k);if(f)dias[k].feriado=f;
   if(!ciclos[ini])ciclos[ini]={ini,fim:addD(ini,6),rod:{}};
   const sso=(d.postos.SSO||[])[0];
