@@ -621,8 +621,28 @@ function cobreRod(d){
  for(const p of ord)for(const id of (d.postos[p]||[]))if(id!==a&&!emExame(id,d.k))return id;
  return null;
 }
+function manualValido(k,man){
+ const disp=disponiveis(k),noPosto=new Set(),ops=operacionais();
+ for(const ids of Object.values(man.p||{}))(ids||[]).forEach(id=>noPosto.add(id));
+ if(disp.some(id=>!noPosto.has(id)))return false;
+ for(const id of noPosto)if(ops.includes(id)&&!disp.includes(id))return false;
+ const parc=disp.filter(id=>emExame(id,k));
+ if(parc.length&&S.rodizio.exameBloqueia){
+  const livres=postosLivres(k),R=S.rodizio.posto;
+  const hora=x=>{const m=parseHora(x);return m==null?0:(turnoId()==='noite'&&m<720?m+1440:m)};
+  const js=Object.values(man.j||{}),ult=js.length?js.reduce((a,b)=>hora(b)>hora(a)?b:a):null;
+  for(const id of parc){
+   for(const[p,ids]of Object.entries(man.p))if(p!==R&&!livres.includes(p)&&(ids||[]).includes(id))return false;
+   if(man.c&&man.c[id])return false;
+   if(man.j&&man.j[id]&&man.j[id]!==ult)return false;
+  }
+ }
+ return true;
+}
 function resolverDia(k,ctx){
- const man=S.manuais[k];
+ let man=S.manuais[k],recalc=false;
+ /* dia editado: se não bate mais com folgas, ausências ou ausência parcial do dia, é recalculado */
+ if(man&&man.p&&!manualValido(k,man)){man=null;recalc=true}
  const disp=disponiveis(k);
  const aslAtivo=apoios().filter(id=>trabalha(id,k)&&!ausente(id,k));
  const asl=aslAtivo.length?aslAtivo.map(nome).join(', '):((S.aslCob&&S.aslCob[k])||'A definir');
@@ -696,7 +716,7 @@ function resolverDia(k,ctx){
  const postos={};
  for(const p of S.postos)if(best.mapa[p.id])postos[p.id]=best.mapa[p.id].slice();
  const d={...base,postos};
- d.avisos=best.av.map(([t,m])=>({t,m}));
+ d.avisos=[...(recalc?[{t:'i',m:'Dia recalculado: a edição manual não batia com as folgas e ausências do dia.'}]:[]),...best.av.map(([t,m])=>({t,m}))];
  const vazios=prio.filter(p=>!postos[p]);
  if(vazios.length){
   const obrigVazio=vazios.filter(p=>{const P=POSTO(p);return P&&P.sempre});
