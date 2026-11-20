@@ -488,11 +488,9 @@ function planoRodizio(dias){
  const livres=dias.filter(k=>!fixos[k]&&prioridade(k).includes(R)&&postosDoDia(k).includes(R));
  const antes={};operacionais().forEach(id=>antes[id]=ultimoNoPosto(id,ini,R));
  const cand={};
- for(const k of livres)cand[k]=disponiveis(k).filter(id=>{
-  if(S.rodizio.exameBloqueia&&emExame(id,k))return false;
-  if(antes[id]&&diff(k,antes[id])<INT)return false;
-  return true;
- });
+ const candEx={};
+ for(const k of livres){candEx[k]=disponiveis(k).filter(id=>!(antes[id]&&diff(k,antes[id])<INT));
+  cand[k]=candEx[k].filter(id=>!(S.rodizio.exameBloqueia&&emExame(id,k)));}
  const intervaloOk=(id,k,at)=>{
   if(antes[id]&&diff(k,antes[id])<INT)return false;
   for(const kk in fixos)if(fixos[kk]===id&&kk!==k&&Math.abs(diff(k,kk))<INT)return false;
@@ -504,25 +502,33 @@ function planoRodizio(dias){
  const gapOk=(id,k,at)=>intervaloOk(id,k,at)&&inedito(id,at);
  const usados=new Set(Object.values(fixos));
  const precisam=operacionais().filter(id=>!usados.has(id)&&dias.some(k=>disponiveis(k).includes(id)));
- const ordem=livres.slice().sort((a,b)=>cand[a].length-cand[b].length);
- let melhor=null,nos=0;
- (function bt(i,at,resto){
-  if(nos++>200000)return;
-  if(melhor&&melhor.cob===precisam.length)return;
-  if(i===ordem.length){
-   const cob=precisam.filter(id=>Object.values(at).includes(id)).length;
-   if(!melhor||cob>melhor.cob)melhor={cob,at:{...at}};
-   return;
-  }
-  const k=ordem[i];
-  const op=cand[k].filter(id=>resto.has(id)&&gapOk(id,k,at));
-  for(const id of (op.length?op:[null])){
-   if(id){resto.delete(id);at[k]=id}
-   bt(i+1,at,resto);
-   if(id){resto.add(id);delete at[k]}
-   if(melhor&&melhor.cob===precisam.length)return;
-  }
- })(0,{},new Set(precisam));
+ function rodar(C){
+  const ordem=livres.slice().sort((a,b)=>C[a].length-C[b].length);
+  let melhor=null,nos=0;
+  (function bt(i,at,resto){
+   if(nos++>200000)return;
+   if(melhor&&melhor.cob===precisam.length&&!melhor.ex)return;
+   if(i===ordem.length){
+    const cob=precisam.filter(id=>Object.values(at).includes(id)).length;
+    const ex=Object.entries(at).filter(([kk,id])=>emExame(id,kk)).length;
+    if(!melhor||cob>melhor.cob||(cob===melhor.cob&&ex<melhor.ex))melhor={cob,ex,at:{...at}};
+    return;
+   }
+   const k=ordem[i];
+   const op=C[k].filter(id=>resto.has(id)&&gapOk(id,k,at));
+   op.sort((a,b)=>emExame(a,k)-emExame(b,k));
+   for(const id of (op.length?op:[null])){
+    if(id){resto.delete(id);at[k]=id}
+    bt(i+1,at,resto);
+    if(id){resto.add(id);delete at[k]}
+    if(melhor&&melhor.cob===precisam.length&&!melhor.ex)return;
+   }
+  })(0,{},new Set(precisam));
+  return melhor;
+ }
+ // quem tem ausência parcial só entra no rodízio se for necessário para o ciclo
+ let melhor=rodar(cand);
+ if(S.rodizio.exameBloqueia&&(!melhor||melhor.cob<precisam.length)){const m2=rodar(candEx);if(m2&&(!melhor||m2.cob>melhor.cob))melhor=m2;}
  const plano={...fixos,...(melhor?melhor.at:{})};
  plano._repete=[];
  const antigo=(a,b,k)=>((antes[b]?diff(k,antes[b]):9999)-(antes[a]?diff(k,antes[a]):9999));
@@ -553,6 +559,7 @@ function planoUmaVez(dias,planoR){
   const cand={};
   for(const k of abertos)cand[k]=disponiveis(k).filter(id=>{
    if(planoR[k]===id)return false;
+   if(S.rodizio.exameBloqueia&&emExame(id,k)&&!postosLivres(k).includes(P.id))return false;
    if(Object.values(res).some(m=>m[k]===id))return false;
    if(primeiro[id]===k){const ld=ultimoDia(id,k,'posto');if(ld&&ld.v===P.id)return false}
    return true;
@@ -601,6 +608,19 @@ function permutar(arr,cb){
  }
 }
 
+/* postos que não são principais: o do excedente e os que vêm depois dele na prioridade
+   (sem excedente definido, só o último). É onde fica quem tem ausência parcial. */
+function postosLivres(k){
+ const pr=prioridade(k);const i=S.excedente?pr.indexOf(S.excedente):-1;
+ return i>=0?pr.slice(i):pr.slice(-1);
+}
+/* rodízio com ausência parcial: um disponível fica até o retorno (de preferência quem está no posto do excedente) */
+function cobreRod(d){
+ const R=S.rodizio.posto,a=R&&(d.postos[R]||[])[0];if(!a||!emExame(a,d.k))return null;
+ const ord=[S.excedente,...prioridade(d.k).slice().reverse()].filter(Boolean);
+ for(const p of ord)for(const id of (d.postos[p]||[]))if(id!==a&&!emExame(id,d.k))return id;
+ return null;
+}
 function resolverDia(k,ctx){
  const man=S.manuais[k];
  const disp=disponiveis(k);
@@ -613,6 +633,7 @@ function resolverDia(k,ctx){
   d.cafe=man.c?{...man.c}:montarCafe(k,disp,postos);
   d.janta=man.j?{...man.j}:montarJanta(k,disp,postos,aslAtivo.length>0);
   if(man.asl)d.asl=man.asl;
+  d.rodCobre=cobreRod(d);
   return d;
  }
  if(!disp.length)return{...base,postos:{},cafe:{},janta:{}};
@@ -637,14 +658,16 @@ function resolverDia(k,ctx){
   for(const kk of ctx.dias){if(kk>=k)break;(CACHE[kk]&&CACHE[kk].postos[pid]||[]).forEach(x=>umaVezUsados[pid].add(x))}
  }
  const R=S.rodizio.posto,INT=Math.max(0,+S.rodizio.intervalo||0);
+ /* posto flexível do dia (o do excedente): é onde fica quem tem ausência parcial */
+ const flex=postosLivres(k);
  function score(mapa){
   let s=0;const av=[];
   const por={};for(const[p,ids]of Object.entries(mapa))ids.forEach(id=>por[id]=p);
   for(const[id,p]of Object.entries(por)){
    if(ult[id]===p){s+=1000;av.push(['e',`${nome(id)} repetiria ${abPosto(p)} do último dia trabalhado`])}
    if(noCiclo[id]&&noCiclo[id].has(p))s+=45;
+   if(S.rodizio.exameBloqueia&&emExame(id,k)&&!flex.includes(p)&&!(p===R&&ctx.rod[k]===id)){s+=1000;av.push(['e',`${nome(id)} em ${abPosto(p)} no dia da ausência parcial`])}
    if(p===R){
-    if(S.rodizio.exameBloqueia&&emExame(id,k)){s+=1000;av.push(['e',`${nome(id)} em ${abPosto(R)} no dia da ausência parcial`])}
     const u=ultimoNoPosto(id,k,R);if(u&&diff(k,u)<INT){s+=1000;av.push(['e',`${nome(id)} em ${abPosto(R)} com ${diff(k,u)} dias de intervalo`])}
    }
    if(umaVezUsados[p]&&umaVezUsados[p].has(id)){s+=1000;av.push(['e',`${nome(id)} faria ${abPosto(p)} duas vezes no ciclo`])}
@@ -681,6 +704,10 @@ function resolverDia(k,ctx){
   if(obrigVazio.length)d.avisos.push({t:'e',m:`${obrigVazio.map(abPosto).join(', ')} ${obrigVazio.length===1?'está marcado como sempre coberto e ficou':'estão marcados como sempre cobertos e ficaram'} sem ninguém — não há efetivo para todos os obrigatórios.`});
   const resto=vazios.filter(p=>!obrigVazio.includes(p));
   if(resto.length)d.avisos.push({t:'i',m:`Sem efetivo para ${resto.map(abPosto).join(', ')} — ${resto.length===1?'cedeu':'cederam'} a vez pela prioridade do dia.`});
+ }
+ if(R&&(postos[R]||[]).some(id=>emExame(id,k))){
+  const a=postos[R][0];d.rodCobre=cobreRod(d);
+  d.avisos.push({t:'i',m:`${nome(a)} vai para ${abPosto(R)} pelo ciclo, mas tem ausência parcial: ${d.rodCobre?nome(d.rodCobre)+' fica até o retorno.':'falta alguém para cobrir até o retorno.'}`});
  }
  d.cafe=montarCafe(k,disp,postos);
  d.janta=montarJanta(k,disp,postos,aslAtivo.length>0);
@@ -802,6 +829,12 @@ function textoGBD(k){
  L.push('━━━━━━━━━━━━━━');L.push('📍 *POSTOS*');L.push('━━━━━━━━━━━━━━');
  for(const p of S.postos){
   const ids=d.postos[p.id];if(!ids||!ids.length)continue;
+  if(p.id===S.rodizio.posto&&emExame(ids[0],k)){
+   const c=d.rodCobre,m=motivoParcial(ids[0],k);
+   L.push(`${p.ico||'▪️'} *${p.nome}* ▸ ${c?nome(c)+' → ':''}${nome(ids[0])}`);
+   L.push(`   _${c?nome(c)+' fica até o retorno de '+nome(ids[0]):'Cobertura até o retorno de '+nome(ids[0])+' a definir'}${m?' ('+m+')':''}; ${nome(ids[0])} assume ao retornar._`);
+   continue;
+  }
   L.push(`${p.ico||'▪️'} *${p.nome}* ▸ ${lista(ids.map(nome))}`);
  }
  const cs={};for(const[id,s]of Object.entries(d.cafe||{}))(cs[s]=cs[s]||[]).push(id);
@@ -1570,7 +1603,7 @@ function opAg(sel){sel.innerHTML='';S.agentes.forEach(a=>sel.appendChild(new Opt
 function renderAus(){
  opAg($('#ausWho'));opAg($('#exWho'));
  $('#exHint').textContent=S.rodizio.posto&&S.rodizio.exameBloqueia
-  ?`Ninguém entra em ${abPosto(S.rodizio.posto)} no dia da própria ausência parcial.`
+  ?`No dia da ausência parcial a pessoa fica no posto do excedente. Em ${abPosto(S.rodizio.posto)} só entra se o ciclo exigir, e aí outro agente cobre até ela voltar.`
   :'Registro informativo: a regra de bloqueio está desligada na configuração.';
  const L=$('#ausList');L.innerHTML='';
  const ks=Object.keys(S.ausencias).sort();
@@ -1854,8 +1887,8 @@ const EXPLICA={
  'sempre coberto':'O posto nunca fica vazio: não cai quando falta gente, e quem está nele não sai na mesma pausa nem no mesmo intervalo que quem está em outro posto sempre coberto. Use na SSO, por exemplo.',
  'Intervalo mínimo entre duas passagens (dias)':'Distância mínima, em dias, entre duas vezes da mesma pessoa no posto de rodízio. Com 4, quem passou no dia 7 só volta a partir do dia 11. Use 0 para não ter limite.',
  'Intervalo mínimo no rodízio (dias)':'Distância mínima, em dias, entre duas vezes da mesma pessoa no posto de rodízio. Com 4, quem passou no dia 7 só volta a partir do dia 11. Use 0 para não ter limite.',
- 'não escalar nele no dia de ausência parcial':'Quem tem ausência parcial registrada no dia (sai antes, chega depois ou se ausenta por parte do turno) trabalha, mas não fica no posto de rodízio.',
- 'não escalar no rodízio no dia de ausência parcial':'Quem tem ausência parcial registrada no dia (sai antes, chega depois ou se ausenta por parte do turno) trabalha, mas não fica no posto de rodízio.',
+ 'não escalar nele no dia de ausência parcial':'Quem tem ausência parcial no dia (sai antes, chega depois ou se ausenta por parte do turno) trabalha no posto do excedente, fora dos postos principais. No posto de rodízio só entra se for a única chance de passar por ele no ciclo: aí o GBD mostra quem cobre até o retorno e que a pessoa assume quando voltar.',
+ 'não escalar no rodízio no dia de ausência parcial':'Quem tem ausência parcial no dia (sai antes, chega depois ou se ausenta por parte do turno) trabalha no posto do excedente, fora dos postos principais. No posto de rodízio só entra se for a única chance de passar por ele no ciclo: aí o GBD mostra quem cobre até o retorno e que a pessoa assume quando voltar.',
  'rodízio e cobertura nunca saem no mesmo intervalo':'Quem está no posto de rodízio e quem o cobre nunca saem juntos na pausa nem no intervalo, para o posto não ficar sem ninguém.',
  'Primeiro horário':'Horário da primeira pausa do turno.',
  'Duração (min)':'Quanto tempo dura cada pausa. Aparece no título do bloco no GBD, como "PAUSA (15 min)".',

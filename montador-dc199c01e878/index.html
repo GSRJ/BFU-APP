@@ -215,7 +215,7 @@ code.k{font:12.5px var(--mono);background:var(--bg3);padding:1px 5px;border-radi
       </div>
       <div class="card">
         <h3>Ausência parcial</h3>
-        <p class="hint">Para quem sai antes, chega depois ou se ausenta por parte do turno. A pessoa trabalha, mas não fica na SSO nesse dia.</p>
+        <p class="hint">Para quem sai antes, chega depois ou se ausenta por parte do turno. A pessoa trabalha na Ronda ou nas Plataformas, fora da SSO, do Apoio SSO e da Linha de Bloqueio. Na SSO só entra se for a única chance de passar por ela no ciclo: aí o GBD mostra quem fica até o retorno e que ela assume ao voltar.</p>
         <div class="form">
           <div class="f"><label>Agente</label><select id="exWho"></select></div>
           <div class="f"><label>Data</label><input type="date" id="exDia"></div>
@@ -322,6 +322,14 @@ const POSTOS={
  PLAT:   {rot:'Plataformas',                 ico:'🚉', ab:'Plat'},
 };
 const ORDEM=['SSO','CARTOES','APOIO','LB','RONDA','PLAT'];
+/* postos principais: quem tem ausência parcial no dia não fica neles (a SSO só quando o ciclo exigir) */
+const PRINCIPAIS=['SSO','CARTOES','APOIO','LB'];
+/* SSO com ausência parcial: um disponível fica até o retorno (o Apoio SSO, ou quem estiver na Ronda/Plataformas) */
+function cobreSSO(d){
+ const s=(d.postos.SSO||[])[0];if(!s||!emExame(s,d.k))return null;
+ for(const p of ['APOIO','RONDA','PLAT','LB','CARTOES'])for(const id of (d.postos[p]||[]))if(id!==s&&!emExame(id,d.k))return id;
+ return null;
+}
 const CARTOES_DESDE='2026-11-26';
 
 const CAFE_SLOTS_3=['15h00','15h30','16h00'];
@@ -538,15 +546,15 @@ function planoSSO(dias,gersonPlan){
  const livres=dias.filter(k=>!fixos[k]);
  const antes={};
  for(const id of AAS)antes[id]=ultimoSSO(id,inicio);
- const cand={};
+ const cand={},candEx={};
  for(const k of livres){
-  cand[k]=disponiveis(k).filter(id=>{
-   if(emExame(id,k))return false;
+  candEx[k]=disponiveis(k).filter(id=>{
    if(id==='gerson'&&(dow(k)===0||dow(k)===6))return false;
    if(id==='gerson'&&gersonPlan&&gersonPlan[k])return false;
    if(antes[id]&&diff(k,antes[id])<4)return false;
    return true;
   });
+  cand[k]=candEx[k].filter(id=>!emExame(id,k));
  }
  // intervalo de 4 dias contando também o que já foi marcado dentro do ciclo
  const gapOk=(id,k,atrib)=>{
@@ -557,26 +565,35 @@ function planoSSO(dias,gersonPlan){
  };
  const usadosFixos=new Set(Object.values(fixos));
  const precisam=AAS.filter(id=>!usadosFixos.has(id)&&dias.some(k=>disponiveis(k).includes(id)));
- const ordem=livres.slice().sort((a,b)=>cand[a].length-cand[b].length);
- let melhor=null,nos=0;
- (function bt(i,atrib,resto){
-  if(nos++>200000)return;
-  if(melhor&&melhor.cob===precisam.length)return;
-  if(i===ordem.length){
-   const cob=precisam.filter(id=>Object.values(atrib).includes(id)).length;
-   if(!melhor||cob>melhor.cob)melhor={cob,atrib:{...atrib}};
-   return;
-  }
-  const k=ordem[i];
-  const op=cand[k].filter(id=>resto.has(id)&&gapOk(id,k,atrib));
-  const lista=op.length?op:[null];
-  for(const id of lista){
-   if(id){resto.delete(id);atrib[k]=id}
-   bt(i+1,atrib,resto);
-   if(id){resto.add(id);delete atrib[k]}
+ // primeiro sem quem tem ausência parcial; só se faltar alguém passar pela SSO no ciclo
+ // é que essa pessoa entra (e um disponível cobre até ela voltar)
+ function rodar(C){
+  const ordem=livres.slice().sort((a,b)=>C[a].length-C[b].length);
+  let melhor=null,nos=0;
+  (function bt(i,atrib,resto){
+   if(nos++>200000)return;
    if(melhor&&melhor.cob===precisam.length)return;
-  }
- })(0,{},new Set(precisam));
+   if(i===ordem.length){
+    const cob=precisam.filter(id=>Object.values(atrib).includes(id)).length;
+    const ex=Object.entries(atrib).filter(([kk,id])=>emExame(id,kk)).length;
+    if(!melhor||cob>melhor.cob||(cob===melhor.cob&&ex<melhor.ex))melhor={cob,ex,atrib:{...atrib}};
+    return;
+   }
+   const k=ordem[i];
+   const op=C[k].filter(id=>resto.has(id)&&gapOk(id,k,atrib));
+   op.sort((a,b)=>emExame(a,k)-emExame(b,k));
+   const lista=op.length?op:[null];
+   for(const id of lista){
+    if(id){resto.delete(id);atrib[k]=id}
+    bt(i+1,atrib,resto);
+    if(id){resto.add(id);delete atrib[k]}
+    if(melhor&&melhor.cob===precisam.length&&!melhor.ex)return;
+   }
+  })(0,{},new Set(precisam));
+  return melhor;
+ }
+ let melhor=rodar(cand);
+ if(!melhor||melhor.cob<precisam.length){const m2=rodar(candEx);if(m2&&(!melhor||m2.cob>melhor.cob))melhor=m2;}
  const plano={...fixos,...(melhor?melhor.atrib:{})};
  // dias ainda sem SSO: quem passou há mais tempo, respeitando o intervalo
  for(const k of livres){
@@ -609,6 +626,7 @@ function planoCartoes(dias,ssoPlano,gersonPlan){
  for(const k of livres){
   cand[k]=disponiveis(k).filter(id=>{
    if(ssoPlano[k]===id)return false;
+   if(emExame(id,k))return false;
    if(id==='gerson'&&gersonPlan&&gersonPlan[k])return false;
    if(primeiro[id]===k){const ld=ultimoDia(id,k,'posto');if(ld&&ld.v==='CARTOES')return false}
    return true;
@@ -713,6 +731,7 @@ function resolverDia(k,ctx){
   d.cafe=man.c?{...man.c}:montarCafe(k,disp,postos,ctx);
   d.janta=man.j?{...man.j}:montarJanta(k,disp,postos,aslOk,ctx);
   if(man.asl)d.asl=man.asl;
+  d.ssoCobre=cobreSSO(d);
   return d;
  }
 
@@ -747,7 +766,7 @@ function resolverDia(k,ctx){
     if(p==='SSO'&&(dow(k)===0||dow(k)===6)){s+=1000;avisos.push(['e','Gerson na SSO em fim de semana'])}
     if(gp&&p!==gp){s+=1000;avisos.push(['w',`Gerson deveria ficar em ${POSTOS[gp].ab} hoje pela regra do fim de semana`])}
    }
-   if(p==='SSO'&&emExame(id,k)){s+=1000;avisos.push(['e',`${nome(id)} na SSO no dia da ausência parcial`])}
+   if(PRINCIPAIS.includes(p)&&emExame(id,k)&&!(p==='SSO'&&preSSO===id)){s+=1000;avisos.push(['e',`${nome(id)} em ${POSTOS[p].ab} no dia da ausência parcial`])}
    if(p==='CARTOES'){
     if(cartNoCiclo.has(id)){s+=1000;avisos.push(['e',`${nome(id)} faria Cartões duas vezes no ciclo`])}
     if(ssoAmanha&&id===ssoAmanha)s-=35;
@@ -792,6 +811,8 @@ function resolverDia(k,ctx){
  d.avisos=best.avisos.map(([t,m])=>({t,m}));
  const naoPreenchidos=prio.filter(p=>!postos[p]);
  if(naoPreenchidos.length)d.avisos.push({t:'i',m:`Sem efetivo para ${naoPreenchidos.map(p=>POSTOS[p].ab).join(', ')} — ${naoPreenchidos.length===1?'é o último':'são os últimos'} da prioridade do dia.`});
+ d.ssoCobre=cobreSSO(d);
+ if((postos.SSO||[]).some(id=>emExame(id,k)))d.avisos.push({t:'i',m:`${nome(postos.SSO[0])} vai para a SSO pelo ciclo, mas tem ausência parcial: ${d.ssoCobre?nome(d.ssoCobre)+' fica na SSO até o retorno.':'falta alguém para cobrir até o retorno.'}`});
  d.cafe=montarCafe(k,disp,postos,ctx);
  d.janta=montarJanta(k,disp,postos,aslOk,ctx);
  return d;
@@ -905,6 +926,12 @@ function textoGBD(k){
  L.push('━━━━━━━━━━━━━━');
  for(const p of ORDEM){
   const ids=d.postos[p];if(!ids||!ids.length)continue;
+  if(p==='SSO'&&emExame(ids[0],k)){
+   const c=d.ssoCobre,m=motivoParcial(ids[0],k);
+   L.push(`${POSTOS[p].ico} *${POSTOS[p].rot}* ▸ ${c?nome(c)+' → ':''}${nome(ids[0])}`);
+   L.push(`   _${c?nome(c)+' fica até o retorno de '+nome(ids[0]):'Cobertura até o retorno de '+nome(ids[0])+' a definir'}${m?' ('+m+')':''}; ${nome(ids[0])} assume ao retornar._`);
+   continue;
+  }
   L.push(`${POSTOS[p].ico} *${POSTOS[p].rot}* ▸ ${lista(ids.map(nome))}`);
  }
  L.push('');
