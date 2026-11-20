@@ -169,6 +169,9 @@ function openApp(k,push,turno){
   const src=app[0]+(turno?(app[0].includes('?')?'&':'?')+'turno='+turno:'');
   if(frames[k]&&turno&&frames[k].dataset.turno!==turno){frames[k].src=src;frames[k].dataset.turno=turno;}
   if(!frames[k]){const f=document.createElement('iframe');f.src=src;f.dataset.turno=turno||'';f.title=app[1];f.setAttribute('allow','web-share; clipboard-write; camera; fullscreen');view.appendChild(f);frames[k]=f;}
+  /* a Planta sempre volta a ser a Planta, mesmo se a página dela tiver mudado */
+  if(k==='planta'&&frames.planta){let ok=false;try{ok=/[?&]planta=1/.test(frames.planta.contentWindow.location.search)}catch(_){}
+    if(!ok)frames.planta.src=src;else try{frames.planta.contentWindow.postMessage({bfu:'show'},location.origin)}catch(_){}}
   for(const x in frames)frames[x].hidden=x!==k;
   view.hidden=false;document.body.classList.add('app-open');
   if(push!==false)history.pushState({app:k,turno:turno||''},'','#'+k+(turno?'/'+turno:''));
