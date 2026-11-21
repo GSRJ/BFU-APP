@@ -39,7 +39,24 @@ input[type=file]{display:none}
 .pg .im img{max-width:100%;max-height:100%;transition:transform .15s}
 .pg .inf{flex:1;min-width:0;font-size:13px;color:#55554F}
 .pg .inf b{display:block;color:var(--k);font:700 18px/1.1 var(--fc)}
-.pg .ac{flex:none;display:grid;grid-template-columns:repeat(2,40px);gap:6px}
+.pg .ac{flex:none;display:grid;grid-template-columns:repeat(3,40px);gap:6px}
+.pg .ac .cut[aria-pressed=true]{background:var(--y)}
+/* editor de corte */
+#corte{position:fixed;inset:0;z-index:20;background:#141414;display:flex;flex-direction:column}
+#corte[hidden]{display:none}
+#corte .cbar{flex:none;display:flex;align-items:center;gap:8px;padding:calc(10px + env(safe-area-inset-top)) 12px 10px;border-bottom:5px solid var(--y);color:#fff}
+#corte .cbar b{flex:1;font:700 24px/1 var(--fc)}
+#corte .area{flex:1;min-height:0;position:relative;overflow:hidden;display:grid;place-items:center;padding:22px;touch-action:none;user-select:none;-webkit-user-select:none}
+#corte .stage{position:relative;line-height:0}
+#corte .stage canvas{display:block}
+#corte .box{position:absolute;border:2px solid var(--y);box-shadow:0 0 0 9999px rgba(0,0,0,.55);cursor:move;touch-action:none}
+#corte .box::before,#corte .box::after{content:"";position:absolute;inset:33.3% 0;border-top:1px solid rgba(255,198,26,.6);border-bottom:1px solid rgba(255,198,26,.6);pointer-events:none}
+#corte .box::after{inset:0 33.3%;border:0;border-left:1px solid rgba(255,198,26,.6);border-right:1px solid rgba(255,198,26,.6)}
+#corte .h{position:absolute;width:30px;height:30px;background:var(--y);border:3px solid #141414;border-radius:50%;touch-action:none}
+#corte .h.nw{left:-16px;top:-16px;cursor:nwse-resize}#corte .h.ne{right:-16px;top:-16px;cursor:nesw-resize}
+#corte .h.sw{left:-16px;bottom:-16px;cursor:nesw-resize}#corte .h.se{right:-16px;bottom:-16px;cursor:nwse-resize}
+#corte .cfoot{flex:none;display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom))}
+#corte .cfoot .btn{min-height:52px;font-size:20px}
 .pg .ac button{width:40px;height:40px;border:2px solid var(--k);border-radius:8px;background:#fff;font-size:18px;font-weight:700;cursor:pointer;color:var(--k);display:grid;place-items:center}
 .pg .ac button:disabled{opacity:.3}
 .pg .ac .del{border-color:#C8201F;color:#C8201F}
@@ -66,7 +83,7 @@ input[type=file]{display:none}
   <b>Foto em PDF</b>
 </header>
 <main>
-  <div><h1>Transforme fotos em PDF</h1><p class="sub">Uma foto por página. Tudo é feito no próprio celular, sem internet e sem enviar as fotos para lugar nenhum.</p></div>
+  <div><h1>Transforme fotos em PDF</h1><p class="sub">Uma foto por página. Gire (↻) ou corte (✂) cada foto antes. Tudo é feito no próprio celular, sem internet e sem enviar as fotos para lugar nenhum.</p></div>
   <div class="add">
     <button class="btn pri" id="bCam" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Tirar foto</button>
     <button class="btn" id="bGal" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg>Escolher da galeria</button>
@@ -83,6 +100,11 @@ input[type=file]{display:none}
   </div>
   <p class="off"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0"/><path d="M12 19h.01"/><path d="M3 3l18 18"/></svg><span>Funciona sem internet depois de instalar o app BFU. Para mandar pelo WhatsApp sem sinal, salve o PDF e envie quando voltar a conexão.</span></p>
 </main>
+<div id="corte" hidden role="dialog" aria-label="Cortar foto">
+  <div class="cbar"><b>Cortar foto</b></div>
+  <div class="area"><div class="stage"><canvas id="cCanvas"></canvas><div class="box" id="cBox"><span class="h nw" data-h="nw"></span><span class="h ne" data-h="ne"></span><span class="h sw" data-h="sw"></span><span class="h se" data-h="se"></span></div></div></div>
+  <div class="cfoot"><button class="btn" id="cCancel" type="button">Cancelar</button><button class="btn" id="cReset" type="button">Foto inteira</button><button class="btn pri" id="cOk" type="button">Aplicar corte</button></div>
+</div>
 <div class="barra"><div class="in">
   <button class="btn dark" id="gerar" type="button" style="width:100%" disabled>Gerar PDF</button>
   <div class="pronto" id="pronto" hidden>
@@ -105,7 +127,7 @@ $('#bGal').onclick=()=>$('#iGal').click();
 async function adiciona(files){
   for(const f of files){
     if(!/^image\//.test(f.type)&&!/\.(jpe?g|png|heic|webp)$/i.test(f.name))continue;
-    fotos.push({id:Math.random().toString(36).slice(2),file:f,url:URL.createObjectURL(f),rot:0,nome:f.name||'foto'});
+    const n={id:Math.random().toString(36).slice(2),file:f,url:URL.createObjectURL(f),rot:0,crop:null,nome:f.name||'foto'};fotos.push(n);miniatura(n);
   }
   invalida();desenha();
 }
@@ -118,11 +140,12 @@ function desenha(){
   const L=$('#lista');L.innerHTML='';
   $('#vazio').hidden=!!fotos.length;$('#opc').hidden=!fotos.length;
   fotos.forEach((f,i)=>{
-    const d=document.createElement('div');d.className='pg';
-    d.innerHTML=`<div class="n">${i+1}</div><div class="im"><img alt="Página ${i+1}" src="${f.url}" style="transform:rotate(${f.rot}deg)"></div><div class="inf"><b>Página ${i+1}</b><span></span></div><div class="ac"><button type="button" data-a="up" aria-label="Subir"${i?'':' disabled'}>↑</button><button type="button" data-a="rot" aria-label="Girar">↻</button><button type="button" data-a="down" aria-label="Descer"${i<fotos.length-1?'':' disabled'}>↓</button><button type="button" data-a="del" class="del" aria-label="Tirar do PDF">✕</button></div>`;
+    const d=document.createElement('div');d.className='pg';d.dataset.id=f.id;
+    d.innerHTML=`<div class="n">${i+1}</div><div class="im"><img alt="Página ${i+1}" src="${f.thumb||f.url}"></div><div class="inf"><b>Página ${i+1}</b><span></span></div><div class="ac"><button type="button" data-a="up" aria-label="Subir"${i?'':' disabled'}>↑</button><button type="button" data-a="rot" aria-label="Girar">↻</button><button type="button" data-a="cut" class="cut" aria-label="Cortar" aria-pressed="${f.crop?'true':'false'}">✂</button><button type="button" data-a="down" aria-label="Descer"${i<fotos.length-1?'':' disabled'}>↓</button><button type="button" data-a="del" class="del" aria-label="Tirar do PDF">✕</button></div>`;
     d.querySelector('span').textContent=f.nome;
     d.querySelector('.ac').onclick=e=>{const a=e.target.closest('button');if(!a)return;const k=a.dataset.a;
-      if(k==='rot')f.rot=(f.rot+90)%360;
+      if(k==='cut'){abreCorte(f);return;}
+      if(k==='rot'){f.rot=(f.rot+90)%360;if(f.crop){const c=f.crop;f.crop={x:1-c.y-c.h,y:c.x,w:c.h,h:c.w};}miniatura(f);}
       else if(k==='del'){URL.revokeObjectURL(f.url);fotos.splice(i,1);}
       else{const j=k==='up'?i-1:i+1;[fotos[i],fotos[j]]=[fotos[j],fotos[i]];}
       invalida();desenha();};
@@ -132,15 +155,71 @@ function desenha(){
 
 /* ---------- foto → JPEG girado e reduzido ---------- */
 function carrega(f){return new Promise((ok,er)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=()=>er(new Error('Não abriu a foto '+f.nome));i.src=f.url;});}
-async function prepara(f){
-  const im=await carrega(f),Q=QUAL[qual];
-  let w=im.naturalWidth,h=im.naturalHeight;const s=Math.min(1,Q.lado/Math.max(w,h));w=Math.round(w*s);h=Math.round(h*s);
-  const giro=f.rot%180!==0,cw=giro?h:w,ch=giro?w:h;
+/* foto girada (e cortada, se tiver corte) num canvas, com o lado maior até "lado" */
+async function girada(f,lado,semCorte){
+  const im=await carrega(f);
+  let w=im.naturalWidth,h=im.naturalHeight;
+  const giro=f.rot%180!==0,c0=(!semCorte&&f.crop)||{x:0,y:0,w:1,h:1};
+  const rw=giro?h:w,rh=giro?w:h;                                   /* tamanho girado, sem reduzir */
+  const s=Math.min(1,lado/Math.max(rw*c0.w,rh*c0.h));               /* reduz pelo tamanho final, já cortado */
+  w=Math.round(w*s);h=Math.round(h*s);
+  const cw=giro?h:w,ch=giro?w:h;
   const c=document.createElement('canvas');c.width=cw;c.height=ch;const x=c.getContext('2d');
   x.fillStyle='#fff';x.fillRect(0,0,cw,ch);x.translate(cw/2,ch/2);x.rotate(f.rot*Math.PI/180);x.drawImage(im,-w/2,-h/2,w,h);
-  const b=await new Promise(ok=>c.toBlob(ok,'image/jpeg',Q.q));
-  return {w:cw,h:ch,bytes:new Uint8Array(await b.arrayBuffer())};
+  if(semCorte||!f.crop)return c;
+  const sx=Math.round(c0.x*cw),sy=Math.round(c0.y*ch),sw=Math.max(1,Math.round(c0.w*cw)),sh=Math.max(1,Math.round(c0.h*ch));
+  const d=document.createElement('canvas');d.width=sw;d.height=sh;d.getContext('2d').drawImage(c,sx,sy,sw,sh,0,0,sw,sh);
+  return d;
 }
+async function prepara(f){
+  const Q=QUAL[qual],c=await girada(f,Q.lado);
+  const b=await new Promise(ok=>c.toBlob(ok,'image/jpeg',Q.q));
+  return {w:c.width,h:c.height,bytes:new Uint8Array(await b.arrayBuffer())};
+}
+/* miniatura da lista já girada e cortada */
+async function miniatura(f){
+  try{const c=await girada(f,240);const u=c.toDataURL('image/jpeg',.8);f.thumb=u;
+    const im=document.querySelector(`#lista .pg[data-id="${f.id}"] .im img`);if(im)im.src=u;}catch(_){}
+}
+
+/* ---------- cortar ---------- */
+let cf=null,cr=null,base=null;
+async function abreCorte(f){
+  cf=f;cr=Object.assign({x:0,y:0,w:1,h:1},f.crop||{});
+  const tela=$('#cCanvas');base=await girada(f,1600,true);
+  tela.width=base.width;tela.height=base.height;tela.getContext('2d').drawImage(base,0,0);
+  $('#corte').hidden=false;requestAnimationFrame(()=>{encaixa();posCaixa();});
+}
+/* a foto cabe inteira na área do editor */
+function encaixa(){const a=$('#corte .area'),t=$('#cCanvas'),aw=a.clientWidth-44,ah=a.clientHeight-44,k=Math.min(aw/t.width,ah/t.height);t.style.width=Math.floor(t.width*k)+'px';t.style.height=Math.floor(t.height*k)+'px';}
+function posCaixa(){
+  const t=$('#cCanvas'),bx=$('#cBox'),W=t.clientWidth,H=t.clientHeight;
+  bx.style.left=(cr.x*W)+'px';bx.style.top=(cr.y*H)+'px';bx.style.width=(cr.w*W)+'px';bx.style.height=(cr.h*H)+'px';
+}
+addEventListener('resize',()=>{if(!$('#corte').hidden){encaixa();posCaixa();}});
+{let drag=null;const MIN=.06;
+  $('#cBox').addEventListener('pointerdown',e=>{e.preventDefault();const t=$('#cCanvas');drag={h:e.target.dataset.h||'move',x:e.clientX,y:e.clientY,c:{...cr},W:t.clientWidth,H:t.clientHeight};try{e.target.setPointerCapture(e.pointerId)}catch(_){}});
+  addEventListener('pointermove',e=>{if(!drag)return;e.preventDefault();
+    const dx=(e.clientX-drag.x)/drag.W,dy=(e.clientY-drag.y)/drag.H,c={...drag.c};
+    if(drag.h==='move'){c.x=Math.min(1-c.w,Math.max(0,c.x+dx));c.y=Math.min(1-c.h,Math.max(0,c.y+dy));}
+    else{
+      let x0=c.x,y0=c.y,x1=c.x+c.w,y1=c.y+c.h;
+      if(drag.h.includes('w'))x0=Math.min(x1-MIN,Math.max(0,x0+dx));
+      if(drag.h.includes('e'))x1=Math.max(x0+MIN,Math.min(1,x1+dx));
+      if(drag.h.includes('n'))y0=Math.min(y1-MIN,Math.max(0,y0+dy));
+      if(drag.h.includes('s'))y1=Math.max(y0+MIN,Math.min(1,y1+dy));
+      c.x=x0;c.y=y0;c.w=x1-x0;c.h=y1-y0;
+    }
+    cr=c;posCaixa();},{passive:false});
+  addEventListener('pointerup',()=>{drag=null;});addEventListener('pointercancel',()=>{drag=null;});
+}
+$('#cCancel').onclick=()=>{$('#corte').hidden=true;cf=null;};
+$('#cReset').onclick=()=>{cr={x:0,y:0,w:1,h:1};posCaixa();};
+$('#cOk').onclick=()=>{
+  if(!cf)return;const inteiro=cr.x<.005&&cr.y<.005&&cr.w>.99&&cr.h>.99;
+  cf.crop=inteiro?null:cr;const f=cf;$('#corte').hidden=true;cf=null;
+  invalida();desenha();miniatura(f);
+};
 
 /* ---------- PDF escrito à mão (A4, uma foto por página) ---------- */
 const enc=new TextEncoder();
