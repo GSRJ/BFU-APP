@@ -119,7 +119,7 @@ body.app-open{overflow:hidden}
   </a>
   <a class="card pdf" href="foto-pdf/index.html">
     <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2.5h8l4.5 4.5v14.5H6z"/><path d="M14 2.5V7h4.5"/><path d="M9 16.5l2-2.5 1.5 1.5 2-3 1.5 4H9z"/></svg></div>
-    <div class="tx"><b>Foto em PDF</b><span>Junte fotos num PDF, mesmo sem internet</span></div>
+    <div class="tx"><b>Foto para PDF</b><span>Converta fotos em PDF, mesmo sem internet</span></div>
     <div class="go" aria-hidden="true"></div>
   </a>
   <a class="card gbd" href="gbd/index.html" id="cardGbd" aria-expanded="false">
@@ -163,7 +163,7 @@ document.getElementById('dlgOk').onclick=()=>document.getElementById('dlg').clos
 if('serviceWorker' in navigator&&/^https?:/.test(location.protocol)){navigator.serviceWorker.register('sw.js').catch(()=>{});}
 /* abre a Ronda ou o Reporte SSO dentro do BFU; cada um fica carregado para voltar de onde parou */
 const view=document.getElementById('appView'),frames={};
-const APPS={ronda:['ronda/index.html','Ronda'],sso:['reporte-sso/index.html','Reporte SSO'],planta:['reporte-sso/index.html?planta=1','Planta da estação'],pdf:['foto-pdf/index.html','Foto em PDF'],gbd:['gbd/index.html','GBD do dia']};
+const APPS={ronda:['ronda/index.html','Ronda'],sso:['reporte-sso/index.html','Reporte SSO'],planta:['reporte-sso/index.html?planta=1','Planta da estação'],pdf:['foto-pdf/index.html','Foto para PDF'],gbd:['gbd/index.html','GBD do dia']};
 function openApp(k,push,turno){
   const app=APPS[k];if(!app)return;
   const src=app[0]+(turno?(app[0].includes('?')?'&':'?')+'turno='+turno:'');
