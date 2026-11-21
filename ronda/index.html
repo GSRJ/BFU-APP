@@ -512,6 +512,8 @@ dialog .big{font-size:22px}
 @media (max-width:350px){.inst-home{font-size:17px;gap:5px;padding:4px 6px}.inst-home svg{width:17px;height:17px}}
 /* aviso de fotos pendentes no fim da ronda */
 .fotowarn{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:2px solid var(--k);border-left-width:8px;border-radius:10px;background:#FFF7D6;color:var(--k);font-size:14.5px;line-height:1.35;margin:4px 0}
+#pdfFotoWarn{position:relative;background:#FFE58A;border-color:#B45309;border-left-color:#B45309;box-shadow:0 4px 14px rgba(180,83,9,.25);margin:6px 0 10px}
+#pdfFotoWarn::after{content:'';position:absolute;left:28px;bottom:-10px;border-width:10px 9px 0;border-style:solid;border-color:#B45309 transparent transparent}
 .fotowarn[hidden]{display:none}
 .fotowarn svg{flex:none;width:24px;height:24px;stroke:var(--k);fill:none;stroke-width:2.2;stroke-linejoin:round}
 .fotowarn b{font-weight:700}
@@ -741,7 +743,7 @@ body.in-hub .top::before{display:none!important}
 <dialog id="pdfDlg" aria-label="Relatório pronto">
   <h2>Relatório pronto</h2>
   <p id="pdfName"></p>
-  <div class="fotowarn" id="pdfFotoWarn" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4Z"/><circle cx="12" cy="13" r="3.5"/></svg><div><b>As fotos não vão junto com o texto.</b> Depois de enviar o relatório, <u>volte para este app</u> e toque em <b>2. Enviar fotos</b>.</div></div>
+  <div class="fotowarn" id="pdfFotoWarn" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4Z"/><circle cx="12" cy="13" r="3.5"/></svg><div><b>Tem fotos para enviar.</b> Depois de mandar o texto no WhatsApp, <u>volte para este app</u> e toque em <b>📷 Enviar fotos</b>.</div></div>
   <div class="menu-list">
     <button class="big cta" id="pdfSimple" type="button" hidden style="display:none"></button>
     <div class="opt" id="optStep"><button class="big cta" id="pdfStep" type="button">📤 Enviar relatório de ronda</button></div>
@@ -2783,7 +2785,8 @@ function updateStepBtn(){
   $('#pdfStep').innerHTML=`<span class="bt">${done?'✅ Texto enviado':'📝 Enviar texto'+(np>1?` (parte ${txtIdx+1} de ${np})`:'')}</span><span class="bs">${done?'Toque para reenviar':(np>1?'Texto longo: vai em '+np+' partes, um toque cada':'Relatório completo da ronda, em texto')}</span>`;
   $('#optFotos').hidden=!tot;
   $('#pdfFotos').innerHTML=`<span class="bt">${sentFot?'✅ Fotos enviadas':'📷 Enviar fotos'}</span><span class="bs">${sentFot?'Toque para reenviar':`${nc} imagem${nc===1?'':'s'}-resumo${n?' + '+n+' foto'+(n===1?'':'s')+' de problema':''}`}</span>`;
-  $('#pdfFotoWarn').hidden=true;
+  $('#pdfFotoWarn').hidden=!tot||sentFot;
+  {const w=$('#pdfFotoWarn b');if(w)w.textContent=n?`Tem ${n} foto${n===1?'':'s'} para enviar.`:'Tem a imagem-resumo para enviar.';}
   $('#pdfStep').classList.toggle('cta',!done);$('#pdfFotos').classList.toggle('cta',!sentFot);$('#pdfFotos').classList.remove('plain');$('#pdfSave').classList.toggle('cta',!sentPdf);$('#pdfFotos').classList.remove('fotonext');
   $('#pdfSave').innerHTML=`<span class="bt">${sentPdf?'✅ PDF enviado':'📎 Enviar relatório em PDF'}</span><span class="bs">${sentPdf?'Toque para reenviar':'Relatório detalhado da ronda'}</span>`;
 }
@@ -2826,10 +2829,10 @@ async function enviaTextoCompleto(){
   if(!pack)return;
   if(txtIdx>=txtParts.length)txtIdx=0;
   const t=txtParts[txtIdx];
-  try{await navigator.share({text:t});txtIdx++;updateStepBtn();}
+  try{await navigator.share({text:t});txtIdx++;updateStepBtn();if(txtIdx>=txtParts.length&&!sentFot&&pack.covers.length+pack.photos.length)setTimeout(pdfFotRemind,600);}
   catch(e){
     if(e&&e.name==='AbortError')return;
-    try{await navigator.clipboard.writeText(t);notify('Texto copiado. Cole no WhatsApp.');txtIdx++;updateStepBtn();}catch(_){notify('Não foi possível enviar o texto.');}
+    try{await navigator.clipboard.writeText(t);notify('Texto copiado. Cole no WhatsApp.');txtIdx++;updateStepBtn();if(txtIdx>=txtParts.length&&!sentFot&&pack.covers.length+pack.photos.length)fotOnReturn=pdfFotRemind;}catch(_){notify('Não foi possível enviar o texto.');}
   }
 }
 /* um envio só: imagem-resumo com os dados da ronda + fotos dos problemas + texto como legenda.
