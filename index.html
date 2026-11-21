@@ -96,6 +96,25 @@ body.app-open{overflow:hidden}
 .card:focus-visible,.inst:focus-visible{outline:4px solid #1F5FD1;outline-offset:3px}
 @media (prefers-reduced-motion:no-preference){.card,.inst{animation:rise .45s cubic-bezier(.2,.8,.2,1) both}.card.sso{animation-delay:.07s}.card.gbd{animation-delay:.14s}.inst{animation-delay:.21s}}
 @keyframes rise{from{opacity:0;transform:translateY(12px)}}
+
+/* ---- layout em grade: os apps em quadrados, dois por linha, e o GBD do dia largo ---- */
+main{display:grid!important;grid-template-columns:1fr 1fr;gap:10px!important;align-content:start}
+.hello{grid-column:1/-1}
+.card{flex-direction:column;align-items:flex-start;min-height:158px!important;padding:14px 14px 16px;position:relative;border-radius:14px}
+.card .ic{margin:0 0 12px!important;width:54px!important;height:54px!important;align-self:flex-start!important}
+.card .ic svg{width:29px!important;height:29px!important}
+.card .tx{padding:0!important;align-self:stretch}
+.card .tx b{font-size:27px!important}
+.card .tx span{font-size:13px!important;margin-top:4px!important}
+.card .go{position:absolute;top:12px;right:12px;width:36px!important;height:36px;border-radius:50%}
+.card .go::before{width:10px;height:10px;border-width:3px;margin-left:-4px}
+.card.gbd{grid-column:1/-1;flex-direction:row;align-items:center;min-height:92px!important}
+.card.gbd .ic{margin:0 14px 0 0!important;align-self:center!important}
+.card.gbd .tx{align-self:center}
+.card.gbd .go{position:static;align-self:center;width:44px!important;height:44px}
+.turnos,.inst,.offnote{grid-column:1/-1}
+@media (max-height:720px) and (max-width:759px){.card{min-height:132px!important}.card .ic{width:44px!important;height:44px!important;margin-bottom:8px!important}.card .tx b{font-size:23px!important}.card.gbd{min-height:76px!important}}
+@media (min-width:760px){main{grid-template-columns:repeat(4,1fr);max-width:1000px}.card{min-height:190px!important}.card.gbd{min-height:110px!important}}
 </style>
 </head>
 <body>
