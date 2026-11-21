@@ -2546,7 +2546,8 @@ async function captionedPhoto(f,p,r,idx,total){
   if(!p.custom)add(locLine(p),{c:'#D7DEE5'});
   if(r.blq&&r.blq.length)add('Bloqueios: '+r.blq.map(p2).join(', '),{b:1,c:'#FF8A75'});
   if(r.note&&r.note.trim()&&st!=='problema')add(r.note.trim(),{c:'#FFFFFF'});
-  add((r.t?'Registrado em '+whenOf(r):'Ronda '+fmtDate(ronda.meta.data))+(ronda.meta.agente?' · '+ronda.meta.agente:'')+(total>1?` · foto ${idx}/${total}`:''),{c:'#93A3B2'});
+  {const m=ronda.meta||{},ag=(m.agente||'').trim();add('Reportado por: '+(ag||'não informado')+(m.matricula?' · mat. '+m.matricula:''),{b:1,c:'#FFFFFF'});}
+  add((r.t?'Registrado em '+whenOf(r):'Reporte '+fmtDate(ronda.meta.data))+(ronda.meta.turno?' · turno '+String(ronda.meta.turno).toLowerCase():'')+(total>1?` · foto ${idx}/${total}`:''),{c:'#93A3B2'});
   const H=pad*2+lines.length*lh;
   cv.height=h+H;
   ctx.fillStyle='#0F161D';ctx.fillRect(0,0,w,h+H);
