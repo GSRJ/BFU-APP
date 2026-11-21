@@ -104,8 +104,6 @@ input[type=file]{display:none}
   <div class="lista" id="lista"></div>
   <div class="opc" id="opc" hidden>
     <label>Nome do arquivo (opcional)<input type="text" id="tit" maxlength="80" placeholder="Ex.: Ficha de APS" autocomplete="off"></label>
-    <div><div style="font-weight:700;font-size:14px;margin-bottom:4px">Tamanho do arquivo</div>
-      <div class="seg" id="qual"><button type="button" data-q="leve" aria-pressed="true">Leve (WhatsApp)</button><button type="button" data-q="alta" aria-pressed="false">Alta qualidade</button></div></div>
   </div>
   <p class="off"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0"/><path d="M12 19h.01"/><path d="M3 3l18 18"/></svg><span>Funciona sem internet depois de instalar o app BFU. Para mandar pelo WhatsApp sem sinal, salve o PDF e envie quando voltar a conexão.</span></p>
 </main>
@@ -128,8 +126,9 @@ const $=s=>document.querySelector(s);
 const IN_FRAME=(()=>{try{return window.parent!==window&&parent.location.origin===location.origin}catch(_){return false}})();
 $('#volta').onclick=()=>{if(IN_FRAME)parent.postMessage({bfu:'home'},location.origin);else location.href='../index.html';};
 
-let fotos=[],qual='leve',pdf=null,pdfUrl=null;
-const QUAL={leve:{lado:1600,q:.72},alta:{lado:2600,q:.86}};
+let fotos=[],pdf=null,pdfUrl=null;
+/* sempre a melhor qualidade: a foto no tamanho original (até 4096 px no lado maior, limite seguro do celular) e JPEG quase sem perda */
+const QUAL={lado:4096,q:.95};
 const msg=t=>$('#msg').textContent=t||'';
 $('#bCam').onclick=()=>$('#iCam').click();
 $('#bGal').onclick=()=>$('#iGal').click();
@@ -142,7 +141,6 @@ async function adiciona(files){
 }
 $('#iCam').onchange=e=>{adiciona([...e.target.files]);e.target.value='';};
 $('#iGal').onchange=e=>{adiciona([...e.target.files]);e.target.value='';};
-document.querySelectorAll('#qual button').forEach(b=>b.onclick=()=>{qual=b.dataset.q;document.querySelectorAll('#qual button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));invalida();});
 $('#tit').addEventListener('input',invalida);
 function invalida(){pdf=null;if(pdfUrl){URL.revokeObjectURL(pdfUrl);pdfUrl=null;}$('#pronto').hidden=true;$('#gerar').hidden=false;$('#gerar').disabled=!fotos.length;msg(fotos.length?fotos.length+(fotos.length===1?' página':' páginas'):'');}
 function desenha(){
@@ -174,7 +172,7 @@ async function girada(f,lado,semCorte){
   const s=Math.min(1,lado/Math.max(rw*c0.w,rh*c0.h));               /* reduz pelo tamanho final, já cortado */
   w=Math.round(w*s);h=Math.round(h*s);
   const cw=giro?h:w,ch=giro?w:h;
-  const c=document.createElement('canvas');c.width=cw;c.height=ch;const x=c.getContext('2d');
+  const c=document.createElement('canvas');c.width=cw;c.height=ch;const x=c.getContext('2d');x.imageSmoothingQuality='high';
   x.fillStyle='#fff';x.fillRect(0,0,cw,ch);x.translate(cw/2,ch/2);x.rotate(f.rot*Math.PI/180);x.drawImage(im,-w/2,-h/2,w,h);
   if(semCorte||!f.crop)return c;
   const sx=Math.round(c0.x*cw),sy=Math.round(c0.y*ch),sw=Math.max(1,Math.round(c0.w*cw)),sh=Math.max(1,Math.round(c0.h*ch));
@@ -182,7 +180,7 @@ async function girada(f,lado,semCorte){
   return d;
 }
 async function prepara(f){
-  const Q=QUAL[qual],c=await girada(f,Q.lado);
+  const Q=QUAL,c=await girada(f,Q.lado);
   const b=await new Promise(ok=>c.toBlob(ok,'image/jpeg',Q.q));
   return {w:c.width,h:c.height,bytes:new Uint8Array(await b.arrayBuffer())};
 }
