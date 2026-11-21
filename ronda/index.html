@@ -2810,6 +2810,24 @@ async function enviaComoReporte(files,text){
     return false;
   }catch(e){if(!(e&&e.name==='AbortError'))notify('Não foi possível abrir o compartilhamento.');return false;}
 }
+/* o Chrome do celular recusa compartilhar mais de 10 arquivos de uma vez: manda em lotes de 10.
+   Cada lote novo e cada nova tentativa pedem um toque (o celular exige um toque para abrir o compartilhamento) */
+const LOTE=10;
+async function enviaEmLotes(files,text){
+  const tot=files.length;
+  for(let i=0;i<tot;i+=LOTE){
+    const parte=files.slice(i,i+LOTE),dados=(text&&i===0)?{files:parte,text}:{files:parte};
+    if(i>0&&!await ask('Próximas fotos',`Já foram ${i} de ${tot}. Toque para enviar as próximas, na mesma conversa do WhatsApp.`,'📤 Enviar próximas','Parar'))return false;
+    for(let t=0;;t++){
+      try{await navigator.share(dados);break;}
+      catch(e){
+        if(e&&e.name==='AbortError')return false;
+        if(t>0||!await ask('Não abriu o compartilhamento',`O celular recusou (${(e&&e.name)||'erro'}). Tentar de novo?`,'Tentar de novo','Cancelar')){notify('Não foi possível abrir o compartilhamento'+(e&&e.name?' ('+e.name+')':'')+'.');return false;}
+      }
+    }
+  }
+  return true;
+}
 async function shareFiles(files,text){
   try{await navigator.share(text?{files,text}:{files});return true;}
   catch(e){
@@ -2855,8 +2873,7 @@ $('#pdfFotos').onclick=async()=>{
   if(!pack)return;
   const all=pack.covers.concat(pack.photos);
   if(!pack.canShare){let n=0;for(const f of all){if(await saveFile(f,f.name))n++;await new Promise(r=>setTimeout(r,350));}if(n)notify(n+' arquivo'+(n===1?'':'s')+' salvo'+(n===1?'':'s')+'.');return;}
-  let ok=true;
-  for(let i=0;i<all.length&&ok;i+=30){ok=await shareFiles(all.slice(i,i+30),'');if(i+30<all.length&&ok)await new Promise(r=>setTimeout(r,300));}
+  const ok=await enviaEmLotes(all,'');
   if(ok){sentFot=true;updateStepBtn();}
 };
 $('#pdfSave').onclick=async()=>{
@@ -3090,7 +3107,7 @@ async function onPdf(){
     const photos=[].concat(...parts.map(q=>multi?q.photos.map(f=>new File([f],q.k+'-'+f.name,{type:f.type})):q.photos));
     const pdfFile=new File([bytes],name,{type:'application/pdf'});
     pack={photos,covers,cover:covers[0],pdfFile,simple:buildSimpleText(parts.map(q=>q.stat)),text:buildFullText(parts.map(q=>q.stat)),caption:multi?buildCaptionMulti(parts.map(q=>q.stat)):parts[0].caption,files:covers.concat(photos)};
-    const canFiles=!!(navigator.canShare&&navigator.canShare({files:pack.files}));
+    const canFiles=!!(navigator.canShare&&navigator.canShare({files:pack.files.slice(0,LOTE)}));
     pack.canShare=canFiles;
     $('#pdfName').textContent=name+(multi?` · ${parts.length} áreas`:'')+` · ${covers.length>1?covers.length+' imagens-resumo':'imagem-resumo'} + ${photos.length} foto${photos.length===1?'':'s'} de problema`;
     sentRes=sentFot=sentPdf=false;txtParts=splitText(pack.text,4000);txtIdx=0;simpParts=splitText(pack.simple,4000);simpIdx=0;updateStepBtn();
@@ -3302,9 +3319,8 @@ async function bEnviarTudo(){
   if(!n){await bSendText();return;}
   notify('Preparando imagens…');
   const files=[await bCoverFile(),...await bPhotoFiles()];$('#toast').classList.remove('on');
-  if(!(navigator.canShare&&navigator.canShare({files}))){await bSendText();fotOnReturn=bFotRemind;return;}
-  let ok=await enviaComoReporte(files.slice(0,30),buildBasicText());
-  for(let i=30;i<files.length&&ok;i+=30){await new Promise(r=>setTimeout(r,300));ok=await shareFiles(files.slice(i,i+30),'');}
+  if(!(navigator.canShare&&navigator.canShare({files:files.slice(0,LOTE)}))){await bSendText();fotOnReturn=bFotRemind;return;}
+  const ok=await enviaEmLotes(files,buildBasicText());
   if(ok){bFotSent=true;renderBasic();}
 }
 async function bPhotoFiles(){
@@ -3355,9 +3371,8 @@ async function bSendPhotos(pre){
   notify('Preparando fotos…');
   const files=pre||await bPhotoFiles();$('#toast').classList.remove('on');
   if(!files.length)return;
-  if(!(navigator.canShare&&navigator.canShare({files}))){let n=0;for(const f of files){if(await saveFile(f,f.name))n++;await new Promise(r=>setTimeout(r,350));}if(n)notify(n+' foto'+(n===1?'':'s')+' salva'+(n===1?'':'s')+'.');return;}
-  let ok=true;
-  for(let i=0;i<files.length&&ok;i+=30){ok=await shareFiles(files.slice(i,i+30),'');if(i+30<files.length&&ok)await new Promise(r=>setTimeout(r,300));}
+  if(!(navigator.canShare&&navigator.canShare({files:files.slice(0,LOTE)}))){let n=0;for(const f of files){if(await saveFile(f,f.name))n++;await new Promise(r=>setTimeout(r,350));}if(n)notify(n+' foto'+(n===1?'':'s')+' salva'+(n===1?'':'s')+'.');return;}
+  const ok=await enviaEmLotes(files,'');
   if(ok){bFotSent=true;renderBasic();}
 }
 async function bAddPhotos(files){
