@@ -2990,9 +2990,9 @@ function buildFullText(stats){
     }
     return L.concat(tail).join('\n');
   };
-  let t='';
-  for(const pl of [0,1,2])for(const lvl of [0,1,2,3]){t=build(lvl,pl);if(t.length<=MAX)return t;}
-  return t.slice(0,MAX-2).replace(/\n[^\n]*$/,'')+'\n…';
+  /* o texto vai sozinho: sempre no estilo completo (lista de todos os itens, problemas com hora).
+     Se passar do limite de uma mensagem, o botão manda em partes */
+  return build(0,0);
 }
 const SIMPLE_CATS={
   mez:[['Extintores',['Extintores']],['Hidrantes',['Hidrantes']],['Sanitários Públicos',[A_SAN]],['Bloqueios',[A_BLQ]],["ATM'S",[A_SSO,'ATMs Autopass']]],
