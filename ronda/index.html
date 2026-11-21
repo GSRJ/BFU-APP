@@ -2781,17 +2781,12 @@ function updateStepBtn(){
   {const np=simpParts.length,done=simpIdx>=np&&np>0;$('#pdfSimple').innerHTML=`<span class="bt">${done?'✅ Relatório simplificado enviado':'🧾 Enviar relatório simplificado'+(np>1?` (parte ${simpIdx+1} de ${np})`:'')}</span><span class="bs">${done?'Toque para reenviar':'Itens com ✅ e, se houver, os problemas detalhados'}</span>`;}
   const n=pack.photos.length,nc=pack.covers.length,tot=nc+n;
   const np=txtParts.length,done=txtIdx>=np;
-  const junto=pack.canShare&&tot>0;
-  $('#pdfStep').innerHTML=junto
-    ?`<span class="bt">${sentFot?'✅ Enviado à SSO':'📤 Enviar à SSO'}</span><span class="bs">${sentFot?'Toque para reenviar':`Imagem com os dados da ronda${n?' + '+n+' foto'+(n===1?'':'s'):''} + texto completo, num envio só`}</span>`
-    :`<span class="bt">${done?'✅ Relatório enviado':'📤 Enviar à SSO'+(np>1?` (parte ${txtIdx+1} de ${np})`:'')}</span><span class="bs">${done?'Toque para reenviar':(np>1?'Texto longo: enviado em '+np+' partes, um toque cada':'Texto completo da ronda')}</span>`;
+  $('#pdfStep').innerHTML=`<span class="bt">${done?'✅ Texto enviado':'📝 Enviar texto'+(np>1?` (parte ${txtIdx+1} de ${np})`:'')}</span><span class="bs">${done?'Toque para reenviar':(np>1?'Texto longo: vai em '+np+' partes, um toque cada':'Relatório completo da ronda, em texto')}</span>`;
   $('#optFotos').hidden=!tot;
-  $('#pdfFotos').innerHTML=junto
-    ?`<span class="bt">${done?'✅ Texto completo enviado':'🧾 Só o texto completo'+(np>1?` (parte ${Math.min(txtIdx+1,np)} de ${np})`:'')}</span><span class="bs">Se a SSO pedir o relatório escrito inteiro</span>`
-    :`<span class="bt">${sentFot?'✅ Fotos enviadas':'📷 Enviar fotos'}</span><span class="bs">${nc} imagem${nc===1?'':'s'}-resumo${n?' + '+n+' foto'+(n===1?'':'s')+' de problema':''}</span>`;
-  $('#pdfFotoWarn').hidden=junto||sentFot||!tot;
-  $('#pdfStep').classList.toggle('cta',!(junto?sentFot:done));$('#pdfFotos').classList.toggle('cta',!junto&&done&&!sentFot&&!!tot);$('#pdfFotos').classList.toggle('plain',junto);$('#pdfSave').classList.toggle('cta',false);$('#pdfFotos').classList.remove('fotonext');
-  $('#pdfSave').innerHTML=`<span class="bt">${sentPdf?'✅ Detalhamento enviado':'📎 Enviar detalhamento'}</span><span class="bs">Relatório em PDF</span>`;
+  $('#pdfFotos').innerHTML=`<span class="bt">${sentFot?'✅ Fotos enviadas':'📷 Enviar fotos'}</span><span class="bs">${sentFot?'Toque para reenviar':`${nc} imagem${nc===1?'':'s'}-resumo${n?' + '+n+' foto'+(n===1?'':'s')+' de problema':''}`}</span>`;
+  $('#pdfFotoWarn').hidden=true;
+  $('#pdfStep').classList.toggle('cta',!done);$('#pdfFotos').classList.toggle('cta',!sentFot);$('#pdfFotos').classList.remove('plain');$('#pdfSave').classList.toggle('cta',!sentPdf);$('#pdfFotos').classList.remove('fotonext');
+  $('#pdfSave').innerHTML=`<span class="bt">${sentPdf?'✅ PDF enviado':'📎 Enviar relatório em PDF'}</span><span class="bs">${sentPdf?'Toque para reenviar':'Relatório detalhado da ronda'}</span>`;
 }
 /* legenda das fotos: o WhatsApp corta legendas muito longas, então manda o começo e avisa */
 const LEG_MAX=1000;
@@ -2840,17 +2835,8 @@ async function enviaTextoCompleto(){
 }
 /* um envio só: imagem-resumo com os dados da ronda + fotos dos problemas + texto como legenda.
    Não precisa voltar ao app para mandar as fotos. */
-$('#pdfStep').onclick=async()=>{
-  if(!pack)return;
-  const all=pack.covers.concat(pack.photos);
-  if(!all.length||!pack.canShare){
-    if(!all.length){await enviaTextoCompleto();return;}
-    await enviaTextoCompleto();fotOnReturn=pdfFotRemind;return;
-  }
-  let ok=await enviaComoReporte(all.slice(0,30),txtParts.join('\n\n'));
-  for(let i=30;i<all.length&&ok;i+=30){await new Promise(r=>setTimeout(r,300));ok=await shareFiles(all.slice(i,i+30),'');}
-  if(ok){sentFot=true;updateStepBtn();}
-};
+/* ronda detalhada: três envios separados — texto, fotos e PDF */
+$('#pdfStep').onclick=()=>enviaTextoCompleto();
 /* texto copiado (sem compartilhar): o lembrete das fotos aparece quando a pessoa volta para o app */
 var fotOnReturn=null;
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&fotOnReturn){const f=fotOnReturn;fotOnReturn=null;setTimeout(f,400);}});
@@ -2860,7 +2846,6 @@ async function pdfFotRemind(){
 }
 $('#pdfFotos').onclick=async()=>{
   if(!pack)return;
-  if(pack.canShare&&pack.covers.length+pack.photos.length){await enviaTextoCompleto();return;}
   const all=pack.covers.concat(pack.photos);
   if(!pack.canShare){let n=0;for(const f of all){if(await saveFile(f,f.name))n++;await new Promise(r=>setTimeout(r,350));}if(n)notify(n+' arquivo'+(n===1?'':'s')+' salvo'+(n===1?'':'s')+'.');return;}
   let ok=true;
