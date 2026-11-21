@@ -115,10 +115,16 @@ main{display:grid!important;grid-template-columns:1fr 1fr;gap:10px!important;ali
 .turnos,.inst,.offnote{grid-column:1/-1}
 @media (max-height:720px) and (max-width:759px){.card{min-height:132px!important}.card .ic{width:44px!important;height:44px!important;margin-bottom:8px!important}.card .tx b{font-size:23px!important}.card.gbd{min-height:76px!important}}
 @media (min-width:760px){main{grid-template-columns:repeat(4,1fr);max-width:1000px}.card{min-height:190px!important}.card.gbd{min-height:110px!important}}
+
+/* instalar no alto, sempre à vista sem rolar */
+.top .inst.topo{margin-left:auto;flex:none;width:auto;min-height:40px;padding:6px 12px;border:2px solid var(--y);background:var(--y);color:var(--k);font:700 18px/1 var(--fc);border-radius:9px;gap:6px}
+.top .inst.topo svg{width:18px;height:18px}
+.top b{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:420px){.top b{font-size:21px}.top .inst.topo{padding:6px 10px}.top .inst.topo span{font-size:0}.top .inst.topo span::after{content:'Instalar';font-size:18px}}
 </style>
 </head>
 <body>
-<header class="top"><div class="logo">BFU</div><b>Estação Barra Funda</b></header>
+<header class="top"><div class="logo">BFU</div><b>Estação Barra Funda</b><button class="inst topo" id="inst" type="button" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M12 7v7m-3-3 3 3 3-3M10 18h4"/></svg><span>Instalar no celular</span></button></header>
 <main>
   <div class="hello"><h1>O que você quer fazer?</h1><div class="d"><span id="turno">Turno</span>, <span id="hoje"></span></div></div>
   <a class="card ronda" href="ronda/index.html">
@@ -151,7 +157,6 @@ main{display:grid!important;grid-template-columns:1fr 1fr;gap:10px!important;ali
     <button class="tn tarde" type="button" data-t="tarde"><span class="p"></span><b>Tarde</b><i>14h às 22h</i></button>
     <button class="tn noite" type="button" data-t="noite"><span class="p"></span><b>Noite</b><i>22h às 06h</i><em data-st="noite">verificando…</em></button>
   </div>
-  <button class="inst" id="inst" type="button" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M12 7v7m-3-3 3 3 3-3M10 18h4"/></svg>Instalar no celular</button>
   <p class="offnote" id="offnote" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0"/><path d="M12 19h.01"/><path d="M3 3l18 18"/></svg><span><b>Funciona sem internet depois de instalado.</b> Dá para fazer a ronda e o reporte sem sinal, e as mensagens saem pelo WhatsApp quando o celular voltar a ter conexão. O GBD também abre sem sinal, mostrando o último que foi publicado.</span></p>
 </main>
 <footer>Desenvolvido por AAS Gerson</footer>
