@@ -3334,8 +3334,29 @@ function locPlan(){
     return `<svg class="locsvg" viewBox="${vx.toFixed(1)} ${vy.toFixed(1)} ${vw.toFixed(1)} ${vh.toFixed(1)}" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, Helvetica, Arial, sans-serif" role="img" aria-label="Local de ${esc(it.name)} na planta"><rect x="-2000" y="-2000" width="${W+4000}" height="${H+4000}" fill="${P.bg}"/>${base}`+
       `<circle class="lring" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" fill="none" stroke="#DC2626" stroke-width="${(r*0.22).toFixed(1)}"/>`+
       `<circle class="lring l2" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" fill="none" stroke="#DC2626" stroke-width="${(r*0.22).toFixed(1)}"/>`+
+      (loc.full?'':nomesPerto(it,vx,vy,vw,vh,P,k))+
       `<g>${pinSVG(p,P,{k})}</g></svg>`;
   });
+}
+/* aproximado: mostra os outros itens que aparecem em volta, com o nome de cada um */
+function nomesPerto(it,vx,vy,vw,vh,P,k){
+  const W=VW(),H=VH(),fs=vw/360*10.5,u=vw/360,caixas=[];
+  const dentro=(x,y)=>x>vx+8*u&&x<vx+vw-8*u&&y>vy+8*u&&y<vy+vh-8*u;
+  const px=it.p.nx*W,py=it.p.ny*H;caixas.push({x0:px-34*u,y0:py-34*u,x1:px+34*u,y1:py+34*u});
+  const pts=allPoints().filter(q=>!q.custom&&q.id!==it.p.id&&q.area!==A_VAO&&dentro(q.nx*W,q.ny*H))
+    .sort((a,b)=>Math.hypot(a.nx*W-px,a.ny*H-py)-Math.hypot(b.nx*W-px,b.ny*H-py));
+  let ic='',tx='';
+  for(const q of pts){
+    const x=q.nx*W,y=q.ny*H;
+    ic+=`<g opacity=".9">${pinSVG(q,P,{k:k*.8})}</g>`;
+    let t=refName(noPlat(q.name));if(t.length>24)t=t.slice(0,23)+'…';
+    const tw=t.length*fs*.55,th=fs*1.25,ty=y+16*k*.8+fs*1.05;
+    const b={x0:x-tw/2-2*u,y0:ty-fs,x1:x+tw/2+2*u,y1:ty-fs+th};
+    if(caixas.some(c=>b.x0<c.x1&&b.x1>c.x0&&b.y0<c.y1&&b.y1>c.y0))continue;
+    caixas.push(b);
+    tx+=`<text x="${x.toFixed(1)}" y="${ty.toFixed(1)}" font-size="${fs.toFixed(1)}" font-weight="700" text-anchor="middle" fill="#1F2937" stroke="#FBF8F1" stroke-width="${(fs*.32).toFixed(1)}" paint-order="stroke">${esc(t)}</text>`;
+  }
+  return ic+tx;
 }
 async function renderLoc(){
   const b=$('#locBody'),a=loc.q.a;let h='';
