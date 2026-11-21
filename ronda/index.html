@@ -2930,7 +2930,8 @@ function areaStat(){
   const nap=all.filter(p=>statusOf(p)==='na'),pdp=all.filter(p=>!statusOf(p));
   const full=bad.map(p=>{const r=res(p.id);return {t:ttl(p),w:p.custom?'':whereText(p),b:r.blq&&r.blq.length?r.blq.map(p2).join(', '):'',n:r.note&&r.note.trim()?r.note.trim():'sem descrição',h:r.t?whenOf(r):''};});
   const cat={};all.forEach(p=>{const c=cat[p.area]||(cat[p.area]={n:0,ok:0,bad:0,na:0,pend:0}),st=statusOf(p);c.n++;if(st==='ok')c.ok++;else if(st==='problema')c.bad++;else if(st==='na')c.na++;else c.pend++;});
-  return {k:KIND,cat,full,naNames:nap.map(nomeAc),pendNames:pdp.map(nomeAc),label:KIND_LABEL[KIND],ok:okp.length,okNames:okp.map(nomeAc),okAreas:okp.reduce((g,p)=>{g[p.area]=(g[p.area]||0)+1;return g;},{}),na:all.filter(p=>statusOf(p)==='na').length,pend:all.filter(p=>!statusOf(p)).length,
+  const porCat={};all.forEach(p=>{(porCat[p.area]=porCat[p.area]||[]).push({nome:refName(noPlat(p.name)),st:statusOf(p)});});
+  return {k:KIND,cat,porCat,full,naNames:nap.map(nomeAc),pendNames:pdp.map(nomeAc),label:KIND_LABEL[KIND],ok:okp.length,okNames:okp.map(nomeAc),okAreas:okp.reduce((g,p)=>{g[p.area]=(g[p.area]||0)+1;return g;},{}),na:all.filter(p=>statusOf(p)==='na').length,pend:all.filter(p=>!statusOf(p)).length,
     bad:bad.map(p=>{const r=res(p.id);return `*${ttl(p)}*${p.custom?'':' – '+whereText(p)}${r.blq&&r.blq.length?' – bloq. '+r.blq.map(p2).join(', '):''} – ${r.note&&r.note.trim()?r.note.trim():'sem descrição'}`;})};
 }
 function buildCaptionMulti(stats){
@@ -2975,8 +2976,14 @@ function buildFullText(stats){
     const L=head.slice();let n=0;
     for(const s of stats){
       L.push('',`${AREA_ICON[s.k]||'📍'} *${String(s.label).toUpperCase()}*`);
+      const icSt=st=>st==='problema'?'⚠️':st==='ok'?'✅':st==='na'?'➖':'⏳';
+      const txSt=st=>st==='problema'?' (com problema)':st==='na'?' (N/A)':st?'':' (não analisado)';
       Object.entries(s.cat||{}).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).forEach(([nome,c])=>{
+        /* bloqueios: cada grupo na sua linha, sem juntar */
+        if(/^Bloqueios/i.test(nome)&&s.porCat&&s.porCat[nome]){s.porCat[nome].forEach(it=>L.push(`${icSt(it.st)} ${it.nome}${txSt(it.st)}`));return;}
         const ic=c.bad?'⚠️':c.pend?'⏳':c.ok===c.n?'✅':c.na===c.n?'➖':'✅';
+        /* item único: só o nome, sem 1/1 */
+        if(c.n===1){L.push(`${ic} ${nome}${c.bad?' (com problema)':c.pend?' (não analisado)':c.na?' (N/A)':''}`);return;}
         const ex=[];if(c.bad)ex.push(c.bad+' com problema');if(c.pend)ex.push(c.pend+' não analisado'+(c.pend===1?'':'s'));if(c.na)ex.push(c.na+' N/A');
         L.push(`${ic} ${nome} ${c.ok}/${c.n}${ex.length?' ('+ex.join(', ')+')':''}`);
       });
