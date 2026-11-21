@@ -2965,34 +2965,36 @@ async function stackCovers(files){
 }
 /* texto único (<= 4000 caracteres, limite do WhatsApp): os problemas ficam sempre completos; o resto encolhe se preciso */
 function buildFullText(stats){
+  /* uma mensagem só: cada tipo de item numa linha com a contagem (em ordem/total),
+     e detalhe apenas dos problemas */
   const m=ronda.meta,MAX=4000;
   const head=[`*RONDA – Estação Barra Funda*`,`${fmtDate(m.data)} · ${m.turno||''}${' · '+hrTxt(m)}`,`Agente: ${m.agente||'—'}${m.matricula?' (mat. '+m.matricula+')':''}`];
   if(encTxt())head.push('⚠️ *'+encTxt()+'*');
   const tail=[];if(m.obs&&m.obs.trim())tail.push('','Obs.: '+m.obs.trim());
-  const build=(lvl,pl)=>{ /* lvl: 0 lista | 1 lista corrida | 2 por tipo | 3 só contagem ; pl: 0 completo | 1 sem hora | 2 uma linha */
+  const build=pl=>{ /* pl: 0 problema com hora | 1 sem hora | 2 uma linha */
     const L=head.slice();let n=0;
     for(const s of stats){
-      areaHead(s.k,s.label).forEach(x=>L.push(x));
-      L.push(`✅ *EM ORDEM (${s.ok})*`+(lvl===0&&s.ok?'':lvl===1&&s.ok?': '+s.okNames.join(' · '):lvl===2&&s.ok?': '+Object.entries(s.okAreas).map(([a,c])=>a+' '+c).join(' · '):''));
-      if(lvl===0)s.okNames.forEach(x=>L.push('• '+x));
-      L.push(`❌ *COM PROBLEMA (${s.full.length})*${s.full.length?'':': nenhum'}`);
-      s.full.forEach(f=>{n++;
-        if(pl===2){L.push(`${n}) *${f.t}*${f.w?' – '+f.w:''}${f.b?' – bloq. '+f.b:''} – ${f.n}`);return;}
-        L.push('',`*${n}) ${f.t}*`);if(f.w)L.push(`📍 ${f.w}`);
-        if(f.b)L.push('🚧 Bloqueios: '+f.b);
-        L.push('Problema: '+f.n);
-        if(f.h&&pl===0)L.push('🕒 Registrado em '+f.h);
+      L.push('',`${AREA_ICON[s.k]||'📍'} *${String(s.label).toUpperCase()}*`);
+      Object.entries(s.cat||{}).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).forEach(([nome,c])=>{
+        const ic=c.bad?'⚠️':c.pend?'⏳':c.ok===c.n?'✅':c.na===c.n?'➖':'✅';
+        const ex=[];if(c.bad)ex.push(c.bad+' com problema');if(c.pend)ex.push(c.pend+' não analisado'+(c.pend===1?'':'s'));if(c.na)ex.push(c.na+' N/A');
+        L.push(`${ic} ${nome} ${c.ok}/${c.n}${ex.length?' ('+ex.join(', ')+')':''}`);
       });
-      if(s.naNames.length)L.push('',lvl===0?`➖ *NÃO SE APLICA (${s.naNames.length})*`:`➖ Não se aplica: ${s.naNames.length}`);
-      if(lvl===0)s.naNames.forEach(x=>L.push('• '+x));
-      if(s.pendNames.length)L.push('',`⏳ Não analisados: ${s.pendNames.length}`+(lvl===0&&s.pendNames.length<=15?'':''));
-      if(lvl===0&&s.pendNames.length&&s.pendNames.length<=15)s.pendNames.forEach(x=>L.push('• '+x));
+      if(s.full.length){
+        L.push('',`❌ *PROBLEMAS (${s.full.length})*`);
+        s.full.forEach(f=>{n++;
+          if(pl===2){L.push(`${n}) *${f.t}*${f.w?' – '+f.w:''}${f.b?' – bloq. '+f.b:''} – ${f.n}`);return;}
+          L.push(`*${n}) ${f.t}*`);if(f.w)L.push(`📍 ${f.w}`);
+          if(f.b)L.push('🚧 Bloqueios: '+f.b);
+          L.push('Problema: '+f.n);
+          if(f.h&&pl===0)L.push('🕒 '+f.h);
+        });
+      }
     }
     return L.concat(tail).join('\n');
   };
-  /* o texto vai sozinho: sempre no estilo completo (lista de todos os itens, problemas com hora).
-     Se passar do limite de uma mensagem, o botão manda em partes */
-  return build(0,0);
+  let t='';for(const pl of [0,1,2]){t=build(pl);if(t.length<=MAX)return t;}
+  return t;
 }
 const SIMPLE_CATS={
   mez:[['Extintores',['Extintores']],['Hidrantes',['Hidrantes']],['Sanitários Públicos',[A_SAN]],['Bloqueios',[A_BLQ]],["ATM'S",[A_SSO,'ATMs Autopass']]],
