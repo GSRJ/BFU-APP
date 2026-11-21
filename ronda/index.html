@@ -3812,7 +3812,8 @@ async function renderPl(keep){
   });
   const w=$('#plWrap');w.innerHTML=svg;
   $('#plOut').disabled=plZ<=1;$('#plIn').disabled=plZ>=5;
-  if(keep){w.scrollLeft=keep[0]*w.scrollWidth-w.clientWidth/2;w.scrollTop=keep[1]*w.scrollHeight-w.clientHeight/2;}else w.scrollTop=0;
+  /* keep = [fx,fy] (ponto da planta, em fração) e, se vier, [ox,oy] = onde ele deve ficar na tela; senão, no centro */
+  if(keep){const ox=keep.length>2?keep[2]:w.clientWidth/2,oy=keep.length>2?keep[3]:w.clientHeight/2;w.scrollLeft=keep[0]*w.scrollWidth-ox;w.scrollTop=keep[1]*w.scrollHeight-oy;}else w.scrollTop=0;
   plDrawMark();requestAnimationFrame(plPositionBalloon);
 }
 function plDrawMark(){
@@ -3868,9 +3869,13 @@ document.addEventListener('click',e=>{
   else if(e.target.id==='plIn'||e.target.id==='plOut'){const w=$('#plWrap');if(!w.querySelector('svg'))return;const fx=(w.scrollLeft+w.clientWidth/2)/w.scrollWidth,fy=(w.scrollTop+w.clientHeight/2)/w.scrollHeight;plZ=Math.min(5,Math.max(1,plZ+(e.target.id==='plIn' ? .5 : -.5)));renderPl([fx,fy]);}
 });
 {let pz=null;const W=()=>$('#plWrap');
-  W().addEventListener('touchstart',e=>{if(e.touches.length===2){const[a,b]=e.touches,w=W();pz={d:Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY),z:plZ,fx:(w.scrollLeft+(a.clientX+b.clientX)/2)/w.scrollWidth,fy:(w.scrollTop+(a.clientY+b.clientY)/2-w.getBoundingClientRect().top)/w.scrollHeight};}},{passive:true});
-  W().addEventListener('touchmove',e=>{if(pz&&e.touches.length===2){e.preventDefault();const[a,b]=e.touches,r=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY)/pz.d,s=W().querySelector('svg'),v=(Math.min(5,Math.max(1,pz.z*r))*100).toFixed(0)+'%';if(s){s.style.width=v;s.style.height=v;requestAnimationFrame(plPositionBalloon);}}},{passive:false});
-  W().addEventListener('touchend',e=>{if(pz&&e.touches.length<2){const s=W().querySelector('svg'),z=s?parseFloat(s.style.width)/100:plZ;plZ=Math.min(5,Math.max(1,Math.round(z*2)/2));const k=[pz.fx,pz.fy];pz=null;renderPl(k);}});}
+  /* pinça: o ponto entre os dedos fica parado embaixo deles enquanto amplia, sem pular depois */
+  const meio=(a,b)=>{const r=W().getBoundingClientRect();return {x:(a.clientX+b.clientX)/2-r.left,y:(a.clientY+b.clientY)/2-r.top};};
+  W().addEventListener('touchstart',e=>{if(e.touches.length===2){const[a,b]=e.touches,w=W(),m=meio(a,b);pz={d:Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY),z:plZ,fx:(w.scrollLeft+m.x)/w.scrollWidth,fy:(w.scrollTop+m.y)/w.scrollHeight,mx:m.x,my:m.y,zz:plZ};$('#plBalloon').hidden=true;}},{passive:true});
+  W().addEventListener('touchmove',e=>{if(pz&&e.touches.length===2){e.preventDefault();const[a,b]=e.touches,w=W(),m=meio(a,b),r=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY)/pz.d,s=w.querySelector('svg');
+    pz.zz=Math.min(5,Math.max(1,pz.z*r));pz.mx=m.x;pz.my=m.y;
+    if(s){const v=(pz.zz*100).toFixed(1)+'%';s.style.width=v;s.style.height=v;w.scrollLeft=pz.fx*w.scrollWidth-m.x;w.scrollTop=pz.fy*w.scrollHeight-m.y;}}},{passive:false});
+  W().addEventListener('touchend',e=>{if(pz&&e.touches.length<2){plZ=pz.zz;const k=[pz.fx,pz.fy,pz.mx,pz.my];pz=null;renderPl(k);}});}
 $('#mPlantas').onclick=()=>{$('#menuDlg').close();openPl();};
 
 
