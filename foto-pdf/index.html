@@ -33,14 +33,19 @@ h1{margin:0;font:700 34px/1 var(--fc)}
 input[type=file]{display:none}
 .vazio{border:2px dashed #8E8E86;border-radius:12px;padding:26px 16px;text-align:center;color:#55554F;background:#F7F7F3}
 .lista{display:flex;flex-direction:column;gap:10px}
-.pg{display:flex;gap:10px;align-items:center;background:#fff;border:2px solid var(--k);border-radius:10px;padding:8px}
+.pg{display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:#fff;border:2px solid var(--k);border-radius:10px;padding:8px}
 .pg .n{flex:none;width:30px;height:30px;border-radius:50%;background:var(--k);color:var(--y);display:grid;place-items:center;font:700 17px/1 var(--fc)}
 .pg .im{flex:none;width:84px;height:84px;border-radius:6px;background:#E5E5DF;display:grid;place-items:center;overflow:hidden}
 .pg .im img{max-width:100%;max-height:100%;transition:transform .15s}
 .pg .inf{flex:1;min-width:0;font-size:13px;color:#55554F}
 .pg .inf b{display:block;color:var(--k);font:700 18px/1.1 var(--fc)}
-.pg .ac{flex:none;display:grid;grid-template-columns:repeat(3,40px);gap:6px}
-.pg .ac .cut[aria-pressed=true]{background:var(--y)}
+.pg .inf span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pg .ac{flex:none;display:grid;grid-template-columns:repeat(2,40px);gap:6px}
+.pg .im{cursor:pointer;position:relative}
+.pg .cortar{flex:1 1 100%;display:flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 12px;border:2px solid var(--k);border-radius:8px;background:var(--y);color:var(--k);font:700 19px/1 var(--fc);cursor:pointer}
+.pg .cortar.feito{background:#fff}
+.pg .cortar{font-size:21px}
+.pg .cortar svg{flex:none;width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
 /* editor de corte */
 #corte{position:fixed;inset:0;z-index:20;background:#141414;display:flex;flex-direction:column}
 #corte[hidden]{display:none}
@@ -83,7 +88,7 @@ input[type=file]{display:none}
   <b>Foto em PDF</b>
 </header>
 <main>
-  <div><h1>Transforme fotos em PDF</h1><p class="sub">Uma foto por página. Gire (↻) ou corte (✂) cada foto antes. Tudo é feito no próprio celular, sem internet e sem enviar as fotos para lugar nenhum.</p></div>
+  <div><h1>Transforme fotos em PDF</h1><p class="sub">Uma foto por página. Toque em <b>Cortar foto</b> para deixar só o que interessa. Tudo é feito no próprio celular, sem internet e sem enviar as fotos para lugar nenhum.</p></div>
   <div class="add">
     <button class="btn pri" id="bCam" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Tirar foto</button>
     <button class="btn" id="bGal" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg>Escolher da galeria</button>
@@ -94,7 +99,6 @@ input[type=file]{display:none}
   <div class="lista" id="lista"></div>
   <div class="opc" id="opc" hidden>
     <label>Nome do arquivo (opcional)<input type="text" id="tit" maxlength="80" placeholder="Ex.: Ficha de APS" autocomplete="off"></label>
-    <label class="ck"><input type="checkbox" id="rod" checked>Data, hora e número da página no rodapé</label>
     <div><div style="font-weight:700;font-size:14px;margin-bottom:4px">Tamanho do arquivo</div>
       <div class="seg" id="qual"><button type="button" data-q="leve" aria-pressed="true">Leve (WhatsApp)</button><button type="button" data-q="alta" aria-pressed="false">Alta qualidade</button></div></div>
   </div>
@@ -134,16 +138,17 @@ async function adiciona(files){
 $('#iCam').onchange=e=>{adiciona([...e.target.files]);e.target.value='';};
 $('#iGal').onchange=e=>{adiciona([...e.target.files]);e.target.value='';};
 document.querySelectorAll('#qual button').forEach(b=>b.onclick=()=>{qual=b.dataset.q;document.querySelectorAll('#qual button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));invalida();});
-['#tit','#rod'].forEach(s=>$(s).addEventListener('input',invalida));
+$('#tit').addEventListener('input',invalida);
 function invalida(){pdf=null;if(pdfUrl){URL.revokeObjectURL(pdfUrl);pdfUrl=null;}$('#pronto').hidden=true;$('#gerar').hidden=false;$('#gerar').disabled=!fotos.length;msg(fotos.length?fotos.length+(fotos.length===1?' página':' páginas'):'');}
 function desenha(){
   const L=$('#lista');L.innerHTML='';
   $('#vazio').hidden=!!fotos.length;$('#opc').hidden=!fotos.length;
   fotos.forEach((f,i)=>{
     const d=document.createElement('div');d.className='pg';d.dataset.id=f.id;
-    d.innerHTML=`<div class="n">${i+1}</div><div class="im"><img alt="Página ${i+1}" src="${f.thumb||f.url}"></div><div class="inf"><b>Página ${i+1}</b><span></span></div><div class="ac"><button type="button" data-a="up" aria-label="Subir"${i?'':' disabled'}>↑</button><button type="button" data-a="rot" aria-label="Girar">↻</button><button type="button" data-a="cut" class="cut" aria-label="Cortar" aria-pressed="${f.crop?'true':'false'}">✂</button><button type="button" data-a="down" aria-label="Descer"${i<fotos.length-1?'':' disabled'}>↓</button><button type="button" data-a="del" class="del" aria-label="Tirar do PDF">✕</button></div>`;
+    d.innerHTML=`<div class="n">${i+1}</div><div class="im"><img alt="Página ${i+1}" src="${f.thumb||f.url}"></div><div class="inf"><b>Página ${i+1}</b><span></span></div><div class="ac"><button type="button" data-a="up" aria-label="Subir"${i?'':' disabled'}>↑</button><button type="button" data-a="rot" aria-label="Girar">↻</button><button type="button" data-a="down" aria-label="Descer"${i<fotos.length-1?'':' disabled'}>↓</button><button type="button" data-a="del" class="del" aria-label="Tirar do PDF">✕</button></div><button type="button" class="cortar${f.crop?' feito':''}" data-a="cut"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.1 15.9M14.5 14.5 20 20M8.1 8.1 12 12"/></svg>${f.crop?'Ajustar corte':'Cortar foto'}</button>`;
     d.querySelector('span').textContent=f.nome;
-    d.querySelector('.ac').onclick=e=>{const a=e.target.closest('button');if(!a)return;const k=a.dataset.a;
+    d.querySelector('.im').onclick=()=>abreCorte(f);
+    d.onclick=e=>{const a=e.target.closest('button[data-a]');if(!a)return;const k=a.dataset.a;
       if(k==='cut'){abreCorte(f);return;}
       if(k==='rot'){f.rot=(f.rot+90)%360;if(f.crop){const c=f.crop;f.crop={x:1-c.y-c.h,y:c.x,w:c.h,h:c.w};}miniatura(f);}
       else if(k==='del'){URL.revokeObjectURL(f.url);fotos.splice(i,1);}
@@ -235,7 +240,7 @@ async function montaPDF(){
   const put=x=>{const b=typeof x==='string'?bytesDe(x):x;partes.push(b);pos+=b.length;};
   const obj=(n,corpo)=>{offs[n]=pos;put(n+' 0 obj\n');corpo();put('\nendobj\n');};
   put('%PDF-1.4\n');put(new Uint8Array([37,226,227,207,211,10]));
-  const N=fotos.length,titulo='',rod=$('#rod').checked;
+  const N=fotos.length,titulo='',rod=false;
   const agora=new Date(),dt=agora.toLocaleDateString('pt-BR')+' '+agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   /* objetos: 1 catálogo, 2 páginas, 3 fonte, depois 3 por página (página, conteúdo, imagem) */
   const kids=[];for(let i=0;i<N;i++)kids.push((4+i*3)+' 0 R');
