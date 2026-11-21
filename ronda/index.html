@@ -2783,7 +2783,7 @@ function updateStepBtn(){
   const np=txtParts.length,done=txtIdx>=np;
   const junto=pack.canShare&&tot>0;
   $('#pdfStep').innerHTML=junto
-    ?`<span class="bt">${sentFot?'✅ Enviado à SSO':'📤 Enviar à SSO'}</span><span class="bs">${sentFot?'Toque para reenviar':`Imagem com os dados da ronda${n?' + '+n+' foto'+(n===1?'':'s'):''}, num envio só`}</span>`
+    ?`<span class="bt">${sentFot?'✅ Enviado à SSO':'📤 Enviar à SSO'}</span><span class="bs">${sentFot?'Toque para reenviar':`Imagem com os dados da ronda${n?' + '+n+' foto'+(n===1?'':'s'):''} + texto completo, num envio só`}</span>`
     :`<span class="bt">${done?'✅ Relatório enviado':'📤 Enviar à SSO'+(np>1?` (parte ${txtIdx+1} de ${np})`:'')}</span><span class="bs">${done?'Toque para reenviar':(np>1?'Texto longo: enviado em '+np+' partes, um toque cada':'Texto completo da ronda')}</span>`;
   $('#optFotos').hidden=!tot;
   $('#pdfFotos').innerHTML=junto
@@ -2800,6 +2800,14 @@ function legenda(t,resumo){
   const fim='\n\n… '+(resumo||'O relatório completo está na imagem com os dados da ronda.');
   let c=t.slice(0,LEG_MAX-fim.length);const q=c.lastIndexOf('\n');if(q>LEG_MAX*.6)c=c.slice(0,q);
   return c+fim;
+}
+/* igual ao Reporte SSO: um compartilhamento só, com as imagens e o texto completo */
+async function enviaComoReporte(files,text){
+  try{
+    if(navigator.share&&navigator.canShare&&navigator.canShare({files,text})){await navigator.share({files,text});return true;}
+    if(navigator.share&&navigator.canShare&&navigator.canShare({files})){await navigator.share({files});return true;}
+    return false;
+  }catch(e){if(!(e&&e.name==='AbortError'))notify('Não foi possível abrir o compartilhamento.');return false;}
 }
 async function shareFiles(files,text){
   try{await navigator.share(text?{files,text}:{files});return true;}
@@ -2839,8 +2847,7 @@ $('#pdfStep').onclick=async()=>{
     if(!all.length){await enviaTextoCompleto();return;}
     await enviaTextoCompleto();fotOnReturn=pdfFotRemind;return;
   }
-  /* sem legenda: o WhatsApp repete o texto em todas as fotos. A imagem-resumo já leva os dados da ronda */
-  let ok=await shareFiles(all.slice(0,30),'');
+  let ok=await enviaComoReporte(all.slice(0,30),txtParts.join('\n\n'));
   for(let i=30;i<all.length&&ok;i+=30){await new Promise(r=>setTimeout(r,300));ok=await shareFiles(all.slice(i,i+30),'');}
   if(ok){sentFot=true;updateStepBtn();}
 };
@@ -3244,7 +3251,7 @@ function basicSummary(){
   if(!basic.meta.fim){basic.meta.fim=nowHM();bSave();}
   h+=`<div class="field" style="margin:4px 0"><label class="lbl" for="bFim">Término da ronda (pode ajustar)</label><input class="inp" id="bFim" type="time" value="${esc(basic.meta.fim)}"></div>`;
   if(false)h+=`<div class="fotowarn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4Z"/><circle cx="12" cy="13" r="3.5"/></svg><div><b>Você tem ${np} foto${np===1?'':'s'} para enviar.</b> Elas não vão junto com o texto. Envie o relatório, <u>volte para este app</u> e toque em <b>2. Enviar fotos</b>.</div></div>`;
-  h+=`<button class="big ${np&&bFotSent?'plain':'cta'}" type="button" data-b="send" style="flex-direction:column"><span class="bt">${np&&bFotSent?'✅ Enviado à SSO':'📤 Enviar à SSO'}</span><span class="bs">${np?(bFotSent?'Toque para reenviar':`Imagem com os dados da ronda + ${np} foto${np===1?'':'s'}, num envio só`):'Itens com ✅ e os problemas detalhados'}</span></button>`+
+  h+=`<button class="big ${np&&bFotSent?'plain':'cta'}" type="button" data-b="send" style="flex-direction:column"><span class="bt">${np&&bFotSent?'✅ Enviado à SSO':'📤 Enviar à SSO'}</span><span class="bs">${np?(bFotSent?'Toque para reenviar':`Imagem com os dados da ronda + ${np} foto${np===1?'':'s'} + texto completo, num envio só`):'Itens com ✅ e os problemas detalhados'}</span></button>`+
      (np?`<button class="big plain" type="button" data-b="txtall" style="flex-direction:column"><span class="bt">🧾 Só o texto</span><span class="bs">Se a SSO pedir o relatório escrito separado</span></button>`:'')+
      `<div class="bnav"><button type="button" data-b="back">↩ Voltar</button><button type="button" data-b="newr" style="color:var(--bad-t)">↺ Nova ronda</button></div></div>`;
   return h;
@@ -3293,8 +3300,7 @@ async function bEnviarTudo(){
   notify('Preparando imagens…');
   const files=[await bCoverFile(),...await bPhotoFiles()];$('#toast').classList.remove('on');
   if(!(navigator.canShare&&navigator.canShare({files}))){await bSendText();fotOnReturn=bFotRemind;return;}
-  /* sem legenda: o WhatsApp repete o texto em todas as fotos. A imagem inicial já leva os dados da ronda */
-  let ok=await shareFiles(files.slice(0,30),'');
+  let ok=await enviaComoReporte(files.slice(0,30),buildBasicText());
   for(let i=30;i<files.length&&ok;i+=30){await new Promise(r=>setTimeout(r,300));ok=await shareFiles(files.slice(i,i+30),'');}
   if(ok){bFotSent=true;renderBasic();}
 }
@@ -3576,7 +3582,7 @@ const TOUR_BASIC=[
     await tourTap(B('[data-b=cam]'),()=>{bDraft.photos.push(demoPhoto());renderBasic();});await sleep(450);},
   el:()=>B('[data-b=save]'),
   tap:()=>{const q=BQ[basic.idx];basic.ans[q.key].probs.push({local:bDraft.local,desc:bDraft.desc,photos:bDraft.photos,t:nowHM(),d:todayISO()});bDraft=null;bFillOk();}},
- {t:'No fim, envie à SSO',p:'Um toque só: vai a imagem com os dados da ronda e as fotos. Escolha a conversa da SSO no WhatsApp.',el:()=>B('[data-b=send]')},
+ {t:'No fim, envie à SSO',p:'Um toque só: vai a imagem com os dados da ronda, as fotos e o texto. Escolha a conversa da SSO no WhatsApp.',el:()=>B('[data-b=send]')},
  {t:'Pronto!',p:'Nada foi salvo. Rever: Como usar, na tela inicial.',prep:async()=>{tourRestore();}}
 ];
 const TOUR_DET=[
