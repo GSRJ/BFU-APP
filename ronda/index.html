@@ -604,6 +604,14 @@ body.in-hub .top::before{display:none!important}
 #tNext{font-size:21px!important}
 /* balão do tour: encosta em cima ou embaixo, do lado que não cobre o destaque */
 .t-card.baixo{top:auto!important;bottom:calc(8px + env(safe-area-inset-bottom))!important}
+
+/* pergunta e resposta centralizadas; "clique para ver" na linha de baixo do botão */
+.bq .bq-p,.bq .bq-t,.bq .bq-s{text-align:center}
+.locbtn{flex-direction:column;gap:1px!important;border-radius:16px!important;padding:8px 14px!important;text-align:center}
+.locbtn .lb2{font-size:12.5px;font-weight:600;color:var(--muted);text-decoration:underline;text-underline-offset:2px}
+/* em cada item da lista, um aviso discreto embaixo do texto */
+.locit i{grid-row:1/4}
+.locit small{grid-column:1;font-size:11.5px;font-weight:600;color:#1F5FD1;opacity:.85;margin-top:1px}
 </style>
 </head>
 <body>
@@ -3122,7 +3130,7 @@ function renderBasic(){
     }else{
       const an=basic.ans[q.key]||{},bad=an.st==='problema';
       h=`<div class="bq"><div class="bprog"><i style="width:${Math.round(basic.idx/BQ.length*100)}%"></i></div><p class="bq-p">${esc(a.label)} · pergunta ${pos} de ${n}</p>${q.extra?`<h2 class="bq-t">Algum outro problema a relatar no ${esc(a.label)}?</h2><p class="bq-s">Algo que não estava nas perguntas anteriores.</p>`:`<h2 class="bq-t">${esc(q.cat)}</h2><p class="bq-s">Está tudo em ordem?</p>`}`+
-        `<div class="big2"><button type="button" class="big ok${an.st==='ok'?' sel':''}" data-b="ok">${q.extra?'✅ Nenhum':'✅ Tudo em ordem'}</button><button type="button" class="big plain danger${bad?' sel':''}" data-b="bad">${q.extra?'⚠️ Sim, relatar':'⚠️ Há problema'}</button></div>`+(q.extra?'':`<button type="button" class="locbtn" data-b="where">📍 Onde estão ${esc(LOC_NOUN[q.cat]||'os itens')}? Clique para ver</button>`);
+        `<div class="big2"><button type="button" class="big ok${an.st==='ok'?' sel':''}" data-b="ok">${q.extra?'✅ Nenhum':'✅ Tudo em ordem'}</button><button type="button" class="big plain danger${bad?' sel':''}" data-b="bad">${q.extra?'⚠️ Sim, relatar':'⚠️ Há problema'}</button></div>`+(q.extra?'':`<button type="button" class="locbtn" data-b="where"><span class="lb1">📍 Onde estão ${esc(LOC_NOUN[q.cat]||'os itens')}?</span><span class="lb2">Clique para ver</span></button>`);
       if(bad){
         (an.probs||[]).forEach((p,i)=>{h+=bProbHTML(p,i);});
         if(bDraft)h+=bDraftHTML();
@@ -3332,8 +3340,8 @@ function locPlan(){
 async function renderLoc(){
   const b=$('#locBody'),a=loc.q.a;let h='';
   if(loc.i<0){
-    h=`<h2>📍 ${esc(loc.q.cat)}</h2><p class="locsub">${a.icon} ${esc(a.label)} · ${loc.items.length} ${loc.items.length===1?'item':'itens'}. Clique para ver na planta.</p><div class="loclist">`+
-      (loc.items.length?loc.items.map((it,i)=>`<button type="button" class="locit" data-li="${i}"><b>${esc(it.name)}</b><span>${esc(it.w)}</span><i>›</i></button>`).join(''):'<p class="locsub">Nenhum item cadastrado neste local.</p>')+`</div>`+
+    h=`<h2>📍 ${esc(loc.q.cat)}</h2><p class="locsub">${a.icon} ${esc(a.label)} · ${loc.items.length} ${loc.items.length===1?'item':'itens'}. </p><div class="loclist">`+
+      (loc.items.length?loc.items.map((it,i)=>`<button type="button" class="locit" data-li="${i}"><b>${esc(it.name)}</b><span>${esc(it.w)}</span><small>🗺️ ver na planta</small><i>›</i></button>`).join(''):'<p class="locsub">Nenhum item cadastrado neste local.</p>')+`</div>`+
       `<button type="button" class="big plain" data-lb="close" style="justify-content:center;min-height:46px;font-size:15px;margin-top:10px">Fechar</button>`;
   }else{
     const it=loc.items[loc.i];
