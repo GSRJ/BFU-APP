@@ -2610,7 +2610,8 @@ async function captionedPhoto(f,p,r,idx,total){
   if(!p.custom)add(locLine(p),{c:'#D7DEE5'});
   if(r.blq&&r.blq.length)add('Bloqueios: '+r.blq.map(p2).join(', '),{b:1,c:'#FF8A75'});
   if(r.note&&r.note.trim()&&st!=='problema')add(r.note.trim(),{c:'#FFFFFF'});
-  add((r.t?'Registrado em '+whenOf(r):'Ronda '+fmtDate(ronda.meta.data))+(ronda.meta.agente?' · '+ronda.meta.agente:'')+(total>1?` · foto ${idx}/${total}`:''),{c:'#93A3B2'});
+  {const m=ronda.meta||{},ag=(m.agente||'').trim();add('Reportado por: '+(ag||'não informado')+(m.matricula?' · mat. '+m.matricula:''),{b:1,c:'#FFFFFF'});}
+  add((r.t?'Registrado em '+whenOf(r):'Ronda '+fmtDate(ronda.meta.data))+(ronda.meta.turno?' · turno '+String(ronda.meta.turno).toLowerCase():'')+(total>1?` · foto ${idx}/${total}`:''),{c:'#93A3B2'});
   const H=pad*2+lines.length*lh;
   cv.height=h+H;
   ctx.fillStyle='#0F161D';ctx.fillRect(0,0,w,h+H);
@@ -3297,20 +3298,27 @@ async function bEnviarTudo(){
   if(ok){bFotSent=true;renderBasic();}
 }
 async function bPhotoFiles(){
+  /* cada foto ganha uma faixa embaixo com o local, a descrição do problema e o horário */
   const out=[];let n=0;
   for(const x of bProblems()){
-    for(const ph of x.p.photos){
-      n++;
+    const tot=x.p.photos.length;
+    for(let k=0;k<tot;k++){
+      const ph=x.p.photos[k];n++;
       const im=await new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=ph.d;});
-      const w=im.naturalWidth,h=im.naturalHeight,c=document.createElement('canvas'),sz=Math.max(16,Math.round(w/34)),bh=Math.round(sz*2.5);
-      c.width=w;c.height=h+bh;const g=c.getContext('2d');
-      g.fillStyle='#14212D';g.fillRect(0,0,w,h+bh);g.drawImage(im,0,0);
-      g.fillStyle='#FFD166';g.font='700 '+sz+'px system-ui,Arial,sans-serif';g.textBaseline='top';
-      const t1=(x.a.short+' · '+x.cat).toUpperCase();
-      g.fillText(t1,sz*.6,h+sz*.35,w-sz*1.2);
-      g.fillStyle='#FFFFFF';g.font='500 '+Math.round(sz*.85)+'px system-ui,Arial,sans-serif';
-      g.fillText(x.p.local||'',sz*.6,h+sz*1.35,w-sz*1.2);
-      const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',.8));
+      const w=im.naturalWidth,h=im.naturalHeight,fs=Math.max(15,Math.round(w/32)),pad=Math.round(fs*.75),lh=Math.round(fs*1.32);
+      const c=document.createElement('canvas'),g=c.getContext('2d');c.width=w;
+      const font=b=>`${b?'700':'500'} ${fs}px system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif`;
+      const lines=[];
+      const add=(t,b,cor)=>{g.font=font(b);let cur='';for(const wd of String(t).split(/\s+/)){const tt=cur?cur+' '+wd:wd;if(g.measureText(tt).width<=w-2*pad)cur=tt;else{if(cur)lines.push({t:cur,b,cor});cur=wd;}}if(cur)lines.push({t:cur,b,cor});};
+      add('PROBLEMA: '+(x.p.desc&&x.p.desc.trim()?x.p.desc.trim():'sem descrição'),1,'#FF8A75');
+      add((x.a.short+' · '+x.cat).toUpperCase(),1,'#FFD166');
+      add('Local: '+(x.p.local&&x.p.local.trim()?x.p.local.trim():'não informado'),0,'#FFFFFF');
+      {const ag=(basic.meta.agente||'').trim();add('Reportado por: '+(ag||'não informado')+(basic.meta.matricula?' · mat. '+basic.meta.matricula:''),1,'#FFFFFF');}
+      add((x.p.t?'Registrado em '+fmtDate(x.p.d||basic.meta.data)+' às '+x.p.t:'Ronda '+fmtDate(basic.meta.data))+(basic.meta.turno?' · turno '+basic.meta.turno.toLowerCase():'')+(tot>1?` · foto ${k+1}/${tot}`:''),0,'#93A3B2');
+      const H=pad*2+lines.length*lh;c.height=h+H;
+      g.fillStyle='#0F161D';g.fillRect(0,0,w,h+H);g.drawImage(im,0,0,w,h);
+      let y=h+pad+fs;for(const l of lines){g.font=font(l.b);g.fillStyle=l.cor;g.fillText(l.t,pad,y);y+=lh;}
+      const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',.86));
       out.push(new File([blob],'ronda-basica-'+String(n).padStart(2,'0')+'-'+slug2(x.a.short+' '+x.cat)+'.jpg',{type:'image/jpeg'}));
     }
   }
