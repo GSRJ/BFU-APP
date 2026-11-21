@@ -2780,11 +2780,25 @@ function updateStepBtn(){
   {const np=simpParts.length,done=simpIdx>=np&&np>0;$('#pdfSimple').innerHTML=`<span class="bt">${done?'✅ Relatório simplificado enviado':'🧾 Enviar relatório simplificado'+(np>1?` (parte ${simpIdx+1} de ${np})`:'')}</span><span class="bs">${done?'Toque para reenviar':'Itens com ✅ e, se houver, os problemas detalhados'}</span>`;}
   const n=pack.photos.length,nc=pack.covers.length,tot=nc+n;
   const np=txtParts.length,done=txtIdx>=np;
-  $('#pdfStep').innerHTML=`<span class="bt">${done?'✅ Relatório enviado':'1. 📤 Enviar relatório de ronda'+(np>1?` (parte ${txtIdx+1} de ${np})`:'')}</span><span class="bs">${done?'Toque para reenviar':(np>1?'Texto longo: enviado em '+np+' partes, um toque cada':'Texto completo com todos os itens vistos')}</span>`;
-  $('#pdfFotos').innerHTML=`<span class="bt">${sentFot?'✅ Fotos enviadas':'2. 📷 Enviar fotos'}</span><span class="bs">${nc} imagem${nc===1?'':'s'}-resumo (1 por área)${n?' + '+n+' foto'+(n===1?'':'s')+' de problema':''}${tot>30?' · mais de um envio':''}</span>`;
-  $('#pdfFotoWarn').hidden=sentFot||!tot;$('#pdfFotoWarn b').textContent=n?'As fotos não vão junto com o texto.':'As imagens-resumo não vão junto com o texto.';
-  {const sd=txtIdx>=txtParts.length;$('#pdfStep').classList.toggle('cta',!sd);$('#pdfFotos').classList.toggle('cta',sd&&!sentFot&&!!tot);$('#pdfSave').classList.toggle('cta',sd&&(sentFot||!tot)&&!sentPdf);$('#pdfFotos').classList.remove('fotonext');}
+  const junto=pack.canShare&&tot>0;
+  $('#pdfStep').innerHTML=junto
+    ?`<span class="bt">${sentFot?'✅ Enviado à SSO':'📤 Enviar à SSO'}</span><span class="bs">${sentFot?'Toque para reenviar':`Imagem com os dados da ronda${n?' + '+n+' foto'+(n===1?'':'s'):''} + texto, numa mensagem só`}</span>`
+    :`<span class="bt">${done?'✅ Relatório enviado':'📤 Enviar à SSO'+(np>1?` (parte ${txtIdx+1} de ${np})`:'')}</span><span class="bs">${done?'Toque para reenviar':(np>1?'Texto longo: enviado em '+np+' partes, um toque cada':'Texto completo da ronda')}</span>`;
+  $('#optFotos').hidden=!tot;
+  $('#pdfFotos').innerHTML=junto
+    ?`<span class="bt">${done?'✅ Texto completo enviado':'🧾 Só o texto completo'+(np>1?` (parte ${Math.min(txtIdx+1,np)} de ${np})`:'')}</span><span class="bs">Se a SSO pedir o relatório escrito inteiro</span>`
+    :`<span class="bt">${sentFot?'✅ Fotos enviadas':'📷 Enviar fotos'}</span><span class="bs">${nc} imagem${nc===1?'':'s'}-resumo${n?' + '+n+' foto'+(n===1?'':'s')+' de problema':''}</span>`;
+  $('#pdfFotoWarn').hidden=junto||sentFot||!tot;
+  $('#pdfStep').classList.toggle('cta',!(junto?sentFot:done));$('#pdfFotos').classList.toggle('cta',!junto&&done&&!sentFot&&!!tot);$('#pdfFotos').classList.toggle('plain',junto);$('#pdfSave').classList.toggle('cta',false);$('#pdfFotos').classList.remove('fotonext');
   $('#pdfSave').innerHTML=`<span class="bt">${sentPdf?'✅ Detalhamento enviado':'📎 Enviar detalhamento'}</span><span class="bs">Relatório em PDF</span>`;
+}
+/* legenda das fotos: o WhatsApp corta legendas muito longas, então manda o começo e avisa */
+const LEG_MAX=1000;
+function legenda(t,resumo){
+  t=String(t||'').trim();if(t.length<=LEG_MAX)return t;
+  const fim='\n\n… '+(resumo||'O relatório completo está na imagem com os dados da ronda.');
+  let c=t.slice(0,LEG_MAX-fim.length);const q=c.lastIndexOf('\n');if(q>LEG_MAX*.6)c=c.slice(0,q);
+  return c+fim;
 }
 async function shareFiles(files,text){
   try{await navigator.share(text?{files,text}:{files});return true;}
@@ -2804,15 +2818,30 @@ $('#pdfSimple').onclick=async()=>{
     try{await navigator.clipboard.writeText(t);notify('Texto copiado. Cole no WhatsApp.');simpIdx++;updateStepBtn();if(simpIdx>=simpParts.length)fotOnReturn=pdfFotRemind;}catch(_){notify('Não foi possível enviar o texto.');}
   }
 };
-$('#pdfStep').onclick=async()=>{
+/* texto completo, em partes (opção secundária) */
+async function enviaTextoCompleto(){
   if(!pack)return;
   if(txtIdx>=txtParts.length)txtIdx=0;
   const t=txtParts[txtIdx];
-  try{await navigator.share({text:t});txtIdx++;updateStepBtn();if(txtIdx>=txtParts.length)pdfFotRemind();}
+  try{await navigator.share({text:t});txtIdx++;updateStepBtn();}
   catch(e){
     if(e&&e.name==='AbortError')return;
-    try{await navigator.clipboard.writeText(t);notify('Texto copiado. Cole no WhatsApp.');txtIdx++;updateStepBtn();if(txtIdx>=txtParts.length)fotOnReturn=pdfFotRemind;}catch(_){notify('Não foi possível enviar o texto.');}
+    try{await navigator.clipboard.writeText(t);notify('Texto copiado. Cole no WhatsApp.');txtIdx++;updateStepBtn();}catch(_){notify('Não foi possível enviar o texto.');}
   }
+}
+/* um envio só: imagem-resumo com os dados da ronda + fotos dos problemas + texto como legenda.
+   Não precisa voltar ao app para mandar as fotos. */
+$('#pdfStep').onclick=async()=>{
+  if(!pack)return;
+  const all=pack.covers.concat(pack.photos);
+  if(!all.length||!pack.canShare){
+    if(!all.length){await enviaTextoCompleto();return;}
+    await enviaTextoCompleto();fotOnReturn=pdfFotRemind;return;
+  }
+  const cap=legenda(txtParts.length===1?txtParts[0]:(pack.caption||txtParts[0]));
+  let ok=await shareFiles(all.slice(0,30),cap);
+  for(let i=30;i<all.length&&ok;i+=30){await new Promise(r=>setTimeout(r,300));ok=await shareFiles(all.slice(i,i+30),'');}
+  if(ok){sentFot=true;updateStepBtn();}
 };
 /* texto copiado (sem compartilhar): o lembrete das fotos aparece quando a pessoa volta para o app */
 var fotOnReturn=null;
@@ -2823,6 +2852,7 @@ async function pdfFotRemind(){
 }
 $('#pdfFotos').onclick=async()=>{
   if(!pack)return;
+  if(pack.canShare&&pack.covers.length+pack.photos.length){await enviaTextoCompleto();return;}
   const all=pack.covers.concat(pack.photos);
   if(!pack.canShare){let n=0;for(const f of all){if(await saveFile(f,f.name))n++;await new Promise(r=>setTimeout(r,350));}if(n)notify(n+' arquivo'+(n===1?'':'s')+' salvo'+(n===1?'':'s')+'.');return;}
   let ok=true;
@@ -3212,13 +3242,60 @@ function basicSummary(){
   const np=pr.reduce((n,x)=>n+x.p.photos.length,0);
   if(!basic.meta.fim){basic.meta.fim=nowHM();bSave();}
   h+=`<div class="field" style="margin:4px 0"><label class="lbl" for="bFim">Término da ronda (pode ajustar)</label><input class="inp" id="bFim" type="time" value="${esc(basic.meta.fim)}"></div>`;
-  if(np&&!bFotSent)h+=`<div class="fotowarn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4Z"/><circle cx="12" cy="13" r="3.5"/></svg><div><b>Você tem ${np} foto${np===1?'':'s'} para enviar.</b> Elas não vão junto com o texto. Envie o relatório, <u>volte para este app</u> e toque em <b>2. Enviar fotos</b>.</div></div>`;
-  h+=`<button class="big cta" type="button" data-b="send" style="flex-direction:column"><span class="bt">${np?'1. ':''}🧾 Enviar relatório simplificado</span><span class="bs">Itens com ✅ e os problemas detalhados</span></button>`+
-     `<button class="big cta${np&&!bFotSent?' fotonext':''}" type="button" data-b="fotos" style="flex-direction:column"${np?'':' disabled'}><span class="bt">${np?(bFotSent?'✅ Fotos enviadas':'2. 📷 Enviar fotos'):'📷 Enviar fotos'}</span><span class="bs">${np?(bFotSent?'Toque para reenviar':np+' foto'+(np===1?'':'s')+' dos problemas'):'Nenhuma foto de problema'}</span></button>`+
+  if(false)h+=`<div class="fotowarn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4Z"/><circle cx="12" cy="13" r="3.5"/></svg><div><b>Você tem ${np} foto${np===1?'':'s'} para enviar.</b> Elas não vão junto com o texto. Envie o relatório, <u>volte para este app</u> e toque em <b>2. Enviar fotos</b>.</div></div>`;
+  h+=`<button class="big ${np&&bFotSent?'plain':'cta'}" type="button" data-b="send" style="flex-direction:column"><span class="bt">${np&&bFotSent?'✅ Enviado à SSO':'📤 Enviar à SSO'}</span><span class="bs">${np?(bFotSent?'Toque para reenviar':`Imagem com os dados da ronda + ${np} foto${np===1?'':'s'} + texto, numa mensagem só`):'Itens com ✅ e os problemas detalhados'}</span></button>`+
+     (np?`<button class="big plain" type="button" data-b="txtall" style="flex-direction:column"><span class="bt">🧾 Só o texto</span><span class="bs">Se a SSO pedir o relatório escrito separado</span></button>`:'')+
      `<div class="bnav"><button type="button" data-b="back">↩ Voltar</button><button type="button" data-b="newr" style="color:var(--bad-t)">↺ Nova ronda</button></div></div>`;
   return h;
 }
 /* fotos com uma tarja de identificação (o WhatsApp não mostra legenda por foto) */
+/* imagem inicial com os dados da ronda básica (vai antes das fotos) */
+async function bCoverFile(){
+  const m=basic.meta,W=1080,M=46,F='system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif';
+  const cv=document.createElement('canvas'),ctx=cv.getContext('2d'),font=(sz,b)=>`${b?'700':'500'} ${sz}px ${F}`;
+  const wrap=(t,w,sz,b)=>{ctx.font=font(sz,b);const out=[];let cur='';for(const wd of String(t).split(/\s+/)){const tt=cur?cur+' '+wd:wd;if(ctx.measureText(tt).width<=w)cur=tt;else{if(cur)out.push(cur);cur=wd;}}if(cur)out.push(cur);return out;};
+  const pr=bProblems(),ag=(m.agente||'').trim();
+  function run(draw){
+    let y=M;const T=(t,x,sz,col,b)=>{if(draw){ctx.font=font(sz,b);ctx.fillStyle=col;ctx.fillText(t,x,y);}};
+    y+=34;T('RONDA BÁSICA · ESTAÇÃO BARRA FUNDA',M,34,'#FFFFFF',1);
+    y+=48;T(`${fmtDate(m.data)} · ${m.turno||''} · ${hrTxt(m)}`,M,27,'#FFD166',1);
+    y+=38;T(`Agente: ${ag||'—'}${m.matricula?' · mat. '+m.matricula:''}`,M,26,'#D7DEE5');
+    y+=20;
+    const nb=pr.length,np=pr.reduce((n,x)=>n+x.p.photos.length,0);
+    if(draw){ctx.fillStyle=nb?'#D8432D':'#1F8F57';ctx.beginPath();ctx.roundRect?ctx.roundRect(M,y,W-2*M,76,14):ctx.rect(M,y,W-2*M,76);ctx.fill();ctx.fillStyle='#fff';ctx.font=font(34,1);ctx.fillText(nb?`⚠ ${nb} problema${nb===1?'':'s'} · ${np} foto${np===1?'':'s'} a seguir`:'✔ Tudo em ordem',M+22,y+50);}
+    y+=76+30;
+    BASIC_AREAS.forEach(a=>{
+      y+=40;T(a.label.toUpperCase(),M,30,'#5FD39A',1);y+=6;
+      a.cats.forEach(c=>{const st=bStat(a.k,c);y+=36;T('•  '+c,M+6,25,'#E6ECF1');T(st.s==='⚠️'?`⚠ ${st.n} com problema`:st.s==='✅'?'em ordem':st.s,W-M-230,25,st.s==='⚠️'?'#FF8A75':'#9FD8B6',1);});
+      y+=8;
+    });
+    if(pr.length){
+      y+=40;T('PROBLEMAS (as fotos vêm em seguida)',M,30,'#FF8A75',1);
+      pr.forEach((x,i)=>{
+        for(const l of wrap(`${i+1}) ${x.cat} · ${x.a.short}`,W-2*M,26,1)){y+=36;T(l,M,26,'#FFFFFF',1);}
+        for(const l of wrap('Local: '+(x.p.local||'não informado'),W-2*M-20,24,0)){y+=32;T(l,M+20,24,'#D7DEE5');}
+        for(const l of wrap('Problema: '+(x.p.desc||'sem descrição'),W-2*M-20,24,0)){y+=32;T(l,M+20,24,'#FF8A75',1);}
+        y+=10;
+      });
+    }
+    return y+M;
+  }
+  cv.width=W;cv.height=Math.max(400,Math.ceil(run(false)));
+  ctx.fillStyle='#0F161D';ctx.fillRect(0,0,W,cv.height);ctx.textBaseline='alphabetic';run(true);
+  const b=await new Promise(r=>cv.toBlob(r,'image/jpeg',.9));
+  return new File([b],'ronda-basica-00-resumo.jpg',{type:'image/jpeg'});
+}
+/* um envio só: imagem com os dados + fotos dos problemas + texto como legenda */
+async function bEnviarTudo(){
+  const n=bPhotoCount();
+  if(!n){await bSendText();return;}
+  notify('Preparando imagens…');
+  const files=[await bCoverFile(),...await bPhotoFiles()];$('#toast').classList.remove('on');
+  if(!(navigator.canShare&&navigator.canShare({files}))){await bSendText();fotOnReturn=bFotRemind;return;}
+  let ok=await shareFiles(files.slice(0,30),legenda(buildBasicText()));
+  for(let i=30;i<files.length&&ok;i+=30){await new Promise(r=>setTimeout(r,300));ok=await shareFiles(files.slice(i,i+30),'');}
+  if(ok){bFotSent=true;renderBasic();}
+}
 async function bPhotoFiles(){
   const out=[];let n=0;
   for(const x of bProblems()){
@@ -3296,7 +3373,8 @@ $('#basic').addEventListener('click',async e=>{
   else if(a==='cam')$('#bPhotoCam').click();
   else if(a==='gal')$('#bPhotoIn').click();
   else if(a==='rmph'){bDraft.photos.splice(+b.dataset.i,1);const l=$('#bLocal'),d=$('#bDesc');bDraft.local=l.value;bDraft.desc=d.value;renderBasic();}
-  else if(a==='send')bSendText();
+  else if(a==='send')bEnviarTudo();
+  else if(a==='txtall')bSendText();
   else if(a==='edit'){const i=+b.dataset.q;if(i>=0){basic.edit=i;basic.idx=i;basic.intro=false;bDraft=null;bSave();renderBasic();}}
   else if(a==='tosum'){bDraft=null;basic.edit=null;basic.idx=BQ.length;bSave();renderBasic();}
   else if(a==='fotos')bSendPhotos();
@@ -3489,8 +3567,7 @@ const TOUR_BASIC=[
     await tourTap(B('[data-b=cam]'),()=>{bDraft.photos.push(demoPhoto());renderBasic();});await sleep(450);},
   el:()=>B('[data-b=save]'),
   tap:()=>{const q=BQ[basic.idx];basic.ans[q.key].probs.push({local:bDraft.local,desc:bDraft.desc,photos:bDraft.photos,t:nowHM(),d:todayISO()});bDraft=null;bFillOk();}},
- {t:'No fim, envie o relatório',p:'Abre o WhatsApp com o texto pronto.',el:()=>B('[data-b=send]')},
- {t:'Volte ao app e envie as fotos',p:'Depois do texto, toque em 📷 Enviar fotos.',el:()=>B('[data-b=fotos]')},
+ {t:'No fim, envie à SSO',p:'Um toque só: vai a imagem com os dados da ronda, as fotos e o texto. Escolha a conversa da SSO no WhatsApp.',el:()=>B('[data-b=send]')},
  {t:'Pronto!',p:'Nada foi salvo. Rever: Como usar, na tela inicial.',prep:async()=>{tourRestore();}}
 ];
 const TOUR_DET=[
