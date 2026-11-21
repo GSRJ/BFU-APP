@@ -124,12 +124,21 @@ main{display:grid!important;grid-template-columns:1fr 1fr;gap:10px!important;ali
 .top .inst.topo svg{width:18px;height:18px}
 .top b{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media (max-width:420px){.top b{font-size:21px}.top .inst.topo{padding:6px 10px}.top .inst.topo span{font-size:0}.top .inst.topo span::after{content:'Instalar';font-size:18px}}
+/* topo e saudação compactos */
+.top{padding:calc(6px + env(safe-area-inset-top)) 12px 6px;border-bottom-width:3px;gap:8px}
+.logo{width:28px;height:28px;font-size:12px}
+.top b{font-size:17px}
+.top .inst.topo{min-height:30px;padding:4px 10px;font-size:14px;border-radius:7px;box-shadow:0 0 0 2px rgba(31,203,99,.28)}
+.top .inst.topo svg{width:14px;height:14px}
+@media (max-width:420px){.top b{font-size:17px}.top .inst.topo span::after{font-size:14px}}
+.hello{margin-bottom:2px}.hello h1{font-size:22px!important}.hello .d{margin-top:2px;font-size:13px}
+main{padding-top:14px}
 </style>
 </head>
 <body>
 <header class="top"><div class="logo">BFU</div><b>Estação Barra Funda</b><button class="inst topo" id="inst" type="button" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M12 7v7m-3-3 3 3 3-3M10 18h4"/></svg><span>Instalar no celular</span></button></header>
 <main>
-  <div class="hello"><h1>O que você quer fazer?</h1><div class="d"><span id="turno">Turno</span>, <span id="hoje"></span></div></div>
+  <div class="hello"><h1>O que você quer fazer?</h1><div class="d"><span id="hoje"></span></div></div>
   <a class="card ronda" href="ronda/index.html">
     <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.5 4.5 5.5v6c0 4.6 3.1 8.4 7.5 10 4.4-1.6 7.5-5.4 7.5-10v-6L12 2.5Z"/><path d="m8.5 12 2.4 2.4 4.6-4.8"/></svg></div>
     <div class="tx"><b>Fazer a ronda</b><span>Confira os itens da estação e gere o relatório</span></div>
@@ -168,9 +177,8 @@ main{display:grid!important;grid-template-columns:1fr 1fr;gap:10px!important;ali
 <dialog id="dlg"><b>Instalar o app</b><p id="dlgT" style="margin:8px 0 0"></p><button type="button" id="dlgOk">Entendi</button></dialog>
 <script>
 (function(){
-  const d=new Date(),h=d.getHours();
-  document.getElementById('turno').textContent='Turno da '+(h>=6&&h<14?'manhã':h>=14&&h<22?'tarde':'noite');
-  const dias=['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
+  const d=new Date();
+  const dias=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
   document.getElementById('hoje').textContent=dias[d.getDay()]+', '+String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0');
 })();
 let deferred=null;
