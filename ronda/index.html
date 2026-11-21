@@ -3122,7 +3122,7 @@ function renderBasic(){
     }else{
       const an=basic.ans[q.key]||{},bad=an.st==='problema';
       h=`<div class="bq"><div class="bprog"><i style="width:${Math.round(basic.idx/BQ.length*100)}%"></i></div><p class="bq-p">${esc(a.label)} · pergunta ${pos} de ${n}</p>${q.extra?`<h2 class="bq-t">Algum outro problema a relatar no ${esc(a.label)}?</h2><p class="bq-s">Algo que não estava nas perguntas anteriores.</p>`:`<h2 class="bq-t">${esc(q.cat)}</h2><p class="bq-s">Está tudo em ordem?</p>`}`+
-        `<div class="big2"><button type="button" class="big ok${an.st==='ok'?' sel':''}" data-b="ok">${q.extra?'✅ Nenhum':'✅ Tudo em ordem'}</button><button type="button" class="big plain danger${bad?' sel':''}" data-b="bad">${q.extra?'⚠️ Sim, relatar':'⚠️ Há problema'}</button></div>`+(q.extra?'':`<button type="button" class="locbtn" data-b="where">📍 Onde estão ${esc(LOC_NOUN[q.cat]||'os itens')}? Onde localizar</button>`);
+        `<div class="big2"><button type="button" class="big ok${an.st==='ok'?' sel':''}" data-b="ok">${q.extra?'✅ Nenhum':'✅ Tudo em ordem'}</button><button type="button" class="big plain danger${bad?' sel':''}" data-b="bad">${q.extra?'⚠️ Sim, relatar':'⚠️ Há problema'}</button></div>`+(q.extra?'':`<button type="button" class="locbtn" data-b="where">📍 Onde estão ${esc(LOC_NOUN[q.cat]||'os itens')}? Clique para ver</button>`);
       if(bad){
         (an.probs||[]).forEach((p,i)=>{h+=bProbHTML(p,i);});
         if(bDraft)h+=bDraftHTML();
@@ -3332,7 +3332,7 @@ function locPlan(){
 async function renderLoc(){
   const b=$('#locBody'),a=loc.q.a;let h='';
   if(loc.i<0){
-    h=`<h2>📍 ${esc(loc.q.cat)}</h2><p class="locsub">${a.icon} ${esc(a.label)} · ${loc.items.length} ${loc.items.length===1?'item':'itens'}. Toque em um item para ver na planta.</p><div class="loclist">`+
+    h=`<h2>📍 ${esc(loc.q.cat)}</h2><p class="locsub">${a.icon} ${esc(a.label)} · ${loc.items.length} ${loc.items.length===1?'item':'itens'}. Clique para ver na planta.</p><div class="loclist">`+
       (loc.items.length?loc.items.map((it,i)=>`<button type="button" class="locit" data-li="${i}"><b>${esc(it.name)}</b><span>${esc(it.w)}</span><i>›</i></button>`).join(''):'<p class="locsub">Nenhum item cadastrado neste local.</p>')+`</div>`+
       `<button type="button" class="big plain" data-lb="close" style="justify-content:center;min-height:46px;font-size:15px;margin-top:10px">Fechar</button>`;
   }else{
@@ -3443,7 +3443,7 @@ const TOUR_BASIC=[
   tap:()=>{basic.intro=false;renderBasic();}},
  {t:'Tudo certo? Toque em ✅',p:'O app passa sozinho para o próximo item.',el:()=>B('[data-b=ok]'),
   tap:()=>{const q=BQ[basic.idx];basic.ans[q.key]={st:'ok',probs:[]};basic.idx++;renderBasic();}},
- {t:'Não sabe onde ficam?',p:'Toque em 📍 Onde localizar.',el:()=>B('[data-b=where]'),
+ {t:'Não sabe onde ficam?',p:'Toque em 📍 Onde estão…? Clique para ver.',el:()=>B('[data-b=where]'),
   tap:()=>openLoc(BQ[basic.idx])},
  {t:'Lista de onde fica cada um',p:'Cada item com o lugar exato. Toque em um para ver na planta.',
   prep:async()=>{await sleep(250);},el:()=>$('#locBody .locit'),
