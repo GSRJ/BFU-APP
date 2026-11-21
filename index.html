@@ -116,8 +116,11 @@ main{display:grid!important;grid-template-columns:1fr 1fr;gap:10px!important;ali
 @media (max-height:720px) and (max-width:759px){.card{min-height:132px!important}.card .ic{width:44px!important;height:44px!important;margin-bottom:8px!important}.card .tx b{font-size:23px!important}.card.gbd{min-height:76px!important}}
 @media (min-width:760px){main{grid-template-columns:repeat(4,1fr);max-width:1000px}.card{min-height:190px!important}.card.gbd{min-height:110px!important}}
 
-/* instalar no alto, sempre à vista sem rolar */
-.top .inst.topo{margin-left:auto;flex:none;width:auto;min-height:40px;padding:6px 12px;border:2px solid var(--y);background:var(--y);color:var(--k);font:700 18px/1 var(--fc);border-radius:9px;gap:6px}
+/* instalar no alto, sempre à vista sem rolar, em verde */
+@keyframes pulsa{0%,100%{box-shadow:0 0 0 3px rgba(31,203,99,.28)}50%{box-shadow:0 0 0 7px rgba(31,203,99,.12)}}
+@media (prefers-reduced-motion:reduce){.top .inst.topo{animation:none!important}}
+.top .inst.topo:active,.top .inst.topo:hover{background:#17A852!important}
+.top .inst.topo{margin-left:auto;flex:none;width:auto;min-height:40px;padding:6px 12px;border:2px solid #4AE88A;background:#1FCB63;color:#fff;box-shadow:0 0 0 3px rgba(31,203,99,.28);animation:pulsa 2.4s ease-in-out infinite;font:700 18px/1 var(--fc);border-radius:9px;gap:6px}
 .top .inst.topo svg{width:18px;height:18px}
 .top b{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media (max-width:420px){.top b{font-size:21px}.top .inst.topo{padding:6px 10px}.top .inst.topo span{font-size:0}.top .inst.topo span::after{content:'Instalar';font-size:18px}}
