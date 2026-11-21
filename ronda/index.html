@@ -744,7 +744,7 @@ body.in-hub .top::before{display:none!important}
 <dialog id="pdfDlg" aria-label="Relatório pronto">
   <h2>Relatório pronto</h2>
   <p id="pdfName"></p>
-  <div class="fotowarn" id="pdfFotoWarn" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4Z"/><circle cx="12" cy="13" r="3.5"/></svg><div><b>Tem fotos para enviar.</b> Depois do texto, volte aqui e envie as fotos.<button type="button" class="avok" id="pdfAvisoOk">OK</button></div></div>
+  <div class="fotowarn" id="pdfFotoWarn" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4Z"/><circle cx="12" cy="13" r="3.5"/></svg><div><b>Tem fotos para enviar.</b> Depois de mandar o texto no WhatsApp, <u>volte para este app</u> e toque em <b>📷 Enviar fotos</b>.<button type="button" class="avok" id="pdfAvisoOk">OK, entendi</button></div></div>
   <div class="menu-list">
     <button class="big cta" id="pdfSimple" type="button" hidden style="display:none"></button>
     <div class="opt" id="optStep"><button class="big cta" id="pdfStep" type="button">📤 Enviar relatório de ronda</button></div>
@@ -2789,8 +2789,8 @@ function updateStepBtn(){
   /* com fotos: o aviso vem primeiro e só depois do OK aparecem os botões */
   const avisar=!!tot&&!sentFot&&!pack.avisoOk;
   $('#pdfFotoWarn').hidden=!avisar;
-  ['#optStep','#optFotos','#pdfSave'].forEach(q=>{const e=$(q);if(e)e.style.display=avisar?'none':'';});
-  {const w=$('#pdfFotoWarn b');if(w)w.textContent=n?`${n} foto${n===1?'':'s'} para enviar.`:'Imagem-resumo para enviar.';}
+  ['#optStep','#optFotos','#pdfSave','#pdfClose','#pdfName'].forEach(q=>{const e=$(q);if(e)e.style.display=avisar?'none':'';});
+  {const w=$('#pdfFotoWarn b');if(w)w.textContent=n?`Tem ${n} foto${n===1?'':'s'} para enviar.`:'Tem a imagem-resumo para enviar.';}
   $('#pdfStep').classList.toggle('cta',!done);$('#pdfFotos').classList.toggle('cta',!sentFot);$('#pdfFotos').classList.remove('plain');$('#pdfSave').classList.toggle('cta',!sentPdf);$('#pdfFotos').classList.remove('fotonext');
   $('#pdfSave').innerHTML=`<span class="bt">${sentPdf?'✅ PDF enviado':'📎 Enviar relatório em PDF'}</span><span class="bs">${sentPdf?'Toque para reenviar':'Relatório detalhado da ronda'}</span>`;
 }
