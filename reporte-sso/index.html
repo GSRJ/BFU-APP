@@ -1420,18 +1420,20 @@ function basePlan0(P){
   for(let i=0;i<15;i++)s+=gate(192+i*27.4,1948,String(i+1).padStart(2,'0'),'h');
   /* SSO */
   s+=mv('sso',97,1928,`<rect x="50" y="1870" width="95" height="117" fill="${P.room}" stroke="${W}" stroke-width="8"/>`+T(97,1938,'SSO',{s:34,ls:1,c:W})+T(97,1957,'SUPERVISÃO',{s:9.5,ls:.6})+T(97,1970,'OPERACIONAL',{s:9.5,ls:.6}));
-  /* carimbo e legenda do desenho */
-  s+=T(535,176,'ESTAÇÃO',{s:26,ls:3,c:W})+T(535,206,'BARRA FUNDA',{s:26,ls:2,c:W});
-  s+=`<path d="M410,224H660" stroke="${W}" stroke-width="2.5"/>`;
-  s+=T(535,248,'MEZANINO · TRIVIA TRENS',{s:14,ls:1})+T(535,270,'Desenho: AAS Gerson · sem escala',{s:13,ls:0,w:500});
-  s+=T(410,322,'LEGENDA',{s:13,ls:2,a:'start'});
+  /* carimbo e legenda do desenho: no alto, acima da estação, em todas as plantas do mezanino */
   LEGEND_MODE=true;
-  const lg=(i,icon,txt)=>{const y=335+i*42;return `<g transform="translate(410 ${y})">${icon}</g>`+T(462,y+23,txt,{s:13,ls:0,w:600,a:'start',c:P.label});};
-  const LI=[[roll(6,0,28,34),'Escada rolante'],[fix(6,0,28,34),'Escada fixa'],[lift(20,17,null),'Elevador'],[kiosk(0,2,40,30),'Quiosque'],[atm(11,8),'Caixa eletrônico'],[`<rect x="0" y="2" width="40" height="30" fill="url(#hz)" stroke="${W}" stroke-width="3"/>`,'Vão para a via'],[gate(20,12,'00','v'),'Bloqueio (catraca)']];
-  {const LEGN={validador:'Validador',atm:'ATM Autopass',botao:'Botão atendim.',acolher:'Espaço acolher',saida:'Saída emerg.',telefone:'Telefone emerg.',cadeira:'Cadeira de rodas'};
+  const LI=[[roll(6,0,28,34),'Escada rolante'],[fix(6,0,28,34),'Escada fixa'],[lift(20,17,null),'Elevador'],[kiosk(0,2,40,30),'Quiosque'],[atm(11,8),'Caixa eletrônico'],[`<rect x="0" y="2" width="40" height="30" fill="url(#hz)" stroke="${W}" stroke-width="3"/>`,'Vão para a via'],[gate(20,12,'00','v'),'Bloqueio']];
+  {const LEGN={validador:'Validador',atm:'ATM Autopass',botao:'Botão atendim.',acolher:'Espaço acolher',saida:'Saída emerg.',telefone:'Telefone emerg.',cadeira:'Cadeira de rodas',mapa:'Mapa da estação',quadro:'Quadro de força'};
    const used=new Set(((typeof cfg!=='undefined'&&cfg&&cfg.points)||[]).map(q=>q.type).filter(Boolean));
    TYPES.filter(t=>used.has(t.k)&&t.k!=='outro'&&t.k!=='quiosque'&&ICON[t.k]).forEach(t=>LI.push([`<g transform="translate(20 17)"><rect x="-15" y="-15" width="30" height="30" rx="8" fill="#fff" stroke="${t.c}" stroke-width="2.4"/>${iconSVG(t.k,t.c,.95)}</g>`,LEGN[t.k]||t.n]));}
-  LI.forEach((x,n)=>{const col=n<8?0:1,r=n%8,ox=410+col*128,oy=330+r*34;s+=`<g transform="translate(${ox} ${oy}) scale(.72)">${x[0]}</g>`+T(ox+33,oy+17,x[1],{s:10.5,ls:0,w:600,a:'start',c:P.label});});
+  
+  {/* sem moldura, acima da planta (fora da área quadriculada): título à esquerda e a legenda em três linhas ao lado */
+   const CURTO={'Caixa eletrônico':'Caixa 24h','Mapa da estação':'Mapa','Quadro de força':'Quadro força','Botão atendim.':'Botão atend.','Telefone emerg.':'Telefone','Cadeira de rodas':'Cadeira rodas','Espaço acolher':'Acolher'};
+   const X0=100,LX=520,X1=1515,rows=3,cols=Math.ceil(LI.length/rows),cw=(X1-LX)/cols,mx=Math.max(6,Math.floor((cw-42)/8));
+   const DY=-TOPO_MEZ+6;
+   s+=T(X0,DY+40,'ESTAÇÃO BARRA FUNDA',{s:31,ls:1,c:W,a:'start'})+T(X0,DY+72,'MEZANINO · TRIVIA TRENS',{s:18,ls:1,w:700,a:'start'})+T(X0,DY+100,'Desenho: AAS Gerson · sem escala',{s:15,ls:0,w:500,a:'start'});
+   LI.forEach((x,n)=>{const c=(n/rows)|0,r=n%rows,ox=LX+c*cw,oy=DY+8+r*38;let t=CURTO[x[1]]||x[1];if(t.length>mx)t=t.slice(0,mx-1)+'…';
+     s+=`<g transform="translate(${ox.toFixed(0)} ${oy}) scale(.85)">${x[0]}</g>`+T(ox+40,oy+21,t,{s:16,ls:0,w:700,a:'start',c:P.label});});}
   return s;
 }
 
@@ -1581,7 +1583,9 @@ function gridSVG(P,u){
   for(let c=0;c<=g.cols;c++){const x=(c*g.cw).toFixed(1);s+=`<line x1="${x}" y1="0" x2="${x}" y2="${h}" stroke="${P.line}" stroke-width="${sw}" stroke-dasharray="${da}" opacity=".7"/>`;}
   for(let r=0;r<=g.rows;r++){const y=(r*g.ch).toFixed(1);s+=`<line x1="0" y1="${y}" x2="${w}" y2="${y}" stroke="${P.line}" stroke-width="${sw}" stroke-dasharray="${da}" opacity=".7"/>`;}
   const lab=(x,y,t)=>`<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" font-size="${fs.toFixed(1)}" font-weight="700" text-anchor="middle" fill="${P.label}" stroke="${P.bg}" stroke-width="${(fs*.35).toFixed(1)}" paint-order="stroke">${t}</text>`;
-  for(let c=0;c<g.cols;c++)s+=lab((c+.5)*g.cw,fs*1.15,String.fromCharCode(65+c));
+  /* no mezanino, as letras das colunas ficam logo abaixo da faixa do título */
+  const ly=fs*1.15;
+  for(let c=0;c<g.cols;c++)s+=lab((c+.5)*g.cw,ly,String.fromCharCode(65+c));
   for(let r=0;r<g.rows;r++)s+=lab(fs*.8,(r+.5)*g.ch+fs*.35,String(r+1));
   return s+'</g>';
 }
@@ -1721,10 +1725,13 @@ function pinSVG(p,P,o){
 /* espaço extra em volta da planta, para itens que ficam fora do desenho */
 const EDGE=()=>Math.round(VW()*0.14);
 /* área exportada (PDF/relatório): a planta, ampliada só se houver itens fora dela */
+/* altura da faixa do título e da legenda acima da planta do mezanino */
+const TOPO_MEZ=128;
 function planBounds(){
   const w=VW(),h=VH();let x0=0,y0=0,x1=w,y1=h;const pd=44;
   for(const q of allPoints()){const x=q.nx*w,y=q.ny*h;x0=Math.min(x0,x-pd);y0=Math.min(y0,y-pd);x1=Math.max(x1,x+pd);y1=Math.max(y1,y+pd);}
   if(KIND!=='mez'&&!cfg.bg){x0=Math.min(x0,-RAIL_M);x1=Math.max(x1,w+RAIL_M);}
+  if(KIND==='mez'&&!cfg.bg)y0=Math.min(y0,-TOPO_MEZ);   /* faixa do título acima da planta */
   return {x0,y0,w:x1-x0,h:y1-y0};
 }
 function planSVG(P,o){
@@ -1811,7 +1818,7 @@ function focusOn(p,zoomIn){
     tweenTo(p.nx*VW(),p.ny*VH(),w);
   });
 }
-function fitAll(){const w=fitW();measure();tweenTo(VW()/2,KIND==='mez'?VH()/2:Math.min(VH()/2,w*stg.h/stg.w/2-EDGE()*.3),w);}
+function fitAll(){const top=KIND==='mez'&&!cfg.bg?TOPO_MEZ:0;measure();const w=top?Math.max(fitW(),(VH()+top)*stg.w/stg.h):fitW();tweenTo(VW()/2,KIND==='mez'?(VH()-top)/2:Math.min(VH()/2,w*stg.h/stg.w/2-EDGE()*.3),w);}
 
 /* ---------- desenho da planta ---------- */
 function renderPlan(){
