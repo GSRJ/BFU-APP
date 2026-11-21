@@ -513,7 +513,8 @@ dialog .big{font-size:22px}
 /* aviso de fotos pendentes no fim da ronda */
 .fotowarn{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:2px solid var(--k);border-left-width:8px;border-radius:10px;background:#FFF7D6;color:var(--k);font-size:14.5px;line-height:1.35;margin:4px 0}
 #pdfFotoWarn{position:relative;background:#FFE58A;border-color:#B45309;border-left-color:#B45309;box-shadow:0 4px 14px rgba(180,83,9,.25);margin:6px 0 10px}
-#pdfFotoWarn::after{content:'';position:absolute;left:28px;bottom:-10px;border-width:10px 9px 0;border-style:solid;border-color:#B45309 transparent transparent}
+#pdfFotoWarn .avok{display:block;width:100%;margin-top:10px;min-height:46px;border:2px solid var(--k);border-radius:10px;background:#1B7F4B;color:#fff;font:700 20px/1 var(--fc);cursor:pointer}
+#pdfFotoWarn::after{display:none;content:'';position:absolute;left:28px;bottom:-10px;border-width:10px 9px 0;border-style:solid;border-color:#B45309 transparent transparent}
 .fotowarn[hidden]{display:none}
 .fotowarn svg{flex:none;width:24px;height:24px;stroke:var(--k);fill:none;stroke-width:2.2;stroke-linejoin:round}
 .fotowarn b{font-weight:700}
@@ -743,7 +744,7 @@ body.in-hub .top::before{display:none!important}
 <dialog id="pdfDlg" aria-label="Relatório pronto">
   <h2>Relatório pronto</h2>
   <p id="pdfName"></p>
-  <div class="fotowarn" id="pdfFotoWarn" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4Z"/><circle cx="12" cy="13" r="3.5"/></svg><div><b>Tem fotos para enviar.</b> Depois de mandar o texto no WhatsApp, <u>volte para este app</u> e toque em <b>📷 Enviar fotos</b>.</div></div>
+  <div class="fotowarn" id="pdfFotoWarn" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4Z"/><circle cx="12" cy="13" r="3.5"/></svg><div><b>Tem fotos para enviar.</b> Depois de mandar o texto no WhatsApp, <u>volte para este app</u> e toque em <b>📷 Enviar fotos</b>.<button type="button" class="avok" id="pdfAvisoOk">OK, entendi</button></div></div>
   <div class="menu-list">
     <button class="big cta" id="pdfSimple" type="button" hidden style="display:none"></button>
     <div class="opt" id="optStep"><button class="big cta" id="pdfStep" type="button">📤 Enviar relatório de ronda</button></div>
@@ -2785,7 +2786,10 @@ function updateStepBtn(){
   $('#pdfStep').innerHTML=`<span class="bt">${done?'✅ Texto enviado':'📝 Enviar texto'+(np>1?` (parte ${txtIdx+1} de ${np})`:'')}</span><span class="bs">${done?'Toque para reenviar':(np>1?'Texto longo: vai em '+np+' partes, um toque cada':'Relatório completo da ronda, em texto')}</span>`;
   $('#optFotos').hidden=!tot;
   $('#pdfFotos').innerHTML=`<span class="bt">${sentFot?'✅ Fotos enviadas':'📷 Enviar fotos'}</span><span class="bs">${sentFot?'Toque para reenviar':`${nc} imagem${nc===1?'':'s'}-resumo${n?' + '+n+' foto'+(n===1?'':'s')+' de problema':''}`}</span>`;
-  $('#pdfFotoWarn').hidden=!tot||sentFot;
+  /* com fotos: o aviso vem primeiro e só depois do OK aparecem os botões */
+  const avisar=!!tot&&!sentFot&&!pack.avisoOk;
+  $('#pdfFotoWarn').hidden=!avisar;
+  ['#optStep','#optFotos','#pdfSave'].forEach(q=>{const e=$(q);if(e)e.style.display=avisar?'none':'';});
   {const w=$('#pdfFotoWarn b');if(w)w.textContent=n?`Tem ${n} foto${n===1?'':'s'} para enviar.`:'Tem a imagem-resumo para enviar.';}
   $('#pdfStep').classList.toggle('cta',!done);$('#pdfFotos').classList.toggle('cta',!sentFot);$('#pdfFotos').classList.remove('plain');$('#pdfSave').classList.toggle('cta',!sentPdf);$('#pdfFotos').classList.remove('fotonext');
   $('#pdfSave').innerHTML=`<span class="bt">${sentPdf?'✅ PDF enviado':'📎 Enviar relatório em PDF'}</span><span class="bs">${sentPdf?'Toque para reenviar':'Relatório detalhado da ronda'}</span>`;
@@ -2839,6 +2843,7 @@ async function enviaTextoCompleto(){
    Não precisa voltar ao app para mandar as fotos. */
 /* ronda detalhada: três envios separados — texto, fotos e PDF */
 $('#pdfStep').onclick=()=>enviaTextoCompleto();
+$('#pdfAvisoOk').onclick=()=>{if(pack){pack.avisoOk=true;updateStepBtn();}};
 /* texto copiado (sem compartilhar): o lembrete das fotos aparece quando a pessoa volta para o app */
 var fotOnReturn=null;
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&fotOnReturn){const f=fotOnReturn;fotOnReturn=null;setTimeout(f,400);}});
