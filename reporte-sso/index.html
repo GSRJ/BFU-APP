@@ -331,7 +331,14 @@ html.so-planta #plDlg::backdrop{background:#EDE7DA}
 #plDlg .plzoom button:disabled{opacity:.38;cursor:not-allowed}
 #plDlg .plleg{position:absolute;left:max(12px,env(safe-area-inset-left));bottom:calc(30px + env(safe-area-inset-bottom));width:auto;padding:0 16px;font-size:16px}
 #plDlg .plnote{position:absolute;right:12px;bottom:calc(8px + env(safe-area-inset-bottom));font-size:11px;color:#6A5F50;background:rgba(251,248,241,.85);padding:2px 8px;border-radius:8px}
-#plLegBox{position:absolute;left:12px;right:12px;bottom:calc(92px + env(safe-area-inset-bottom));max-height:55dvh;overflow:auto;background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.3);padding:12px 14px}
+/* controles numa barra embaixo, fora da planta: nada fica por cima do desenho */
+#plDlg .plfoot{flex:none;display:flex;align-items:center;gap:8px;padding:8px max(10px,env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));background:#fff;border-top:2px solid rgba(0,0,0,.12)}
+#plDlg .plfoot .plzoom{position:static;flex-direction:row;gap:6px;flex:none}
+#plDlg .plfoot .plzoom button{width:46px;height:46px;font-size:22px;box-shadow:none}
+#plDlg .plfoot .plleg{position:static;height:46px;padding:0 12px;font-size:15px;box-shadow:none;flex:none}
+#plDlg .plfoot .plnote{position:static;flex:1;min-width:0;background:none;padding:0;font-size:11.5px;line-height:1.25;text-align:center}
+@media (max-width:420px){#plDlg .plfoot .plnote{font-size:10.5px}#plDlg .plfoot .plleg{padding:0 10px}}
+#plLegBox{position:absolute;left:12px;right:12px;bottom:calc(76px + env(safe-area-inset-bottom));max-height:55dvh;overflow:auto;background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.3);padding:12px 14px}
 #plLegBox h3{margin:0 0 8px;font-size:16px}
 #plLegBox .lgg{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px}
 #plLegBox .lgi{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--ink)}
@@ -646,10 +653,12 @@ body.in-hub .top::before{display:none!important}
 <dialog id="plDlg" aria-label="Plantas">
   <div class="plbar"><div class="pltabs" id="plTabs"></div><button class="plx" id="plClose" type="button" aria-label="Fechar">✕</button></div>
   <div id="plWrap"></div>
-  <div class="plzoom"><button id="plIn" type="button" aria-label="Aproximar">＋</button><button id="plOut" type="button" aria-label="Afastar">−</button><button id="plFit" type="button" aria-label="Voltar ao tamanho inicial" title="Voltar ao tamanho inicial" style="font-size:21px">⤢</button></div>
-  <button class="plleg" id="plLeg" type="button">ⓘ Legenda</button>
+  <div class="plfoot">
+    <button class="plleg" id="plLeg" type="button">ⓘ Legenda</button>
+    <div class="plnote">Toque num local para aproximar e registrar</div>
+    <div class="plzoom"><button id="plIn" type="button" aria-label="Aproximar">＋</button><button id="plOut" type="button" aria-label="Afastar">−</button><button id="plFit" type="button" aria-label="Voltar ao tamanho inicial" title="Voltar ao tamanho inicial" style="font-size:21px">⤢</button></div>
+  </div>
   <div id="plLegBox" hidden></div>
-  <div class="plnote">Clique em qualquer local para aproximar · arraste para mover</div>
   <div id="plBalloon" role="dialog" aria-label="Registrar neste local" hidden>
     <div class="plbtop"><div class="plbtxt"><b>Registrar neste local</b><span id="plBalloonWhere"></span></div><button class="plbclose" id="plBalloonClose" type="button" aria-label="Fechar">✕</button></div>
     <div class="plbact"><button id="plBalloonProblem" type="button">⚠ Problema</button><button id="plBalloonInfo" type="button">ⓘ Informe</button></div>
@@ -1732,6 +1741,7 @@ function planBounds(){
   for(const q of allPoints()){const x=q.nx*w,y=q.ny*h;x0=Math.min(x0,x-pd);y0=Math.min(y0,y-pd);x1=Math.max(x1,x+pd);y1=Math.max(y1,y+pd);}
   if(KIND!=='mez'&&!cfg.bg){x0=Math.min(x0,-RAIL_M);x1=Math.max(x1,w+RAIL_M);}
   if(KIND==='mez'&&!cfg.bg)y0=Math.min(y0,-TOPO_MEZ);   /* faixa do título acima da planta */
+  y1+=34;                                               /* espaço para o nome do último item embaixo */
   return {x0,y0,w:x1-x0,h:y1-y0};
 }
 function planSVG(P,o){
