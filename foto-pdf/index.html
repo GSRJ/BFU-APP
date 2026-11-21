@@ -27,8 +27,11 @@ h1{margin:0;font:700 34px/1 var(--fc)}
 .btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:58px;border:2px solid var(--k);border-radius:10px;background:#fff;color:var(--k);font:700 22px/1.05 var(--fc);cursor:pointer;padding:6px 10px;text-align:center}
 .btn svg{flex:none;width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .btn.pri{background:var(--y)}
-.btn.dark{background:var(--k);color:#fff}
+.btn.go{background:#1B7F4B;border-color:#1B7F4B;color:#fff;min-height:62px;font-size:26px}
+.btn.go:disabled{background:#B9C9BF;border-color:#B9C9BF;color:#fff;opacity:1}
+.btn.zap{background:#25D366;border-color:#1DA851;color:#073B1E}
 .btn:disabled{opacity:.45;cursor:not-allowed}
+.btn[hidden]{display:none}
 .btn:active:not(:disabled){filter:brightness(.92)}
 input[type=file]{display:none}
 .vazio{border:2px dashed #8E8E86;border-radius:12px;padding:26px 16px;text-align:center;color:#55554F;background:#F7F7F3}
@@ -72,7 +75,9 @@ input[type=file]{display:none}
 .opc .ck input{width:22px;height:22px;accent-color:var(--k)}
 .seg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .seg button{min-height:42px;border:2px solid var(--k);border-radius:8px;background:#fff;font:700 17px/1 var(--fc);cursor:pointer}
-.seg button[aria-pressed=true]{background:var(--k);color:var(--y)}
+.seg button{display:flex;align-items:center;justify-content:center;gap:6px}
+.seg button[aria-pressed=true]{background:var(--y)}
+.seg button[aria-pressed=true]::before{content:'✓';font-size:18px}
 .barra{position:fixed;left:0;right:0;bottom:0;background:#EEEEE9;border-top:2px solid var(--k);padding:10px 14px calc(10px + env(safe-area-inset-bottom));z-index:5}
 .barra .in{max-width:720px;margin:0 auto}
 .pronto{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
@@ -110,10 +115,10 @@ input[type=file]{display:none}
   <div class="cfoot"><button class="btn" id="cCancel" type="button">Cancelar</button><button class="btn" id="cReset" type="button">Foto inteira</button><button class="btn pri" id="cOk" type="button">Aplicar corte</button></div>
 </div>
 <div class="barra"><div class="in">
-  <button class="btn dark" id="gerar" type="button" style="width:100%" disabled>Gerar PDF</button>
+  <button class="btn go" id="gerar" type="button" style="width:100%" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2.5h8l4.5 4.5v14.5H6z"/><path d="M14 2.5V7h4.5M12 11v6M9 14l3 3 3-3"/></svg>Gerar PDF</button>
   <div class="pronto" id="pronto" hidden>
-    <button class="btn pri" id="share" type="button">Enviar / compartilhar</button>
-    <button class="btn" id="baixa" type="button">Salvar no celular</button>
+    <button class="btn zap" id="share" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M12 15V3M7.5 7.5 12 3l4.5 4.5"/></svg>Enviar</button>
+    <button class="btn" id="baixa" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7.5 10.5 12 15l4.5-4.5M4 19h16"/></svg>Salvar no celular</button>
   </div>
   <p class="msg" id="msg"></p>
 </div></div>
