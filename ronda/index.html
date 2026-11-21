@@ -2725,7 +2725,6 @@ function buildSummary(){
   if(pend.length&&pend.length<=15){L.push('',`*⏳ NÃO ANALISADOS (${pend.length})*`);pend.forEach(p=>L.push('• '+noPlat(p.name)+' – '+whereText(p)));}
   else if(pend.length)L.push('',`⏳ Não analisados: ${pend.length} itens (não fazem parte desta ronda)`);
   if(m.obs&&m.obs.trim())L.push('','Obs.: '+m.obs.trim());
-  if(termoTxt())L.push('','✔ '+termoTxt());
   return L.join('\n');
 }
 /* versão curta (cabe na legenda do WhatsApp, ~1000 caracteres): contagem + problemas */
@@ -2752,7 +2751,7 @@ function buildCaption(){
   const m=ronda.meta,all=allPoints().filter(inRonda),MAX=1000;
   const ok=all.filter(p=>statusOf(p)==='ok'),bad=all.filter(p=>statusOf(p)==='problema'),na=all.filter(p=>statusOf(p)==='na'),pend=all.filter(p=>!statusOf(p));
   const head=[`*RONDA – Estação Barra Funda (${KIND_LABEL[KIND]})*`,`${fmtDate(m.data)} · ${m.turno||''}${' · '+hrTxt(m)}`,`Agente: ${m.agente||'—'}${m.matricula?' (mat. '+m.matricula+')':''}`];
-  const foot=((na.length||pend.length)?['',`${na.length?'➖ N/A: '+na.length:''}${na.length&&pend.length?' · ':''}${pend.length?'⏳ Não analisados: '+pend.length:''}`]:[]).concat(termoTxt()?['','✔ Declaração de veracidade: '+(m.agente||'agente')+', '+dtFull(m.termo.ts)]:[]);
+  const foot=((na.length||pend.length)?['',`${na.length?'➖ N/A: '+na.length:''}${na.length&&pend.length?' · ':''}${pend.length?'⏳ Não analisados: '+pend.length:''}`]:[]);
   const badL=bad.map((p,i)=>{const r=res(p.id);return `${i+1}) *${ttl(p)}*${p.custom?'':' – '+whereText(p)}${r.blq&&r.blq.length?' – bloq. '+r.blq.map(p2).join(', '):''} – ${r.note&&r.note.trim()?r.note.trim():'sem descrição'}`;});
   if(encTxt())head.push('⚠️ *ENCERRADA ANTES DO FIM*'+(m.enc.motivo?' – '+m.enc.motivo:''));
   const build=okLines=>head.concat(['',`✅ *EM ORDEM (${ok.length})*`],okLines,['',`❌ *COM PROBLEMA (${bad.length})*`],bad.length?badL:['Nenhum.'],foot).join('\n');
@@ -2937,7 +2936,7 @@ function areaStat(){
 function buildCaptionMulti(stats){
   const m=ronda.meta,MAX=1000;
   const head=[`*RONDA – Estação Barra Funda*`,`${fmtDate(m.data)} · ${m.turno||''}${' · '+hrTxt(m)}`,`Agente: ${m.agente||'—'}${m.matricula?' (mat. '+m.matricula+')':''}`];
-  const foot=termoTxt()?['','✔ Declaração de veracidade: '+(m.agente||'agente')+', '+dtFull(m.termo.ts)]:[];
+  const foot=[];
   const build=(lim,mode)=>{
     const L=head.slice();let n=0;
     for(const s of stats){
@@ -2969,7 +2968,7 @@ function buildFullText(stats){
   const m=ronda.meta,MAX=4000;
   const head=[`*RONDA – Estação Barra Funda*`,`${fmtDate(m.data)} · ${m.turno||''}${' · '+hrTxt(m)}`,`Agente: ${m.agente||'—'}${m.matricula?' (mat. '+m.matricula+')':''}`];
   if(encTxt())head.push('⚠️ *'+encTxt()+'*');
-  const tail=[];if(m.obs&&m.obs.trim())tail.push('','Obs.: '+m.obs.trim());if(termoTxt())tail.push('','✔ '+termoTxt());
+  const tail=[];if(m.obs&&m.obs.trim())tail.push('','Obs.: '+m.obs.trim());
   const build=(lvl,pl)=>{ /* lvl: 0 lista | 1 lista corrida | 2 por tipo | 3 só contagem ; pl: 0 completo | 1 sem hora | 2 uma linha */
     const L=head.slice();let n=0;
     for(const s of stats){
@@ -3067,6 +3066,8 @@ async function onPdf(){
       out.setTitle('Relatório de ronda – Estação Barra Funda');out.setCreator('Ronda Barra Funda');
       bytes=await out.save();name=name.replace(/\.pdf$/i,'')+'-completo.pdf';
     }
+    /* nome do arquivo: Relatorio de ronda DD-MM-AAAA.pdf */
+    {const d=(ronda.meta&&ronda.meta.data)||todayISO(),[yy,mm,dd]=d.split('-');name=`Relatorio de ronda ${dd}-${mm}-${yy}.pdf`;}
     lastPdf={bytes,name};
     const covers=parts.map(q=>multi?new File([q.cover],'resumo-'+q.k+'.jpg',{type:q.cover.type}):q.cover);
     const photos=[].concat(...parts.map(q=>multi?q.photos.map(f=>new File([f],q.k+'-'+f.name,{type:f.type})):q.photos));
