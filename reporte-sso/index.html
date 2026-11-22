@@ -1694,6 +1694,9 @@ function homeIcons(P,k){
   }).join('');
 }
 
+/* mistura a cor c com o fundo f (t = quanto do fundo) */
+function mixC(c,f,t){const hx=v=>{v=String(v||'').trim();if(v==='#fff'||v==='#ffffff'||v==='#FFF'||v==='#FFFFFF')return [255,255,255];let m=v.match(/^#([0-9a-f]{3})$/i);if(m)return m[1].split('').map(x=>parseInt(x+x,16));m=v.match(/^#([0-9a-f]{6})$/i);if(m)return [0,2,4].map(i=>parseInt(m[1].slice(i,i+2),16));m=v.match(/^rgba?\((\d+)\D+(\d+)\D+(\d+)/i);return m?[+m[1],+m[2],+m[3]]:null;};
+  const A=hx(c),B=hx(f)||[246,241,230];if(!A)return c;return '#'+A.map((x,i)=>Math.round(x+(B[i]-x)*t).toString(16).padStart(2,'0')).join('');}
 const badgeTxt=p=>{const t=tipoVisual(p);return t?t.g:(p.num!=null?String(p.num):'');};
 function pinSVG(p,P,o){
   const k=o.k||VW()/1000,x=(p.nx*VW()).toFixed(1),y=(p.ny*VH()).toFixed(1);
@@ -1705,7 +1708,10 @@ function pinSVG(p,P,o){
   else if(st==='na'){fill=P.mute;stroke=P.mute;tc='#fff';bc=P.mute;}
   const lab=(p.num!=null?p.num+'. ':'')+p.name+' — '+(st?ST[st]:'não verificado');
   const inA=!o.areaSel||p.area===o.areaSel;
-  let g=`<g class="pin" data-id="${esc(p.id)}"${inA?'':' opacity=".38"'} transform="translate(${x} ${y}) scale(${k.toFixed(4)})">`;
+  /* itens fora da área atual ficam claros pela cor misturada ao fundo: transparência em grupo pesava no celular e deixava listras */
+  const fd=inA?(c=>c):(c=>mixC(c,P.bg,.62));
+  fill=fd(fill);stroke=fd(stroke);tc=fd(tc);if(bc)bc=fd(bc);if(tint)tint=fd(tint);const wh=fd('#fff');
+  let g=`<g class="pin" data-id="${esc(p.id)}" transform="translate(${x} ${y}) scale(${k.toFixed(4)})">`;
   const isSel=o.sel===p.id&&!o.exp;
   if(isSel)g+=`<circle r="40" fill="${P.sel}" fill-opacity=".16" stroke="${P.sel}" stroke-width="3"/>`;
   if(o.areaSel&&inA&&o.sel!==p.id)g+=`<circle r="30" fill="${P.sel}" fill-opacity=".16" stroke="${P.sel}" stroke-width="2.5" stroke-dasharray="5 4"/>`;
@@ -1718,7 +1724,7 @@ function pinSVG(p,P,o){
   if(ty&&ICON[ty.k])g+=iconSVG(ty.k,tc,1.05);
   else g+=`<text text-anchor="middle" dy=".36em" font-size="${tx.length>1?13:15}" font-weight="700" fill="${tc}">${esc(tx)}</text>`;
   if(bc){
-    g+=`<circle cx="13" cy="-13" r="8" fill="#fff" stroke="${bc}" stroke-width="2"/>`;
+    g+=`<circle cx="13" cy="-13" r="8" fill="${wh}" stroke="${bc}" stroke-width="2"/>`;
     if(st==='ok')g+=`<path d="M9.6 -13 L12 -10.6 L16.6 -15.4" fill="none" stroke="${bc}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`;
     else if(st==='problema')g+=`<path d="M13 -17.2 V-12.6" stroke="${bc}" stroke-width="2.3" stroke-linecap="round"/><circle cx="13" cy="-9.4" r="1.3" fill="${bc}"/>`;
     else g+=`<path d="M9.6 -13 H16.4" stroke="${bc}" stroke-width="2.3" stroke-linecap="round"/>`;
@@ -1937,12 +1943,19 @@ function progressS(){
 function routeSVG(u){
   if(cfg.bg||!showRoute||KIND!=='mez')return '';
   const done=Math.min(ROUTE_LEN,progressS());
-  const pa=`d="${ROUTE_D}" pathLength="${ROUTE_LEN.toFixed(0)}" fill="none" stroke-linecap="round" stroke-linejoin="round"`;
+  /* desenho simples, sem tracejado "cortado" (pathLength + dasharray) nem transparência:
+     alguns chips de vídeo de celular estragavam faixas da planta com esse tipo de traço */
+  const ln=(d,c,w)=>`<path d="${d}" fill="none" stroke="${c}" stroke-width="${(u*w).toFixed(1)}" stroke-linecap="round" stroke-linejoin="round"/>`;
   const mk=(p,t,c)=>`<g transform="translate(${p[0]} ${p[1]})"><circle r="${(u*9).toFixed(1)}" fill="${c}" stroke="#fff" stroke-width="${(u*2).toFixed(1)}"/><text y="${(-u*14).toFixed(1)}" text-anchor="middle" font-size="${(u*12).toFixed(1)}" font-weight="800" fill="${c}" stroke="#fff" stroke-width="${(u*3).toFixed(1)}" paint-order="stroke">${t}</text></g>`;
-  const ar=u*5.5;
-  return `<g pointer-events="none"><path ${pa} stroke="#fff" stroke-opacity=".7" stroke-width="${(u*7).toFixed(1)}"/><path ${pa} stroke="#7DBF9D" stroke-opacity=".9" stroke-width="${(u*3.5).toFixed(1)}" stroke-dasharray="${(u*10).toFixed(1)} ${(u*8).toFixed(1)}"/>`+
-    (done>0?`<path ${pa} stroke="#fff" stroke-width="${(u*8).toFixed(1)}" stroke-dasharray="${done.toFixed(1)} ${ROUTE_LEN.toFixed(0)}"/><path ${pa} stroke="#1B9A5A" stroke-width="${(u*5).toFixed(1)}" stroke-dasharray="${done.toFixed(1)} ${ROUTE_LEN.toFixed(0)}"/>`:'')+
-    mk(ROUTE[0],'INÍCIO','#1B7F4B')+mk(ROUTE[ROUTE.length-1],'FIM','#B02A18')+`</g>`;
+  let feito='';
+  if(done>0){
+    const pts=[ROUTE[0]];let acc=0;
+    for(let i=1;i<ROUTE.length;i++){const a=ROUTE[i-1],b=ROUTE[i],L=Math.hypot(b[0]-a[0],b[1]-a[1]);
+      if(acc+L>=done){const t=L?(done-acc)/L:0;pts.push([+(a[0]+(b[0]-a[0])*t).toFixed(1),+(a[1]+(b[1]-a[1])*t).toFixed(1)]);break;}
+      pts.push(b);acc+=L;}
+    if(pts.length>1){const d=roundedPath(pts,38);feito=ln(d,'#FFFFFF',8)+ln(d,'#1B9A5A',5);}
+  }
+  return `<g pointer-events="none">`+ln(ROUTE_D,'#F4F8F5',7)+ln(ROUTE_D,'#A9D5BD',3.5)+feito+mk(ROUTE[0],'INÍCIO','#1B7F4B')+mk(ROUTE[ROUTE.length-1],'FIM','#B02A18')+`</g>`;
 }
 /* ---------- gestos: arrastar, pinça, toque ---------- */
 const ptrs=new Map();let gs=null;
