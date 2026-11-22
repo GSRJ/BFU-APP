@@ -74,21 +74,10 @@ pre{margin:0;padding:15px 14px;background:var(--mar);color:#E7EEF8;
 .card.rod .faltam{background:#fff}
 /* o GBD em blocos, lido do mesmo texto que vai para o WhatsApp; cada parte tem a sua cor */
 .gv{--pau:#FFF1D6;--pau2:#F6C66B;--pauT:#6B3A05;--int:#DDF3EC;--int2:#8FD3BE;--intT:#0B4F49;--fol:#EEE7FB;--fol2:#CDBDF2;--folT:#47308A;--pos:#E3ECFB}
-.eu{background:var(--az);color:#fff;padding:14px 14px 13px}
-.eu .lid{font-size:13px;color:#D7E4FB;margin-bottom:10px}
-.eu .lid b{color:#fff}
-.eu .pq{font:400 21px/1.15 var(--fc);margin:0 0 9px}
-.eu .nomes{display:flex;flex-wrap:wrap;gap:7px}
-.eu .nomes::-webkit-scrollbar{display:none}
-.eu .nomes button{flex:none;border:1.5px solid rgba(255,255,255,.55);background:transparent;color:#fff;border-radius:999px;padding:8px 14px;font:600 15px/1 var(--f)}
-.eu .nomes button[aria-pressed=true]{background:#fff;color:var(--mar);border-color:#fff}
-.eu .res{margin-top:12px;display:grid;gap:7px}
-.eu .res>div{display:flex;align-items:center;gap:10px;background:rgba(10,30,56,.28);border-radius:10px;padding:10px 12px}
-.eu .res i{font-style:normal;font-size:20px;width:26px;text-align:center}
-.eu .res>div>div{min-width:0}
-.eu .res span{font-size:12.5px;color:#D7E4FB;display:block;line-height:1.2}
-.eu .res b{font:700 18px/1.2 var(--f);display:block}
-.eu .troca{margin-top:9px;background:none;border:0;padding:0;color:#D7E4FB;font:600 13px/1 var(--f);text-decoration:underline}
+.eu{display:flex;align-items:center;gap:12px;background:var(--az);color:#fff;padding:13px 14px}
+.eu .av{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--mar);font:700 17px/1 var(--f)}
+.eu span{display:block;font-size:12.5px;color:#D7E4FB;line-height:1.2}
+.eu b{display:block;font:700 19px/1.2 var(--f)}
 .gs{padding:14px}
 .gs h4{margin:0 0 10px;display:flex;align-items:center;gap:9px;font:400 20px/1.2 var(--fc);color:var(--tx)}
 .gs h4 i{font-style:normal;font-size:16px;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:#fff}
@@ -99,18 +88,13 @@ pre{margin:0;padding:15px 14px;background:var(--mar);color:#E7EEF8;
 .tile i{font-style:normal;font-size:19px;line-height:1}
 .tile span{font-size:12.5px;color:#B9C8DD;line-height:1.2}
 .tile b{font:700 17px/1.2 var(--f);margin-top:auto}
-.tile.me{background:var(--az);box-shadow:0 0 0 3px #fff inset}
-.tile.me span{color:#E1EBFD}
 .tiles .go{grid-column:1/-1;margin:0}
 .gt{display:flex;align-items:center;gap:10px;padding:5px;border-radius:10px;margin-bottom:6px}
 .gt .h{flex:none;min-width:80px;text-align:center;padding:8px 6px;border-radius:8px;font:700 16px/1 var(--f);font-variant-numeric:tabular-nums}
 .gt b{font:600 17px/1.3 var(--f)}
 .pau .gt .h{background:var(--pau2);color:var(--pauT)}.int .gt .h{background:var(--int2);color:var(--intT)}
-.gt.me{background:#fff}
-mark{background:#FFE066;color:inherit;border-radius:4px;padding:0 3px;font-weight:700}
 .gch{display:flex;flex-wrap:wrap;gap:7px;padding-bottom:8px}
 .gch span{padding:7px 13px;border-radius:999px;background:var(--fol2);color:var(--folT);font:600 15px/1.2 var(--f)}
-.gs .gch span.me{background:var(--folT);color:#fff}
 .gk{padding:4px 0 6px;font:600 13px/1.2 var(--f);color:var(--folT)}
 .gk+.gch span{background:#FBD3B5;color:#8A3108}
 .go{display:flex;gap:7px;margin:0 0 8px;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.7);font-size:13px;line-height:1.35;color:#3C5168}
@@ -429,45 +413,12 @@ function gbdParse(txt){
 }
 const titSec=t=>{t=t.toLowerCase();return t.charAt(0).toUpperCase()+t.slice(1)};
 const COR_SEC=t=>/POSTO/i.test(t)?'pos':/PAUSA|CAF/i.test(t)?'pau':/INTERV|JANT|ALMO/i.test(t)?'int':/FOLG|AUS/i.test(t)?'fol':'';
-/* quem está olhando: guardado no aparelho, para destacar o próprio nome */
-let EU=(()=>{try{return localStorage.getItem('gbd-eu')||''}catch(_){return ''}})();
-function setEu(n){EU=EU===n?'':n;try{localStorage.setItem('gbd-eu',EU)}catch(_){}render()}
-const reNome=n=>new RegExp('(^|[^\\p{L}])('+n.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')(?=$|[^\\p{L}])','u');
-const temNome=(t,n)=>!!n&&reNome(n).test(t);
-const marca=(t,n)=>{const e=esc(t);return n?e.replace(new RegExp('(^|[^\\p{L}])('+esc(n).replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')(?=$|[^\\p{L}])','gu'),'$1<mark>$2</mark>'):e};
 function gbdView(txt){
  const o=gbdParse(txt),box=el('div','gv');
  const nItens=o.secs.reduce((n,s)=>n+s.itens.length,0);
  if(!o.secs.length||!nItens){box.appendChild(el('pre',null,txt));return box}
  const lider=o.lid.map(it=>it.v.join(', ')).join(', ');
- const nomes=[...new Set([...(D&&D.equipe||[]),...o.lid.flatMap(it=>it.v)])];
- const eu=nomes.includes(EU)?EU:'';
-
- /* o seu turno */
- const top=el('div','eu');
- if(lider)top.insertAdjacentHTML('beforeend',`<div class="lid">Líder do turno (ASL): <b>${esc(lider)}</b></div>`);
- if(!eu){
-  top.appendChild(el('p','pq','Quem é você?'));
-  const ns=el('div','nomes');for(const n of nomes){const b=el('button',null,n);b.type='button';b.setAttribute('aria-pressed','false');b.onclick=()=>setEu(n);ns.appendChild(b)}
-  top.appendChild(ns);
-  top.insertAdjacentHTML('beforeend','<div class="lid" style="margin:9px 0 0">Toque no seu nome para ver seu posto, pausa e intervalo.</div>');
- }else{
-  top.appendChild(el('p','pq',`${eu}, seu turno`));
-  const res=el('div','res'),add=(ic,k,v)=>res.insertAdjacentHTML('beforeend',`<div><i>${ic}</i><div><span>${esc(k)}</span><b>${esc(v)}</b></div></div>`);
-  let achou=false;
-  for(const sc of o.secs){const c=COR_SEC(sc.t);
-   for(const it of sc.itens){
-    if(it.tipo==='posto'&&temNome(it.v,eu)){add(it.ic||'📍','Posto',it.k+(it.v.includes('→')?' ('+it.v+')':''));achou=true}
-    else if(it.tipo==='hora'&&temNome(it.v,eu)){add(c==='pau'?'☕':c==='int'?'🍽️':'🕒',titSec(sc.t),it.k);achou=true}
-    else if(it.tipo==='lista'&&it.v.some(x=>temNome(x,eu))){add('🏠','Hoje','Folga');achou=true}
-    else if(it.tipo==='kv'){const x=it.v.find(y=>temNome(y,eu));if(x){add(/parcial/i.test(it.k)?'⏳':'🚫',it.k,x);achou=true}}
-   }}
-  if(eu===lider||o.lid.some(it=>it.v.includes(eu))){add('👤','Função','Líder do turno (ASL)');achou=true}
-  if(!achou)add('ℹ️','Hoje','Seu nome não aparece neste GBD');
-  top.appendChild(res);
-  const t=el('button','troca','Não é você? Trocar nome');t.type='button';t.onclick=()=>setEu(eu);top.appendChild(t);
- }
- box.appendChild(top);
+ if(lider){const top=el('div','eu');top.innerHTML=`<div class="av">${esc(lider.charAt(0))}</div><div><span>Líder do turno (ASL)</span><b>${esc(lider)}</b></div>`;box.appendChild(top)}
 
  for(const sc of o.secs){
   const c=COR_SEC(sc.t),g=el('div','gs '+c);
@@ -476,15 +427,15 @@ function gbdView(txt){
   for(const it of sc.itens){
    if(it.tipo==='posto'){
     if(!tiles){tiles=el('div','tiles');g.appendChild(tiles)}
-    const r=el('div','tile'+(temNome(it.v,eu)?' me':''));r.innerHTML=`<i>${esc(it.ic||'📍')}</i><span>${esc(it.k)}</span><b>${esc(it.v)}</b>`;tiles.appendChild(r);
+    const r=el('div','tile');r.innerHTML=`<i>${esc(it.ic||'📍')}</i><span>${esc(it.k)}</span><b>${esc(it.v)}</b>`;tiles.appendChild(r);
    }else if(it.tipo==='obs'){
-    const r=el('div','go');r.innerHTML=`${it.ic?`<i>${esc(it.ic)}</i>`:''}<span>${marca(it.t,eu)}</span>`;(tiles&&tiles.parentNode===g&&g.lastChild===tiles?tiles:g).appendChild(r);
+    const r=el('div','go');r.innerHTML=`${it.ic?`<i>${esc(it.ic)}</i>`:''}<span>${esc(it.t)}</span>`;(tiles&&tiles.parentNode===g&&g.lastChild===tiles?tiles:g).appendChild(r);
    }else if(it.tipo==='hora'){
-    tiles=null;const r=el('div','gt'+(temNome(it.v,eu)?' me':''));r.innerHTML=`<span class="h">${esc(it.k)}</span><b>${marca(it.v,eu)}</b>`;g.appendChild(r);
+    tiles=null;const r=el('div','gt');r.innerHTML=`<span class="h">${esc(it.k)}</span><b>${esc(it.v)}</b>`;g.appendChild(r);
    }else{
     tiles=null;
     if(it.tipo==='kv')g.appendChild(el('div','gk',it.k));
-    const ch=el('div','gch');for(const n of it.v){const sp=el('span',temNome(n,eu)?'me':null,n);ch.appendChild(sp)}g.appendChild(ch);
+    const ch=el('div','gch');for(const n of it.v){ch.appendChild(el('span',null,n))}g.appendChild(ch);
    }
   }
   box.appendChild(g);
