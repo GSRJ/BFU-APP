@@ -642,7 +642,7 @@ body.in-hub .top::before{display:none!important}
   <section class="sheet" id="sheet" aria-live="polite"></section>
 </main>
 <section class="basic" id="basic" hidden aria-live="polite"></section>
-<div class="foot-strip" aria-hidden="true"><span>Desenvolvido por AAS GERSON · versão <b id="appVer">116</b></span></div>
+<div class="foot-strip" aria-hidden="true"><span>Desenvolvido por AAS GERSON · versão <b id="appVer">117</b></span></div>
 
 <dialog id="dlg">
   <h2 id="dlgT"></h2>
@@ -1881,7 +1881,7 @@ function tweenTo(cx,cy,w){
 function focusOn(p,zoomIn){
   requestAnimationFrame(()=>{
     clampView();
-    const w=zoomIn===false?view.w:VW()*0.52*Math.max(1,(stg.w||400)/420);
+    const w=zoomIn===false?view.w:VW()*0.45*Math.max(1,(stg.w||400)/420);
     tweenTo(p.nx*VW(),p.ny*VH(),w);
   });
 }
