@@ -331,6 +331,7 @@ function cobreSSO(d){
  return null;
 }
 const CARTOES_DESDE='2026-11-26';
+const CPTM_ATE='2026-11-26'; /* rodapé da CPTM só até 25/11 */
 
 const CAFE_SLOTS_3=['15h00','15h30','16h00'];
 /* pausa de 30 minutos: os horários andam de meia em meia hora */
@@ -1052,8 +1053,7 @@ function textoGBD(k){
    L.push(`⏳ *Ausência parcial:* ${parc.map(id=>{const m=motivoParcial(id,k);return m?`${nome(id)} (${m})`:nome(id)}).join(' • ')}`);
    L.push(`↩️ _${parc.length>1?'Quando voltarem':'Quando voltar'}, a SSO define ${parc.length>1?'os postos':'o posto'} e os horários de pausa e intervalo._`);
   }}
- L.push('');
- L.push('🚆 _Operação assistida pela CPTM._');
+ if(k<CPTM_ATE){L.push('');L.push('🚆 _Operação assistida pela CPTM._');}
  return L.join('\n');
 }
 function motivoParcial(id,k){return ((S.exMotivo||{})[k+'|'+id]||'').trim()}

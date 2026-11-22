@@ -305,7 +305,7 @@ function padraoDe(fmt){
 
 /* ===================== estado ===================== */
 function estadoPadrao(){return{
- estacao:{nome:'BFU',turno:'Manhã',inicioCiclo:hojeK(),tamCiclo:0,rodape:'🚆 _Operação assistida pela CPTM._'},
+ estacao:{nome:'BFU',turno:'Manhã',inicioCiclo:hojeK(),tamCiclo:0,rodape:''},
  postos:[],prioUtil:[],prioFer:[],excedente:'',
  rodizio:{posto:'',intervalo:4,exameBloqueia:true},
  cobertura:{posto:'',separar:true},
@@ -897,7 +897,7 @@ function textoGBD(k){
    L.push(`⏳ *Ausência parcial:* ${parc.map(id=>{const m=motivoParcial(id,k);return m?`${nome(id)} (${m})`:nome(id)}).join(' • ')}`);
    if(S.rodizio.exameBloqueia)L.push(`↩️ _${parc.length>1?'Quando voltarem':'Quando voltar'}, a SSO define ${parc.length>1?'os postos':'o posto'} e os horários de pausa e intervalo._`);
   }}
- if(S.estacao.rodape){L.push('');L.push(S.estacao.rodape)}
+ if(S.estacao.rodape&&!(k>='2026-11-26'&&/CPTM/i.test(S.estacao.rodape))){L.push('');L.push(S.estacao.rodape)} /* rodapé da CPTM só até 25/11 */
  return L.join('\n');
 }
 
