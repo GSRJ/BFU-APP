@@ -67,6 +67,40 @@ pre{margin:0;padding:15px 14px;background:var(--mar);color:#E7EEF8;
 .nota{padding:10px 14px;background:#F6F9FD;border-top:1px solid var(--li);font-size:13px;line-height:1.4;color:var(--mut)}
 .nota b{color:var(--tx)}
 
+
+/* o GBD em blocos: lido do mesmo texto que vai para o WhatsApp */
+.gv{background:#fff}
+.glid{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--mar);color:#fff}
+.glid .av{flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--az);font:700 16px/1 var(--f)}
+.glid small{display:block;font-size:12.5px;color:#B9C8DD;line-height:1.2}
+.glid b{display:block;font:600 19px/1.2 var(--f)}
+.gs{padding:13px 14px 8px;border-top:1px solid #E6ECF4}
+.glid+.gs{border-top:0}
+.gs h4{margin:0 0 6px;display:flex;align-items:center;gap:8px;font:400 19px/1.2 var(--fc);color:var(--tx)}
+.gs h4 i{font-style:normal;font-size:17px;width:24px;text-align:center}
+.gp{display:grid;grid-template-columns:24px 1fr;column-gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #EEF2F8}
+.gp:last-child,.gt:last-child{border-bottom:0}
+.gp i{font-style:normal;font-size:16px;text-align:center;grid-row:span 2}
+.gp span{font-size:13px;color:var(--mut);line-height:1.2}
+.gp b{font:600 17.5px/1.25 var(--f);color:var(--tx)}
+.gt{display:flex;align-items:center;gap:12px;padding:7px 0;border-bottom:1px solid #EEF2F8}
+.gt .h{flex:none;min-width:78px;text-align:center;padding:6px 8px;border-radius:8px;background:#EDF3FE;color:var(--mar);
+ font:700 15px/1 var(--f);font-variant-numeric:tabular-nums}
+.gt b{font:600 17px/1.3 var(--f)}
+.gch{display:flex;flex-wrap:wrap;gap:6px;padding:4px 0 8px}
+.gch span{padding:6px 12px;border-radius:999px;background:#EEF2F8;font:600 15px/1.2 var(--f);color:var(--tx)}
+.gk{padding:6px 0 4px;font-size:13px;color:var(--mut)}
+.gk+.gch span{background:#FFF1E4;color:#9A3412}
+.go{display:flex;gap:6px;margin:-2px 0 6px 32px;padding:6px 9px;border-radius:7px;background:#F6F8FB;font-size:13px;line-height:1.35;color:var(--mut)}
+.go i{font-style:normal}
+.gch+.go{margin-left:0}
+.gn{display:flex;gap:8px;padding:10px 14px;border-top:1px solid #E6ECF4;font-size:13.5px;line-height:1.4;color:var(--mut)}
+.gn i{font-style:normal}
+details.wpp{border-top:1px solid var(--li)}
+details.wpp summary{padding:11px 14px;font:600 14px/1.2 var(--f);color:var(--az);cursor:pointer;list-style:none}
+details.wpp summary::-webkit-details-marker{display:none}
+details.wpp summary::before{content:"▸ ";}
+details.wpp[open] summary::before{content:"▾ ";}
 /* botões */
 .btn{background:#fff;border:1px solid var(--li);border-radius:8px;padding:7px 12px;font:600 14px/1.1 var(--f);color:var(--tx)}
 .btn:hover{border-color:var(--az);color:var(--az)}
@@ -324,7 +358,7 @@ function render(){
   h.appendChild(bc);
  }
  c.appendChild(h);
- if(dd)c.appendChild(el('pre',null,dd.txt));
+ if(dd)c.appendChild(gbdView(dd.txt));
  if(dd){
   const n=el('div','nota');
   n.innerHTML=cf
@@ -340,6 +374,65 @@ function render(){
 
 }
 
+
+/* ---------- o GBD em blocos ---------- */
+/* lê o texto do WhatsApp: cabeçalho (ASL), seções entre linhas ━, linhas "posto ▸ nomes", "hora ▸ nomes", "nome • nome" e notas em itálico */
+function gbdParse(txt){
+ const o={lid:[],secs:[],notas:[]};let cur=null,sep=false,vazia=false;
+ const limpa=x=>x.replace(/\*/g,'').replace(/^_+|_+$/g,'').trim();
+ const ic=l=>{const m=l.match(/^(\S+)\s+(.*)$/u);return m&&!/[0-9A-Za-zÀ-ú*_]/.test(m[1])?[m[1],m[2]]:['',l]};
+ for(const raw of String(txt||'').split('\n')){
+  const l=raw.trim();
+  if(!l){vazia=true;continue}
+  if(/^━+$/.test(l)){sep=true;vazia=false;continue}
+  const [e,r]=ic(l);
+  let m=r.match(/^\*([^*]+)\*$/);
+  if(m&&sep&&!/:$/.test(m[1])){cur={ic:e,t:m[1],itens:[]};o.secs.push(cur);sep=false;continue}
+  sep=false;
+  if(!cur&&m)continue;                                   /* título e data: já estão no cabeçalho do cartão */
+  /* nota logo abaixo de um item fica junto dele; depois de uma linha em branco, vai para o rodapé */
+  if(/^_.*_$/.test(r)){if(cur&&!vazia)cur.itens.push({tipo:'obs',ic:e,t:limpa(r)});else o.notas.push({ic:e,t:limpa(r)});vazia=false;continue}
+  vazia=false;
+  m=r.match(/^\*([^*]+?):\*\s*(.*)$/);
+  if(m){const it={tipo:'kv',k:m[1],v:m[2].split(/\s*•\s*/).map(limpa).filter(Boolean)};
+   if(!cur&&/^ASL$/i.test(m[1]))o.lid.push(it);else if(cur)cur.itens.push(it);else o.lid.push(it);continue}
+  const sp=r.split('▸');
+  if(sp.length>1){const k=limpa(sp[0]),v=limpa(sp.slice(1).join('▸'));
+   const it=/^\d{1,2}h/.test(k)?{tipo:'hora',k,v}:{tipo:'posto',ic:e,k,v};
+   if(cur)cur.itens.push(it);continue}
+  if(cur){cur.itens.push({tipo:'lista',v:limpa(l).split(/\s*•\s*/).filter(Boolean)});continue}
+  o.notas.push({ic:e,t:limpa(r)});
+ }
+ return o;
+}
+const titSec=t=>{t=t.toLowerCase();return t.charAt(0).toUpperCase()+t.slice(1)};
+function gbdView(txt){
+ const o=gbdParse(txt),box=el('div','gv');
+ const nItens=o.secs.reduce((n,s)=>n+s.itens.length,0);
+ if(!o.secs.length||!nItens){box.appendChild(el('pre',null,txt));return box}
+ for(const it of o.lid){
+  const d=el('div','glid'),nome=it.v.join(', ');
+  d.innerHTML=`<div class="av">${esc((nome||'?').charAt(0))}</div><div><small>${esc(/^ASL$/i.test(it.k)?'Líder do turno (ASL)':it.k)}</small><b>${esc(nome)}</b></div>`;
+  box.appendChild(d);
+ }
+ for(const s of o.secs){
+  const g=el('div','gs');
+  g.innerHTML=`<h4>${s.ic?`<i>${esc(s.ic)}</i>`:''}${esc(titSec(s.t))}</h4>`;
+  for(const it of s.itens){
+   if(it.tipo==='posto'){const r=el('div','gp');r.innerHTML=`<i>${esc(it.ic||'•')}</i><span>${esc(it.k)}</span><b>${esc(it.v)}</b>`;g.appendChild(r)}
+   else if(it.tipo==='obs'){const r=el('div','go');r.innerHTML=`${it.ic?`<i>${esc(it.ic)}</i>`:''}<span>${esc(it.t)}</span>`;g.appendChild(r)}
+   else if(it.tipo==='hora'){const r=el('div','gt');r.innerHTML=`<span class="h">${esc(it.k)}</span><b>${esc(it.v)}</b>`;g.appendChild(r)}
+   else{
+    if(it.tipo==='kv')g.appendChild(el('div','gk',it.k));
+    const c=el('div','gch');for(const n of it.v)c.appendChild(el('span',null,n));g.appendChild(c);
+   }
+  }
+  box.appendChild(g);
+ }
+ for(const n of o.notas){const d=el('div','gn');d.innerHTML=`${n.ic?`<i>${esc(n.ic)}</i>`:''}<span>${esc(n.t)}</span>`;box.appendChild(d)}
+ const det=el('details','wpp');det.appendChild(el('summary',null,'Ver o texto do WhatsApp'));det.appendChild(el('pre',null,txt));box.appendChild(det);
+ return box;
+}
 function voltarEscolha(){
  if(typeof IN_FRAME!=='undefined'&&IN_FRAME){goHub();return}
  turno=null;verDia=null;render();
