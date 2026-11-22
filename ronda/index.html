@@ -642,7 +642,7 @@ body.in-hub .top::before{display:none!important}
   <section class="sheet" id="sheet" aria-live="polite"></section>
 </main>
 <section class="basic" id="basic" hidden aria-live="polite"></section>
-<div class="foot-strip" aria-hidden="true"><span>Desenvolvido por AAS GERSON · versão <b id="appVer">115</b></span></div>
+<div class="foot-strip" aria-hidden="true"><span>Desenvolvido por AAS GERSON · versão <b id="appVer">116</b></span></div>
 
 <dialog id="dlg">
   <h2 id="dlgT"></h2>
@@ -1881,7 +1881,7 @@ function tweenTo(cx,cy,w){
 function focusOn(p,zoomIn){
   requestAnimationFrame(()=>{
     clampView();
-    const w=zoomIn===false?view.w:VW()*0.62*Math.max(1,(stg.w||400)/420);
+    const w=zoomIn===false?view.w:VW()*0.52*Math.max(1,(stg.w||400)/420);
     tweenTo(p.nx*VW(),p.ny*VH(),w);
   });
 }
@@ -3448,7 +3448,7 @@ const LOC_NOUN={'Extintores':'os extintores','Hidrantes':'os hidrantes','Sanitá
 let loc=null;
 async function locCfg(k){
   if(k===KIND)return cfg;
-  try{const c=await kvGet(k==='mez'?'config':'config-'+k);if(c&&Array.isArray(c.points)){c.points.forEach(q=>{if(q.area==='A_TEC')q.area=A_TEC;});return fixOutro(c);}}catch(_){}
+  try{const c=await kvGet(k==='mez'?'config':'config-'+k);if(c&&Array.isArray(c.points)){c.points.forEach(q=>{if(q.area==='A_TEC')q.area=A_TEC;});fixOutro(c);return await cfgMigrada(k,c);}}catch(_){}
   return null;
 }
 async function openLoc(q){
@@ -3950,7 +3950,7 @@ function plNomeCurto(p){
 
 async function plCfg(k){
   if(k===KIND)return cfg;
-  try{const c=await kvGet(k==='mez'?'config':'config-'+k);if(c&&Array.isArray(c.points)){c.points.forEach(q=>{if(q.area==='A_TEC')q.area=A_TEC;});fixOutro(c);applyLoc(c,k);return c;}}catch(_){}
+  try{const c=await kvGet(k==='mez'?'config':'config-'+k);if(c&&Array.isArray(c.points)){c.points.forEach(q=>{if(q.area==='A_TEC')q.area=A_TEC;});fixOutro(c);const m=await cfgMigrada(k,c);if(m)applyLoc(m,k);return m;}}catch(_){}
   return null;
 }
 async function renderPl(keep){
@@ -4065,19 +4065,8 @@ window.addEventListener('keydown',e=>{
 if(window.ResizeObserver){let rw=0,rh=0,rt=null;new ResizeObserver(en=>{const r=en[0].contentRect;if(Math.abs(r.width-rw)<40&&Math.abs(r.height-rh)<40)return;rw=r.width;rh=r.height;clearTimeout(rt);rt=setTimeout(()=>{try{if(!sel&&mode!=='edit'&&!placing&&!(typeof expanded!=='undefined'&&expanded))fitAll();}catch(_){}},120);}).observe(document.getElementById('stage'));}
 /* ---------- início ---------- */
 document.body.classList.add('boot');setTimeout(()=>document.body.classList.remove('boot'),1600);
-(async function init(){
-  try{
-    let kd=await kvGet('kind');
-    if(kd&&PLATS[kd]&&!(await kvGet('autostart'))){
-      /* tela inicial é sempre a planta do Mezanino, a menos que haja ronda detalhada em andamento na plataforma */
-      const r=await kvGet('ronda-'+kd);
-      const prog=r&&((r.extras&&r.extras.length)||Object.keys(r.results||{}).length);
-      if(!prog){kd='mez';await kvSet('kind','mez');}
-    }
-    if(kd&&PLATS[kd]){setKind(kd);cfg=defaultConfig();}
-    const c=await kvGet(cfgKey());let fresh=false;
-    if(c&&c.ver===3&&!c.bg){const d=defaultConfig();c.points.forEach(q=>{const z=d.points.find(v=>v.id===q.id);if(z&&z.box&&!q.box)q.box=z.box;});c.ver=CFG_VER;scheduleSave();}
-    if(c&&Array.isArray(c.points)&&(c.ver===CFG_VER||c.bg))cfg=c;else fresh=true;
+/* atualiza a planta salva no celular (itens novos, nomes, ordem): usada ao abrir a planta e ao ver plantas de outras áreas */
+function migraCfg(sv){
     if(!cfg.bg&&(cfg.route||0)<8){
       cfg.points.forEach(q=>{
         const m=/^m(\d+)$/.exec(q.id);if(m&&DEFAULT_POINTS[+m[1]-1])q.o=DEFAULT_POINTS[+m[1]-1][0];
@@ -4085,13 +4074,13 @@ document.body.classList.add('boot');setTimeout(()=>document.body.classList.remov
         const fo=frontOverride(baseName(q),q.nx);if(fo!=null)q.rs=fo;
         if(/Caixa eletrônico 24h – (junto ao bloqueio 15|após o Vão 05)/.test(q.name)&&q.rs==null)q.rs=CAIXA_RS;
       });
-      cfg.points=renameKiosks(sortByRoute(cfg.points));cfg.route=8;scheduleSave();}
+      cfg.points=renameKiosks(sortByRoute(cfg.points));cfg.route=8;sv();}
     if(!cfg.bg&&(cfg.route||0)<9){
       cfg.points.forEach(q=>{
         const m=/^m(\d+)$/.exec(q.id);if(m&&DEFAULT_POINTS[+m[1]-1])q.o=DEFAULT_POINTS[+m[1]-1][0];
         if(/^Caixa eletrônico 24h – (junto ao bloqueio 15|após o Vão 05)/.test(q.name)){q.name=q.o='Caixa eletrônico 24h – após o Vão 05';if(q.rs==null)q.rs=CAIXA_RS;}
       });
-      cfg.points=renameKiosks(sortByRoute(cfg.points));cfg.route=9;scheduleSave();}
+      cfg.points=renameKiosks(sortByRoute(cfg.points));cfg.route=9;sv();}
     if(!cfg.bg&&(cfg.route||0)<10){
       const dc=defaultConfig().points;
       cfg.points.forEach(q=>{
@@ -4102,7 +4091,7 @@ document.body.classList.add('boot');setTimeout(()=>document.body.classList.remov
         }
       });
       dc.filter(d=>/^Escada rolante 3[13]$/.test(d.name)&&!cfg.points.some(q=>q.id===d.id)).forEach(d=>cfg.points.push(Object.assign({},d)));
-      cfg.points=renameKiosks(sortByRoute(cfg.points));cfg.route=10;scheduleSave();}
+      cfg.points=renameKiosks(sortByRoute(cfg.points));cfg.route=10;sv();}
     if(!cfg.bg&&(cfg.route||0)<11){
       const dc=defaultConfig().points;
       const OLD={'Bloqueios 01 a 15 (base)':1,'Bloqueios 55 a 66 (lado esquerdo, parte baixa)':1,'Bloqueios 40 a 54 (lado esquerdo, parte alta)':1,
@@ -4116,12 +4105,12 @@ document.body.classList.add('boot');setTimeout(()=>document.body.classList.remov
         if(d.where&&!q.where)q.where=d.where;
       });
       dc.filter(d=>/^Escada rolante 0[247]$/.test(d.o)&&!cfg.points.some(q=>q.id===d.id)).forEach(d=>cfg.points.push(Object.assign({},d)));
-      cfg.points=renameKiosks(sortByRoute(cfg.points));cfg.route=11;scheduleSave();}
+      cfg.points=renameKiosks(sortByRoute(cfg.points));cfg.route=11;sv();}
     if(!cfg.bg&&(cfg.route||0)<12){
       const dc=defaultConfig().points;
       cfg.points.forEach(q=>{if(noPlat(q.name)==='Escadas rolantes 34 e 40'){const d=dc.find(z=>z.id===q.id);if(d){q.name=withPlat('Escada rolante 34');q.o='Escada rolante 34';q.nx=d.nx;q.ny=d.ny;}}});
       dc.filter(d=>d.o==='Escada rolante 40'&&!cfg.points.some(q=>q.id===d.id)).forEach(d=>cfg.points.push(Object.assign({},d)));
-      cfg.points=renameKiosks(sortByRoute(cfg.points));cfg.route=12;scheduleSave();}
+      cfg.points=renameKiosks(sortByRoute(cfg.points));cfg.route=12;sv();}
     if(!cfg.bg&&(cfg.route||0)<13){
       const dc=defaultConfig().points,ids=new Set(dc.filter(d=>/^c/.test(d.id)||/^m(59|6\d)$/.test(d.id)||(DEFAULT_POS[d.id]!=null)||(DEFAULT_NAME[d.id]!=null)).map(d=>d.id));
       cfg.points=cfg.points.filter(q=>!DEFAULT_REMOVED.includes(q.id)&&!(OLD_EXTRA_KIOSKS.includes(q.id)));
@@ -4131,43 +4120,39 @@ document.body.classList.add('boot');setTimeout(()=>document.body.classList.remov
         if(!q){cfg.points.push(Object.assign({},d));return;}
         q.nx=d.nx;q.ny=d.ny;q.name=d.name;q.area=d.area;if(d.type)q.type=d.type;
       });
-      cfg.points=renameKiosks(sortByRoute(cfg.points));cfg.route=13;scheduleSave();}
-    if(!cfg.bg&&(cfg.route||0)<14){cfg.points=renameKiosks(sortByRoute(cfg.points));cfg.route=14;scheduleSave();}
+      cfg.points=renameKiosks(sortByRoute(cfg.points));cfg.route=13;sv();}
+    if(!cfg.bg&&(cfg.route||0)<14){cfg.points=renameKiosks(sortByRoute(cfg.points));cfg.route=14;sv();}
     if(!cfg.bg&&(cfg.route||0)<15){
       defaultConfig().points.filter(d=>['cmw2sqov4','cmw2sr35a','cmw2sr531','cmw2st62l'].includes(d.id)).forEach(d=>{
         const q=cfg.points.find(z=>z.id===d.id);
         if(!q)cfg.points.push(Object.assign({},d));else{q.nx=d.nx;q.ny=d.ny;q.name=d.name;q.area=d.area;q.type=d.type;}
       });
-      cfg.points=renameKiosks(sortByRoute(cfg.points));cfg.route=15;scheduleSave();}
+      cfg.points=renameKiosks(sortByRoute(cfg.points));cfg.route=15;sv();}
     if(KIND==='mez'&&!cfg.bg&&(cfg.route||0)<16){
       defaultConfig().points.filter(d=>['cmwgpdvdh','cmwgpjy5a'].includes(d.id)).forEach(d=>{if(!cfg.points.some(z=>z.id===d.id))cfg.points.push(Object.assign({},d));});
-      cfg.points=renameKiosks(sortByRoute(cfg.points));cfg.route=16;scheduleSave();}
-    if(KIND==='mez'&&!cfg.bg&&(cfg.route||0)<17){cfg.points=renameKiosks(sortByRoute(cfg.points));cfg.route=17;scheduleSave();}
-    if(KIND==='mez'&&!cfg.bg&&(cfg.route||0)<18){cfg.points=renameKiosks(sortByRoute(mezFix(cfg.points)));cfg.route=18;scheduleSave();}
-    if(KIND==='mez'&&!cfg.bg&&(cfg.route||0)<19){cfg.points=renameKiosks(sortByRoute(mezFix(cfg.points)));cfg.route=19;scheduleSave();}
+      cfg.points=renameKiosks(sortByRoute(cfg.points));cfg.route=16;sv();}
+    if(KIND==='mez'&&!cfg.bg&&(cfg.route||0)<17){cfg.points=renameKiosks(sortByRoute(cfg.points));cfg.route=17;sv();}
+    if(KIND==='mez'&&!cfg.bg&&(cfg.route||0)<18){cfg.points=renameKiosks(sortByRoute(mezFix(cfg.points)));cfg.route=18;sv();}
+    if(KIND==='mez'&&!cfg.bg&&(cfg.route||0)<19){cfg.points=renameKiosks(sortByRoute(mezFix(cfg.points)));cfg.route=19;sv();}
     /* 22/11: dois painéis, o totem externo e o nome do Quiosque Casa de Bolos, também para quem já tem a planta salva */
-    if(KIND==='mez'&&!cfg.bg&&(cfg.route||0)<20){cfg.points=mezFix(cfg.points);cfg.route=20;scheduleSave();}
+    if(KIND==='mez'&&!cfg.bg&&(cfg.route||0)<20){cfg.points=mezFix(cfg.points);cfg.route=20;sv();}
     /* reordena pela sequência da ronda: itens novos não ficam no fim da numeração */
-    if(KIND==='mez'&&!cfg.bg&&(cfg.route||0)<21){cfg.points=sortByRoute(cfg.points);cfg.route=21;scheduleSave();}
+    if(KIND==='mez'&&!cfg.bg&&(cfg.route||0)<21){cfg.points=sortByRoute(cfg.points);cfg.route=21;sv();}
     if(KIND!=='mez')cfg.points.forEach(q=>{if(q.area==='A_TEC')q.area=A_TEC;});
     fixOutro(cfg);
-    if(KIND!=='mez'&&(cfg.route||0)<101){cfg=(KIND==='p78')?defaultConfig():Object.assign(cfg,{points:sortByRoute(cfg.points),route:101});scheduleSave();}
-    if(KIND==='p78'&&!cfg.bg&&(cfg.route||0)<102){cfg.points=sortByRoute(cfg.points);cfg.route=102;scheduleSave();}
-    if(KIND!=='mez'&&!cfg.bg&&(cfg.route||0)<103){cfg.points=sortByRoute(cfg.points);cfg.route=103;scheduleSave();}
-    if(KIND==='p78'&&!cfg.bg&&(cfg.route||0)<104){const d=defaultConfig();const pg=d.points.find(z=>z.id==='cmwjdwmmk');if(pg&&!cfg.points.some(z=>z.id==='cmwjdwmmk'))cfg.points.push(Object.assign({where:'no corredor das salas técnicas'},pg));cfg.shapes=(d.shapes||[]).map(x=>Object.assign({},x));cfg.points=sortByRoute(cfg.points);cfg.route=104;scheduleSave();}
-    if(KIND!=='mez'&&!cfg.bg&&(cfg.route||0)<104){cfg.route=104;scheduleSave();}
+    if(KIND!=='mez'&&(cfg.route||0)<101){cfg=(KIND==='p78')?defaultConfig():Object.assign(cfg,{points:sortByRoute(cfg.points),route:101});sv();}
+    if(KIND==='p78'&&!cfg.bg&&(cfg.route||0)<102){cfg.points=sortByRoute(cfg.points);cfg.route=102;sv();}
+    if(KIND!=='mez'&&!cfg.bg&&(cfg.route||0)<103){cfg.points=sortByRoute(cfg.points);cfg.route=103;sv();}
+    if(KIND==='p78'&&!cfg.bg&&(cfg.route||0)<104){const d=defaultConfig();const pg=d.points.find(z=>z.id==='cmwjdwmmk');if(pg&&!cfg.points.some(z=>z.id==='cmwjdwmmk'))cfg.points.push(Object.assign({where:'no corredor das salas técnicas'},pg));cfg.shapes=(d.shapes||[]).map(x=>Object.assign({},x));cfg.points=sortByRoute(cfg.points);cfg.route=104;sv();}
+    if(KIND!=='mez'&&!cfg.bg&&(cfg.route||0)<104){cfg.route=104;sv();}
     /* 22/11: novos itens na 9/10 e ajustes, aplicados também a quem já tem a planta salva no celular */
     if(KIND==='p910'&&!cfg.bg&&(cfg.route||0)<105){const d=defaultConfig(),dm={};d.points.forEach(z=>dm[z.id]=z);
       ['cmws64ztm','cmws65hiz','cmws66xlk','cmws68b9c'].forEach(id=>{if(dm[id]&&!cfg.points.some(z=>z.id===id))cfg.points.push(Object.assign({},dm[id]));});
       ['p910-12','p910-16'].forEach(id=>{const q=cfg.points.find(z=>z.id===id);if(q&&dm[id]){q.nx=dm[id].nx;q.ny=dm[id].ny;delete q.where;}});
       {const q=cfg.points.find(z=>z.id==='p910-19');if(q){q.o=q.name='Botão de atendimento 02';q.area=TYPE_AREA.botao;q.type='botao';}}
-      cfg.route=105;scheduleSave();}
-    if(KIND==='p78'&&!cfg.bg&&(cfg.route||0)<105){cfg.route=105;scheduleSave();}
-    if(KIND!=='mez'&&!cfg.bg&&(cfg.route||0)<106){cfg.points=sortByRoute(cfg.points);cfg.route=106;scheduleSave();}
-    const rr=await kvGet(rondaKey());if(rr&&rr.meta)ronda=Object.assign(newRonda(),rr,{meta:Object.assign(newRonda().meta,rr.meta)});
-    if(fresh&&c){ronda.results={};ronda.extras=[];scheduleSave();}
-    ronda.meta.tipo=KIND;
-    const cy=await kvGet('carry');if(cy){if(cy.data&&ronda.meta.data&&ronda.meta.data!==cy.data){ronda=newRonda();}ronda.meta.tipo=KIND;Object.assign(ronda.meta,cy);await kvSet('carry',null);scheduleSave();}
+      cfg.route=105;sv();}
+    if(KIND==='p78'&&!cfg.bg&&(cfg.route||0)<105){cfg.route=105;sv();}
+    if(KIND!=='mez'&&!cfg.bg&&(cfg.route||0)<106){cfg.points=sortByRoute(cfg.points);cfg.route=106;sv();}
     if(!cfg.bg&&cfg.merge!==2){
       /* desfaz a fusão antiga: devolve as escadas fixas como pontos próprios */
       const dc=defaultConfig().points;
@@ -4177,8 +4162,31 @@ document.body.classList.add('boot');setTimeout(()=>document.body.classList.remov
         if(k&&dk){k.name=dk.name;k.nx=dk.nx;k.ny=dk.ny;}
         if(dd&&!cfg.points.some(q=>baseName(q)===m.drop))cfg.points.push(Object.assign({},dd));
       }
-      cfg.points=renameKiosks(sortByRoute(cfg.points));cfg.merge=2;scheduleSave();
+      cfg.points=renameKiosks(sortByRoute(cfg.points));cfg.merge=2;sv();
     }
+}
+async function cfgMigrada(k,c){
+  if(!c||c.bg)return c;if(c.ver!==CFG_VER)return null;
+  try{return await withArea(k,c,newRonda(),async()=>{migraCfg(()=>{});return cfg;});}catch(_){return c;}
+}
+(async function init(){
+  try{
+    let kd=await kvGet('kind');
+    if(kd&&PLATS[kd]&&!(await kvGet('autostart'))){
+      /* tela inicial é sempre a planta do Mezanino, a menos que haja ronda detalhada em andamento na plataforma */
+      const r=await kvGet('ronda-'+kd);
+      const prog=r&&((r.extras&&r.extras.length)||Object.keys(r.results||{}).length);
+      if(!prog){kd='mez';await kvSet('kind','mez');}
+    }
+    if(kd&&PLATS[kd]){setKind(kd);cfg=defaultConfig();}
+    const c=await kvGet(cfgKey());let fresh=false;
+    if(c&&c.ver===3&&!c.bg){const d=defaultConfig();c.points.forEach(q=>{const z=d.points.find(v=>v.id===q.id);if(z&&z.box&&!q.box)q.box=z.box;});c.ver=CFG_VER;scheduleSave();}
+    if(c&&Array.isArray(c.points)&&(c.ver===CFG_VER||c.bg))cfg=c;else fresh=true;
+    migraCfg(scheduleSave);
+    const rr=await kvGet(rondaKey());if(rr&&rr.meta)ronda=Object.assign(newRonda(),rr,{meta:Object.assign(newRonda().meta,rr.meta)});
+    if(fresh&&c){ronda.results={};ronda.extras=[];scheduleSave();}
+    ronda.meta.tipo=KIND;
+    const cy=await kvGet('carry');if(cy){if(cy.data&&ronda.meta.data&&ronda.meta.data!==cy.data){ronda=newRonda();}ronda.meta.tipo=KIND;Object.assign(ronda.meta,cy);await kvSet('carry',null);scheduleSave();}
     if(applyLoc(cfg,KIND))scheduleSave();
     setSaved('Salvamento automático');
   }catch(e){setSaved('Sem salvamento neste navegador');}
