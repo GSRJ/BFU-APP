@@ -1079,7 +1079,7 @@ function defaultConfig(){
   if(KIND!=='mez')return platDefaultConfig(KIND);
   const base=DEFAULT_POINTS.map((p,i)=>{const id='m'+(i+1);if(DEFAULT_REMOVED.includes(id))return null;const pos=DEFAULT_POS[id]||[p[2],p[3]];const o={id,o:p[0],name:DEFAULT_NAME[id]||withPlat(p[0]),area:p[1],nx:pos[0]/1527,ny:pos[1]/1990};if(p[0]==='Caixa eletrônico 24h')o.rs=CAIXA_RS;{const fo=frontOverride(p[0],o.nx);if(fo!=null)o.rs=fo;}{const w=DEFAULT_WHERE[p[0]];if(w)o.where=w;}if(p[4])o.box=[p[4][0]/1527,p[4][1]/1990,p[4][2]/1527,p[4][3]/1990];return o;}).filter(Boolean);
   const ext=DEFAULT_EXTRA.map(e=>{return {id:e[0],name:e[1],area:TYPE_AREA[e[2]],type:e[2],nx:e[3]/1527,ny:e[4]/1990};});
-  return {ver:CFG_VER,route:20,merge:2,bg:null,points:renameKiosks(sortByRoute(mezFix(base.concat(ext))))};
+  return {ver:CFG_VER,route:21,merge:2,bg:null,points:renameKiosks(sortByRoute(mezFix(base.concat(ext))))};
 }
 const TERMO_TXT='Declaro que as informações registradas nesta ronda são verdadeiras e correspondem ao que verifiquei pessoalmente.';
 const dtFull=iso=>{if(!iso)return '';const d=new Date(iso);return isNaN(d)?'':fmtDate(d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()))+' às '+pad(d.getHours())+':'+pad(d.getMinutes());};
@@ -1195,7 +1195,7 @@ function platDefaultConfig(k){
     if(it[4])o.box=[it[4][0]/P.w,it[4][1]/P.h,it[4][2]/P.w,it[4][3]/P.h];
     return o;
   });
-  const c={ver:CFG_VER,route:105,merge:2,bg:null,points:sortByRoute(pts)};
+  const c={ver:CFG_VER,route:106,merge:2,bg:null,points:sortByRoute(pts)};
   if(P.shapes)c.shapes=P.shapes.map(x=>Object.assign({},x));
   return c;
 }
@@ -3937,6 +3937,8 @@ document.body.classList.add('boot');setTimeout(()=>document.body.classList.remov
     if(KIND==='mez'&&!cfg.bg&&(cfg.route||0)<19){cfg.points=renameKiosks(sortByRoute(mezFix(cfg.points)));cfg.route=19;scheduleSave();}
     /* 22/11: dois painéis, o totem externo e o nome do Quiosque Casa de Bolos, também para quem já tem a planta salva */
     if(KIND==='mez'&&!cfg.bg&&(cfg.route||0)<20){cfg.points=mezFix(cfg.points);cfg.route=20;scheduleSave();}
+    /* reordena pela sequência da ronda: itens novos não ficam no fim da numeração */
+    if(KIND==='mez'&&!cfg.bg&&(cfg.route||0)<21){cfg.points=sortByRoute(cfg.points);cfg.route=21;scheduleSave();}
     if(KIND!=='mez')cfg.points.forEach(q=>{if(q.area==='A_TEC')q.area=A_TEC;});
     fixOutro(cfg);
     if(KIND!=='mez'&&(cfg.route||0)<101){cfg=(KIND==='p78')?defaultConfig():Object.assign(cfg,{points:sortByRoute(cfg.points),route:101});scheduleSave();}
@@ -3951,6 +3953,7 @@ document.body.classList.add('boot');setTimeout(()=>document.body.classList.remov
       {const q=cfg.points.find(z=>z.id==='p910-19');if(q){q.o=q.name='Botão de atendimento 02';q.area=TYPE_AREA.botao;q.type='botao';}}
       cfg.route=105;scheduleSave();}
     if(KIND==='p78'&&!cfg.bg&&(cfg.route||0)<105){cfg.route=105;scheduleSave();}
+    if(KIND!=='mez'&&!cfg.bg&&(cfg.route||0)<106){cfg.points=sortByRoute(cfg.points);cfg.route=106;scheduleSave();}
     const rr=await kvGet(rondaKey());if(rr&&rr.meta)ronda=Object.assign(newRonda(),rr,{meta:Object.assign(newRonda().meta,rr.meta)});
     if(fresh&&c){ronda.results={};ronda.extras=[];scheduleSave();}
     ronda.meta.tipo=KIND;
