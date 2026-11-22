@@ -642,7 +642,7 @@ body.in-hub .top::before{display:none!important}
   <section class="sheet" id="sheet" aria-live="polite"></section>
 </main>
 <section class="basic" id="basic" hidden aria-live="polite"></section>
-<div class="foot-strip" aria-hidden="true"><span>Desenvolvido por AAS GERSON · versão <b id="appVer">118</b></span></div>
+<div class="foot-strip" aria-hidden="true"><span>Desenvolvido por AAS GERSON · versão <b id="appVer">119</b></span></div>
 
 <dialog id="dlg">
   <h2 id="dlgT"></h2>
@@ -1725,9 +1725,10 @@ const ICON={
 /* desenho do item dentro do quadrado do ponto (k = tipo, c = cor) */
 const iconSVG=(k,c,s)=>ICON[k]?`<g transform="scale(${s||1})">${ICON[k](c)}</g>`:'';
 /* planta inicial: só os desenhos dos itens (sem nomes); o item selecionado ganha destaque */
-function homeIcons(P,k){
+/* todos = true na Planta da estação: escadas, elevadores, quiosques, vãos etc. também ganham ícone, como na ronda */
+function homeIcons(P,k,todos){
   return allPoints().filter(p=>!p.custom).map(p=>{
-    const ty=typeOf(p),on=p.id===sel;
+    const ty=todos?tipoVisual(p):typeOf(p),on=p.id===sel;
     if(!ty){return on?`<g transform="translate(${(p.nx*VW()).toFixed(1)} ${(p.ny*VH()).toFixed(1)}) scale(${k.toFixed(4)})" pointer-events="none"><circle r="26" fill="none" stroke="${P.sel}" stroke-width="5"/></g>`:'';}
     const st=statusOf(p),bg=st==='ok'?P.ok:st==='problema'?P.bad:on?ty.c:'#fff',fg=(st==='ok'||st==='problema'||on)?'#fff':ty.c;
     return `<g transform="translate(${(p.nx*VW()).toFixed(1)} ${(p.ny*VH()).toFixed(1)}) scale(${(k*(on?1:.62)).toFixed(4)})" pointer-events="none"><rect x="-15" y="-15" width="30" height="30" rx="8" fill="${bg}" stroke="${on?P.sel:ty.c}" stroke-width="${on?3.5:2.4}"/>${iconSVG(ty.k,fg,.95)}</g>`;
@@ -3929,9 +3930,13 @@ const PL_BASE_LEG=[
  ['<rect x="3" y="3" width="24" height="24" fill="none" stroke="#4A3F35" stroke-width="3"/>','Pilar / sala']
 ];
 function plLegend(){
-  const used=new Set(cfg.points.map(q=>q.type).filter(Boolean));
-  let h='<h3>Legenda</h3><div class="lgg">'+PL_BASE_LEG.map(x=>`<div class="lgi"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">${x[0]}</svg>${x[1]}</div>`).join('');
-  TYPES.filter(t=>used.has(t.k)&&ICON[t.k]).forEach(t=>{h+=`<div class="lgi"><svg width="30" height="30" viewBox="-15 -15 30 30" aria-hidden="true"><rect x="-14" y="-14" width="28" height="28" rx="7" fill="#fff" stroke="${t.c}" stroke-width="2.2"/>${iconSVG(t.k,t.c,.88)}</svg>${esc(t.n)}</div>`;});
+  /* ícones dos itens; quando a planta também tem desenho do mesmo item (escada, elevador…), os dois ficam na mesma linha */
+  const vis=[],vk=new Set();allPoints().filter(p=>!p.custom).forEach(p=>{const t=tipoVisual(p);if(t&&ICON[t.k]&&!vk.has(t.k)){vk.add(t.k);vis.push(t);}});
+  const ico=t=>`<svg width="30" height="30" viewBox="-15 -15 30 30" aria-hidden="true"><rect x="-14" y="-14" width="28" height="28" rx="7" fill="#fff" stroke="${t.c}" stroke-width="2.2"/>${iconSVG(t.k,t.c,.88)}</svg>`;
+  const nm=x=>String(x).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s*\(.*$/,'').trim(),usados=new Set();
+  let h='<h3>Legenda</h3><div class="lgg">'+PL_BASE_LEG.map(x=>{const t=vis.find(v=>!usados.has(v.k)&&nm(v.n)===nm(x[1]));if(t)usados.add(t.k);
+    return `<div class="lgi"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">${x[0]}</svg>${t?ico(t):''}${x[1]}</div>`;}).join('');
+  vis.filter(t=>!usados.has(t.k)).forEach(t=>{h+=`<div class="lgi">${ico(t)}${esc(t.n)}</div>`;});
   return h+'</div><p class="mut" style="font-size:12px;margin:8px 0 0">Rótulos: Q = quiosque, ER = escada rolante, EF = escada fixa e EL = elevador.</p>';
 }
 function plNomeCurto(p){
@@ -3961,7 +3966,7 @@ async function renderPl(keep){
     const P=cssPal(),Wd=VW(),Hd=VH(),B=planBounds(),y0=Math.min(B.y0,KIND==='mez'?-10:B.y0);
     let base=cfg.bg?`<image href="${cfg.bg.d}" width="${Wd}" height="${Hd}" preserveAspectRatio="none"/>`:basePlan(P);
     base=base.replace(/id="([^"]+)"/g,'id="V_$1"').replace(/url\(#([^)]+)\)/g,'url(#V_$1)');
-    const kk=Wd/430*(plZ>=2?1.6/plZ:1);const sv=sel;sel=null;const ic=homeIcons(P,kk);sel=sv;
+    const kk=Wd/430*(plZ>=2?1.6/plZ:1);const sv=sel;sel=null;const ic=homeIcons(P,kk,true);sel=sv;
     const pts=allPoints().filter(p=>!p.custom),vh=B.h+B.y0-y0,w=$('#plWrap'),sc=Math.min(w.clientWidth*plZ/B.w,w.clientHeight*plZ/vh);
     plPoints=pts.map(p=>({id:String(p.id),name:p.name,nx:p.nx,ny:p.ny}));plDims={w:Wd,h:Hd};
     /* no computador, mostra sempre rótulos curtos; no celular, mostra ao ampliar */
