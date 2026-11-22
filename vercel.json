@@ -1,0 +1,11 @@
+{
+  "redirects": [
+    { "source": "/montador-dc199c01e878", "destination": "/montador/", "permanent": true },
+    { "source": "/montador-dc199c01e878/:path*", "destination": "/montador/:path*", "permanent": true },
+    { "source": "/criador-32daa622295e", "destination": "/criador/", "permanent": true },
+    { "source": "/criador-32daa622295e/:path*", "destination": "/criador/:path*", "permanent": true }
+  ],
+  "headers": [
+    { "source": "/(montador|criador)/(.*)", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] }
+  ]
+}
