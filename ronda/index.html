@@ -642,7 +642,7 @@ body.in-hub .top::before{display:none!important}
   <section class="sheet" id="sheet" aria-live="polite"></section>
 </main>
 <section class="basic" id="basic" hidden aria-live="polite"></section>
-<div class="foot-strip" aria-hidden="true"><span>Desenvolvido por AAS GERSON · versão <b id="appVer">113</b></span></div>
+<div class="foot-strip" aria-hidden="true"><span>Desenvolvido por AAS GERSON · versão <b id="appVer">114</b></span></div>
 
 <dialog id="dlg">
   <h2 id="dlgT"></h2>
@@ -1835,15 +1835,23 @@ function applyView(){
   clampView();
   const svg=$('#svg');if(!svg)return;
   const vh=view.w*stg.h/stg.w;
-  svg.setAttribute('viewBox',`${(view.cx-view.w/2).toFixed(2)} ${(view.cy-vh/2).toFixed(2)} ${view.w.toFixed(2)} ${vh.toFixed(2)}`);
+  /* canto da vista em pixel inteiro da tela: menos faixas mal redesenhadas no Chrome do Android */
+  const u=view.w/(stg.w||1),x0=Math.round((view.cx-view.w/2)/u)*u,y0=Math.round((view.cy-vh/2)/u)*u;
+  svg.setAttribute('viewBox',`${x0.toFixed(3)} ${y0.toFixed(3)} ${view.w.toFixed(3)} ${vh.toFixed(3)}`);
+  limpaTela();
   const k=view.w/stg.w*(COARSE?0.8:0.85);
   if(!pinK||Math.abs(k-pinK)/pinK>0.015)redesenhaPins();
 }
 /* refazer os 99 ícones a cada quadro do zoom pesava no celular e deixava rastros na planta: no máximo a cada 90 ms, com um redesenho final */
 function redesenhaPins(){
-  const agora=performance.now(),faz=()=>{applyView.t=performance.now();pinK=view.w/stg.w*(COARSE?0.8:0.85);renderPins();renderGrid();};
+  const agora=performance.now(),faz=()=>{applyView.t=performance.now();pinK=view.w/stg.w*(COARSE?0.8:0.85);renderPins();renderGrid();limpaTela();};
   clearTimeout(applyView.tm);
   if(agora-(applyView.t||0)>90)faz();else applyView.tm=setTimeout(faz,100);
+}
+/* quando a planta para de se mexer, força um redesenho completo: apaga restos (listras) que o celular deixa em faixas da tela */
+function limpaTela(){
+  clearTimeout(limpaTela.t);
+  limpaTela.t=setTimeout(()=>{const s=$('#svg');if(!s)return;s.style.transform='translateZ(0)';requestAnimationFrame(()=>requestAnimationFrame(()=>{s.style.transform='';}));},160);
 }
 function toSvg(cx,cy){measure();return {x:view.cx-view.w/2+(cx-stg.l)/stg.w*view.w,y:view.cy-(view.w*stg.h/stg.w)/2+(cy-stg.t)/stg.h*(view.w*stg.h/stg.w)};}
 function toScreen(x,y){measure();const vh=view.w*stg.h/stg.w;return {x:stg.l+(x-(view.cx-view.w/2))/view.w*stg.w,y:stg.t+(y-(view.cy-vh/2))/vh*stg.h};}
