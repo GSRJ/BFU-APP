@@ -52,6 +52,10 @@ h1{margin:0;font:400 28px/1.1 var(--fc)}
 .alerta.pau{border-left:8px solid var(--pau2)}.alerta.int{border-left:8px solid var(--int2)}
 .cont{font:700 15px/1 var(--f);color:var(--az);text-align:center;margin-top:8px;min-height:15px}
 @media(min-width:700px){.alerta{left:auto;right:20px;top:20px;width:400px;transform:translateX(130%)}.alerta.on{transform:none}}
+.diag{margin-top:10px;padding:10px 12px;border-radius:8px;background:#FDEEEC;color:#8A1C17;font-size:13.5px;line-height:1.4}
+.diag.ok{background:#E3F4EE;color:#145C46}
+.dica{margin-top:6px;font-size:13px;color:var(--mut)}
+.dica b{color:var(--tx)}
 </style>
 </head>
 <body>
@@ -71,6 +75,11 @@ h1{margin:0;font:400 28px/1.1 var(--fc)}
    <button class="btn sec" id="b10" type="button">Testar em 10 s</button>
   </div>
   <div class="cont" id="cont"></div>
+  <div class="diag" id="diag" hidden></div>
+  <div class="dica"><b>Se o som tocar e a notificação não aparecer:</b><br>
+  • Windows: Configurações › Sistema › Notificações › ligue o Google Chrome (ou o Edge) e desligue o "Não perturbe".<br>
+  • Android: Configurações › Apps › Chrome › Notificações › ligue "Notificações de sites".<br>
+  • No navegador: cadeado ao lado do endereço › Notificações › Permitir.</div>
   <p class="hint">No teste de 10 s, depois de tocar, saia desta tela (no computador, minimize o navegador ou troque de aba): o aviso chega como notificação.</p>
  </div></div>
 
@@ -143,6 +152,9 @@ function tocar(){
 /* o navegador só libera som depois de um toque na página */
 addEventListener('pointerdown',liberarSom,{once:true});
 
+/* resultado do último aviso, para saber onde a notificação parou */
+function diag(m,ok){const d=$('#diag');d.hidden=false;d.className='diag'+(ok?' ok':'');d.textContent=m}
+
 /* ---------- notificação ---------- */
 let REG=null;
 async function registrar(){
@@ -180,20 +192,24 @@ async function avisar(e,modo){
  requestAnimationFrame(()=>a.classList.add('on'));
  try{navigator.vibrate&&navigator.vibrate([300,150,300,150,500])}catch(_){}
  /* notificação do sistema */
- if(!('Notification' in window)||Notification.permission!=='granted')return;
+ if(!('Notification' in window)){diag('Notificação não enviada: este navegador não tem notificações.');return}
+ if(Notification.permission!=='granted'){diag(Notification.permission==='denied'?'Notificação não enviada: as notificações deste site estão bloqueadas no navegador.':'Notificação não enviada: falta permitir as notificações.');return}
  const op={body:x.c,icon:'../icon-192.png',badge:'../icon-192.png',tag:'gbd-'+(e.rot||'t')+'-'+modo,renotify:true,vibrate:[300,150,300],requireInteraction:true,silent:false,data:{url:location.href}};
- try{const r=REG||await navigator.serviceWorker.getRegistration();if(r){await r.showNotification(x.t,op);return}}catch(_){}
- try{new Notification(x.t,op)}catch(_){}
+ let erro='';
+ try{const r=REG||await navigator.serviceWorker.getRegistration();if(r){await r.showNotification(x.t,op);diag('✔ Notificação entregue ao sistema. Se ela não apareceu, o bloqueio está no aparelho (veja abaixo).',true);return}}catch(e){erro=e&&e.message||String(e)}
+ try{new Notification(x.t,op);diag('✔ Notificação entregue ao sistema. Se ela não apareceu, o bloqueio está no aparelho (veja abaixo).',true);return}catch(e){erro=erro||(e&&e.message)||String(e)}
+ diag('Notificação não enviada: '+erro);
 }
 $('#aOk').onclick=()=>$('#alerta').classList.remove('on');
 $('#bAtivar').onclick=ativar;
 
 /* testes */
 function proximo(){const agora=Date.now();return EVS.find(e=>quando(e).getTime()>agora)||EVS[0]}
-$('#bAgora').onclick=async()=>{if(!REG)await registrar();const e=proximo();if(e)avisar(e,'hora')};
+async function garantir(){if(!REG)await registrar();if('Notification' in window&&Notification.permission==='default'){await Notification.requestPermission();estado()}}
+$('#bAgora').onclick=async()=>{await garantir();const e=proximo();if(e)avisar(e,'hora')};
 let tTeste=null;
 $('#b10').onclick=async()=>{
- if(!REG)await registrar();
+ await garantir();
  clearInterval(tTeste);let n=10;$('#cont').textContent=`Aviso em ${n} s…`;
  tTeste=setInterval(()=>{n--;if(n>0){$('#cont').textContent=`Aviso em ${n} s…`;return}
   clearInterval(tTeste);$('#cont').textContent='';const e=proximo();if(e)avisar(e,'hora')},1000);
