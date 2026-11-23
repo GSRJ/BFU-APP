@@ -106,6 +106,8 @@ details.wpp summary{padding:11px 14px;font:600 14px/1.2 var(--f);color:var(--az)
 details.wpp summary::-webkit-details-marker{display:none}
 details.wpp summary::before{content:"▸ "}
 details.wpp[open] summary::before{content:"▾ "}
+.tnot{display:block;text-align:center;padding:13px;border-radius:10px;border:2px solid var(--az);color:var(--az);background:#fff;font:700 15px/1 var(--f);text-decoration:none}
+.tnot:active{background:#E8EEF8}
 /* botões */
 .btn{background:#fff;border:1px solid var(--li);border-radius:8px;padding:7px 12px;font:600 14px/1.1 var(--f);color:var(--tx)}
 .btn:hover{border-color:var(--az);color:var(--az)}
@@ -196,6 +198,7 @@ footer .off{display:inline-block;padding:4px 10px;border-radius:999px;background
   </div>
   <div id="alerta"></div>
   <div id="conteudo"></div>
+  <a class="tnot" href="teste-aviso.html">🔔 Testar notificações</a>
 </main>
 <footer><span class="off">Funciona sem internet: mostra o último GBD publicado.</span><br>Desenvolvido por AAS Gerson</footer>
 <div class="toast" id="toast"></div>
