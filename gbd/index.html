@@ -205,6 +205,57 @@ footer .off{display:inline-block;padding:4px 10px;border-radius:999px;background
  .hello h1{font-size:38px}
  .ch .dd{font-size:21px}
 }
+
+/* GBD compacto: o dia inteiro cabe na tela sem rolar; o rodízio fica abaixo */
+.vgbd main{gap:8px;padding-top:12px}
+.vgbd .hello{display:flex;align-items:center;gap:10px}
+.vgbd .hello h1{flex:1;font-size:23px}
+.vgbd .hello .d{display:none}
+.hello .volta{flex:none;font-size:13.5px}
+.avc .avbar{display:flex;align-items:center;gap:10px;padding:9px 12px}
+.avc .avtx{flex:1;min-width:0}
+.avc .avtx b{display:block;font:700 14px/1.2 var(--f)}
+.avc .avst{font-size:12.5px;font-weight:600;color:var(--mut);gap:6px;margin-top:2px}
+.avc .avst i{width:8px;height:8px}
+.avc .avbtn{width:auto;flex:none;margin:0;padding:10px 16px;font-size:14.5px}
+.avmais{border-top:1px solid #E6ECF4}
+.avmais{padding-top:8px}
+.avmais[hidden]{display:none}
+.avmais>*{margin-left:12px;margin-right:12px}
+.avlin{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:2px}
+.avlin .avst{margin:0}
+.avinfo{flex:none;background:none;border:0;padding:0;font:600 13px/1.2 var(--f);color:var(--az);text-decoration:underline;cursor:pointer}
+.avinfo[aria-expanded=true]{text-decoration:none}
+@media(min-width:700px){.gv .tiles{grid-template-columns:repeat(4,1fr)}}
+.avmais .tnot{margin-bottom:10px;padding:10px}
+.avmais .avhint,.avmais .avprox{margin-top:4px;margin-bottom:6px}
+.vgbd .ch{padding:8px 12px;gap:7px}
+.vgbd .ch .dd{font-size:17px}
+.vgbd .ch .btn.sm{padding:5px 9px}
+.gv .eu{padding:7px 12px;gap:9px}
+.gv .eu .av{width:28px;height:28px;font-size:13px}
+.gv .eu span{display:inline;font-size:12.5px}
+.gv .eu b{display:inline;font-size:15.5px;margin-left:4px}
+.gv .gs{padding:8px 12px 9px}
+.gv .gs h4{font-size:15.5px;margin:0 0 6px;gap:7px}
+.gv .gs h4 i{width:22px;height:22px;font-size:12px}
+.gv .tiles{gap:6px}
+.gv .tile{min-height:0;padding:6px 9px 7px;border-radius:9px;display:grid;grid-template-columns:auto 1fr;column-gap:6px;align-items:center}
+.gv .tile i{font-size:13px;grid-row:1}
+.gv .tile span{font-size:11.5px;grid-column:2}
+.gv .tile b{font-size:15px;margin:0;grid-column:1/-1}
+.gv .gpar{display:grid;grid-template-columns:1fr 1fr}
+.gv .gpar .gs{min-width:0}
+.gv .gt{gap:6px;padding:2px;margin-bottom:4px;align-items:flex-start}
+.gv .gt .h{min-width:0;padding:5px 6px;font-size:13px;border-radius:6px}
+.gv .gt b{font-size:14px;line-height:1.25;padding-top:3px}
+.gv .gch{gap:5px;padding-bottom:4px}
+.gv .gch span{padding:4px 10px;font-size:13.5px}
+.gv .gk{padding:2px 0 4px;font-size:12px}
+.gv .go{padding:5px 8px;font-size:12px;margin-bottom:5px}
+.gv .gn{padding:6px 12px;font-size:12px}
+.gv details.wpp summary{padding:8px 12px;font-size:13px}
+.vgbd .nota{padding:7px 12px;font-size:12px}
 </style>
 </head>
 <body>
@@ -220,19 +271,22 @@ footer .off{display:inline-block;padding:4px 10px;border-radius:999px;background
   </div>
   <div id="alerta"></div>
   <div id="conteudo"></div>
-  <div class="card avc" id="avisos" hidden><div class="cb">
-    <h3 class="avtit">🔔 Avisos de pausa e intervalo</h3>
-    <ul class="avlist" id="avList">
-      <li>Na hora de cada pausa e intervalo, toca um som e aparece na tela quem pode sair.</li>
-      <li>Também chega como notificação no celular ou no computador.</li>
-      <li>Só funciona com o GBD aberto. Pode ficar em outra aba.</li>
-    </ul>
-    <div class="avst" id="avSt"><i></i><span>Avisos desligados</span></div>
-    <p class="avhint" id="avHint">Toque em Ativar avisos e permita as notificações quando o navegador pedir.</p>
-    <p class="avprox" id="avProx" hidden></p>
-    <button class="avbtn" id="avBtn" type="button">Ativar avisos</button>
-    <a class="tnot" href="teste-aviso.html" onclick="event.preventDefault();location.replace('teste-aviso.html'+location.search)">Testar notificações</a>
-  </div></div>
+  <div class="card avc" id="avisos" hidden>
+    <div class="avbar">
+      <div class="avtx"><b>🔔 Avisos de pausa e intervalo</b><div class="avlin"><div class="avst" id="avSt"><i></i><span>Desligados</span></div><button class="avinfo" id="avInfo" type="button" aria-expanded="false" aria-controls="avMais">Como funciona</button></div></div>
+      <button class="avbtn" id="avBtn" type="button">Ativar</button>
+    </div>
+    <div class="avmais" id="avMais" hidden>
+      <ul class="avlist" id="avList">
+        <li>Na hora de cada pausa e intervalo, toca um som e aparece na tela quem pode sair.</li>
+        <li>Também chega como notificação no celular ou no computador.</li>
+        <li>Só funciona com o GBD aberto. Pode ficar em outra aba.</li>
+      </ul>
+      <p class="avhint" id="avHint">Toque em Ativar e permita as notificações quando o navegador pedir.</p>
+      <p class="avprox" id="avProx" hidden></p>
+      <a class="tnot" href="teste-aviso.html" onclick="event.preventDefault();location.replace('teste-aviso.html'+location.search)">Testar notificações</a>
+    </div>
+  </div>
 </main>
 <footer><span class="off">Funciona sem internet: mostra o último GBD publicado.</span><br>Desenvolvido por AAS Gerson</footer>
 <div class="toast" id="toast"></div>
@@ -321,6 +375,7 @@ async function carregar(silencioso){
 
 /* ---------- render ---------- */
 function render(){
+ document.querySelectorAll('.hello .volta').forEach(x=>x.remove());document.body.classList.remove('vgbd');
  const al=$('#alerta');al.innerHTML='';
  const avb=$('#avisos');if(avb){avb.hidden=true;$('main').appendChild(avb)}
  const box=$('#conteudo');box.innerHTML='';
@@ -354,9 +409,9 @@ function render(){
 
  if(turno===null){montarEscolha(box);return}
 
- const bv=el('button','volta','‹ Trocar de turno');
+ const bv=el('button','volta','‹ Trocar turno');
  bv.onclick=voltarEscolha;
- box.appendChild(bv);
+ $('.hello').appendChild(bv);document.body.classList.add('vgbd');
 
  const dd=D.dias[verDia];
 
@@ -379,7 +434,7 @@ function render(){
  const agora=new Date();
  const rot=ehFoco?(foco>hojeK()?'GBD de amanhã':foco<hojeK()?'Turno em andamento':'GBD de hoje'):'Outro dia';
  h.appendChild(el('span','q',rot));
- h.appendChild(el('span','dd',`${DOW[dow(verDia)]}, ${br(verDia)}`));
+ h.appendChild(el('span','dd',`${DOW[dow(verDia)]}, ${br(verDia).slice(0,5)}`));
  if(dd&&dd.feriado)h.appendChild(el('span','tag fer',dd.feriado));
  const cf=dd?confirmadoEm(verDia,dd):0;
  if(dd)h.appendChild(el('span','tag '+(cf?'conf':'prev'),cf?'confirmado':'previsto'));
@@ -463,6 +518,7 @@ function gbdView(txt){
  const lider=o.lid.map(it=>it.v.join(', ')).join(', ');
  if(lider){const top=el('div','eu');top.innerHTML=`<div class="av">${esc(lider.charAt(0))}</div><div><span>Líder do turno (ASL)</span><b>${esc(lider)}</b></div>`;box.appendChild(top)}
 
+ let par=null;
  for(const sc of o.secs){
   const c=COR_SEC(sc.t),g=el('div','gs '+c);
   g.innerHTML=`<h4><i>${esc(sc.ic||'•')}</i>${esc(titSec(sc.t))}</h4>`;
@@ -481,7 +537,8 @@ function gbdView(txt){
     const ch=el('div','gch');for(const n of it.v){ch.appendChild(el('span',null,n))}g.appendChild(ch);
    }
   }
-  box.appendChild(g);
+  /* pausa e intervalo lado a lado, para o GBD caber sem rolar */
+  if(c==='pau'||c==='int'){if(!par){par=el('div','gpar');box.appendChild(par)}par.appendChild(g)}else{par=null;box.appendChild(g)}
  }
  for(const n of o.notas){const d=el('div','gn');d.innerHTML=`${n.ic?`<i>${esc(n.ic)}</i>`:''}<span>${esc(n.t)}</span>`;box.appendChild(d)}
  const det=el('details','wpp');det.appendChild(el('summary',null,'Ver o texto do WhatsApp'));det.appendChild(el('pre',null,txt));box.appendChild(det);
@@ -644,19 +701,20 @@ function atualizarAvisos(){
  const s=$('#avSt'),hi=$('#avHint'),b=$('#avBtn'),pr=$('#avProx');
  const temNot='Notification' in window,perm=temNot?Notification.permission:'none';
  /* com os avisos ligados, a explicação sai para não ocupar espaço */
- $('#avList').hidden=avOn&&perm==='granted';
- if(!avOn){s.className='avst';s.lastChild.textContent='Avisos desligados';
+ 
+ if(!avOn){s.className='avst';s.lastChild.textContent='Desligados';
   hi.textContent='Toque em Ativar avisos e permita as notificações quando o navegador pedir.';
-  b.textContent='Ativar avisos';b.className='avbtn';}
+  b.textContent='Ativar';b.className='avbtn';}
  else{
-  if(perm==='granted'){s.className='avst on';s.lastChild.textContent='Avisos ligados';hi.textContent='Com o GBD aberto, o aparelho avisa com som e notificação na hora de cada pausa e intervalo.'}
-  else if(perm==='denied'){s.className='avst no';s.lastChild.textContent='Avisos ligados só na tela';hi.textContent='As notificações deste site estão bloqueadas. Libere em: cadeado ao lado do endereço › Notificações. O aviso com som na tela continua funcionando.'}
-  else if(!temNot){s.className='avst on';s.lastChild.textContent='Avisos ligados na tela';hi.textContent='Este navegador não mostra notificações. No iPhone, só funcionam com o BFU instalado na tela de início. O aviso com som na tela continua funcionando.'}
-  else{s.className='avst on';s.lastChild.textContent='Avisos ligados na tela';hi.textContent='Falta permitir as notificações. Toque em Ativar avisos de novo para permitir.'}
-  b.textContent=perm==='default'?'Permitir notificações':'Desativar avisos';b.className='avbtn'+(perm==='default'?'':' off');
+  if(perm==='granted'){s.className='avst on';s.lastChild.textContent='Ligados';hi.textContent='Com o GBD aberto, o aparelho avisa com som e notificação na hora de cada pausa e intervalo.'}
+  else if(perm==='denied'){s.className='avst no';s.lastChild.textContent='Ligados só na tela';hi.textContent='As notificações deste site estão bloqueadas. Libere em: cadeado ao lado do endereço › Notificações. O aviso com som na tela continua funcionando.'}
+  else if(!temNot){s.className='avst on';s.lastChild.textContent='Ligados só na tela';hi.textContent='Este navegador não mostra notificações. No iPhone, só funcionam com o BFU instalado na tela de início. O aviso com som na tela continua funcionando.'}
+  else{s.className='avst on';s.lastChild.textContent='Falta permitir';hi.textContent='Falta permitir as notificações. Toque em Permitir.'}
+  b.textContent=perm==='default'?'Permitir':'Desligar';b.className='avbtn'+(perm==='default'?'':' off');
  }
  const p=avProximo();
  if(p){const f=Math.round((avQuando(p).getTime()-Date.now())/60000),qd=f<60?`em ${f} min`:`em ${Math.floor(f/60)}h${f%60?String(f%60).padStart(2,'0'):''}`;
+  if(avOn)s.lastChild.textContent=s.lastChild.textContent+` · próximo ${p.rot}`;
   pr.hidden=false;pr.innerHTML=`Próximo aviso: <b>${esc(p.rot)}</b> · ${p.tipo==='pau'?'Pausa':'Intervalo'} de ${esc(p.nomes.join(', '))} (${qd})`;}
  else{pr.hidden=false;pr.textContent='Não há mais pausa nem intervalo hoje.'}
 }
@@ -690,6 +748,7 @@ async function avisar(e,modo){
  try{const r=AV_REG||await navigator.serviceWorker.getRegistration('./');if(r){await r.showNotification(titulo,op);return}}catch(_){}
  try{new Notification(titulo,op)}catch(_){}
 }
+$('#avInfo').onclick=()=>{const m=$('#avMais'),ab=m.hidden;m.hidden=!ab;$('#avInfo').setAttribute('aria-expanded',ab)};
 $('#avOk').onclick=()=>$('#avPop').classList.remove('on');
 $('#avBtn').onclick=async()=>{
  avSomLiberar();
