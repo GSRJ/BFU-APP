@@ -106,7 +106,11 @@ details.wpp summary{padding:11px 14px;font:600 14px/1.2 var(--f);color:var(--az)
 details.wpp summary::-webkit-details-marker{display:none}
 details.wpp summary::before{content:"▸ "}
 details.wpp[open] summary::before{content:"▾ "}
-.tnot{display:block;text-align:center;padding:13px;border-radius:10px;border:2px solid var(--az);color:var(--az);background:#fff;font:700 15px/1 var(--f);text-decoration:none}
+.tnot{display:block;text-align:center;padding:12px;border-radius:10px;border:2px solid var(--az);color:var(--az);background:#fff;font:700 15px/1 var(--f);text-decoration:none;margin-top:2px}
+.avtit{margin:0;font:400 19px/1.2 var(--fc)}
+.avlist{margin:0 0 4px;padding-left:18px;font-size:14px;line-height:1.4;color:var(--tx)}
+.avlist li{margin:3px 0}
+.avlist[hidden]{display:none}
 .tnot:active{background:#E8EEF8}
 /* avisos de pausa e intervalo */
 .avc .cb{display:flex;flex-direction:column;gap:6px}
@@ -217,12 +221,18 @@ footer .off{display:inline-block;padding:4px 10px;border-radius:999px;background
   <div id="alerta"></div>
   <div id="conteudo"></div>
   <div class="card avc" id="avisos" hidden><div class="cb">
+    <h3 class="avtit">🔔 Avisos de pausa e intervalo</h3>
+    <ul class="avlist" id="avList">
+      <li>Na hora de cada pausa e intervalo, toca um som e aparece na tela quem pode sair.</li>
+      <li>Também chega como notificação no celular ou no computador.</li>
+      <li>Só funciona com o GBD aberto. Pode ficar em outra aba.</li>
+    </ul>
     <div class="avst" id="avSt"><i></i><span>Avisos desligados</span></div>
-    <p class="avhint" id="avHint">Toque em Ativar avisos e permita as notificações. Com o GBD aberto, o aparelho avisa com som na hora de cada pausa e intervalo.</p>
+    <p class="avhint" id="avHint">Toque em Ativar avisos e permita as notificações quando o navegador pedir.</p>
     <p class="avprox" id="avProx" hidden></p>
     <button class="avbtn" id="avBtn" type="button">Ativar avisos</button>
+    <a class="tnot" href="teste-aviso.html" onclick="event.preventDefault();location.replace('teste-aviso.html'+location.search)">Testar notificações</a>
   </div></div>
-  <a class="tnot" href="teste-aviso.html" onclick="event.preventDefault();location.replace('teste-aviso.html'+location.search)">🔔 Testar notificações</a>
 </main>
 <footer><span class="off">Funciona sem internet: mostra o último GBD publicado.</span><br>Desenvolvido por AAS Gerson</footer>
 <div class="toast" id="toast"></div>
@@ -312,7 +322,7 @@ async function carregar(silencioso){
 /* ---------- render ---------- */
 function render(){
  const al=$('#alerta');al.innerHTML='';
- const avb=$('#avisos');if(avb){avb.hidden=true;$('main').insertBefore(avb,$('.tnot'))}
+ const avb=$('#avisos');if(avb){avb.hidden=true;$('main').appendChild(avb)}
  const box=$('#conteudo');box.innerHTML='';
 
  D=DADOS[turno||'tarde']||null;
@@ -403,8 +413,9 @@ function render(){
   c.appendChild(n);
  }
  else c.appendChild(el('div','cb',el('p','hint','Sem GBD para esta data.').textContent));
- box.appendChild(c);
+ /* avisos em cima do GBD de hoje */
  if(dd&&verDia===foco)box.appendChild($('#avisos'));
+ box.appendChild(c);
 
  /* ciclo do posto de rodízio até a data */
  if(dd&&dd.ciclo&&D.ciclos&&(D.ciclos[dd.ciclo]||verCiclo))montarCiclo(box,dd);
@@ -632,8 +643,10 @@ function atualizarAvisos(){
  box.hidden=false;
  const s=$('#avSt'),hi=$('#avHint'),b=$('#avBtn'),pr=$('#avProx');
  const temNot='Notification' in window,perm=temNot?Notification.permission:'none';
+ /* com os avisos ligados, a explicação sai para não ocupar espaço */
+ $('#avList').hidden=avOn&&perm==='granted';
  if(!avOn){s.className='avst';s.lastChild.textContent='Avisos desligados';
-  hi.textContent='Toque em Ativar avisos e permita as notificações. Com o GBD aberto, o aparelho avisa com som na hora de cada pausa e intervalo.';
+  hi.textContent='Toque em Ativar avisos e permita as notificações quando o navegador pedir.';
   b.textContent='Ativar avisos';b.className='avbtn';}
  else{
   if(perm==='granted'){s.className='avst on';s.lastChild.textContent='Avisos ligados';hi.textContent='Com o GBD aberto, o aparelho avisa com som e notificação na hora de cada pausa e intervalo.'}
