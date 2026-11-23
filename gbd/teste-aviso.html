@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#10294A">
+<title>Teste · avisos de pausa e intervalo</title>
+<link rel="icon" href="../icon-192.png">
+<style>
+:root{--az:#2F6FE4;--mar:#10294A;--bg:#EDF1F7;--tx:#11253D;--mut:#5A6B80;--li:#C9D4E2;
+ --pau:#FFF1D6;--pau2:#F6C66B;--pauT:#6B3A05;--int:#DDF3EC;--int2:#8FD3BE;--intT:#0B4F49;
+ --f:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;--fc:Georgia,Cambria,"Times New Roman",serif}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 var(--f)}
+header{background:var(--mar);color:#fff;border-bottom:3px solid var(--az);padding:calc(12px + env(safe-area-inset-top)) 16px 12px}
+header b{font:600 17px/1.2 var(--fc)}
+main{max-width:560px;margin:0 auto;padding:16px 14px 40px;display:flex;flex-direction:column;gap:12px}
+h1{margin:0;font:400 28px/1.1 var(--fc)}
+.sub{margin:4px 0 0;color:var(--mut);font-size:14px}
+.card{background:#fff;border:1px solid var(--li);border-radius:12px;overflow:hidden}
+.cb{padding:14px}
+.st{display:flex;align-items:center;gap:10px;font-weight:600}
+.st i{width:12px;height:12px;border-radius:50%;background:#B8C3D1;flex:none}
+.st.on i{background:#1E8C6B}.st.no i{background:#C2201C}
+.hint{color:var(--mut);font-size:13.5px;margin:6px 0 0}
+.btn{width:100%;border:0;border-radius:10px;padding:14px;font:700 16px/1 var(--f);background:var(--az);color:#fff;margin-top:12px;cursor:pointer}
+.btn.sec{background:#fff;color:var(--az);border:2px solid var(--az)}
+.btn:disabled{opacity:.4}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.row2 .btn{margin-top:10px;font-size:15px;padding:13px 8px}
+.sec{padding:12px 14px}
+.sec h2{margin:0 0 8px;font:400 19px/1.2 var(--fc)}
+.sec.pau{background:var(--pau)}.sec.int{background:var(--int)}
+.ev{display:flex;align-items:center;gap:10px;padding:6px 0}
+.ev .h{flex:none;min-width:74px;text-align:center;padding:7px 6px;border-radius:8px;font:700 15px/1 var(--f);font-variant-numeric:tabular-nums}
+.pau .ev .h{background:var(--pau2);color:var(--pauT)}.int .ev .h{background:var(--int2);color:var(--intT)}
+.ev b{font-weight:600;flex:1}
+.ev small{color:var(--mut);font-size:12px;white-space:nowrap}
+.ev.passou{opacity:.45}
+.ev.prox small{color:var(--az);font-weight:700}
+/* aviso dentro da página */
+.alerta{position:fixed;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top));z-index:9;background:var(--mar);color:#fff;border-radius:14px;
+ padding:16px 16px 14px;box-shadow:0 10px 30px rgba(10,30,56,.35);transform:translateY(-140%);transition:transform .35s cubic-bezier(.2,.9,.3,1)}
+.alerta.on{transform:none}
+.alerta .t{font:700 13px/1 var(--f);color:#B9C8DD;letter-spacing:.02em}
+.alerta .n{font:700 24px/1.2 var(--f);margin:6px 0 4px}
+.alerta .p{font-size:14px;color:#D7E4FB}
+.alerta button{margin-top:12px;width:100%;border:0;border-radius:9px;padding:12px;font:700 15px/1 var(--f);background:#fff;color:var(--mar)}
+.alerta.pau{border-left:8px solid var(--pau2)}.alerta.int{border-left:8px solid var(--int2)}
+.cont{font:700 15px/1 var(--f);color:var(--az);text-align:center;margin-top:8px;min-height:15px}
+</style>
+</head>
+<body>
+<header><b>Estação Barra Funda · teste de avisos</b></header>
+<main>
+ <div>
+  <h1>Avisos de pausa e intervalo</h1>
+  <p class="sub" id="sub">Lendo o GBD de hoje…</p>
+ </div>
+
+ <div class="card"><div class="cb">
+  <div class="st" id="st"><i></i><span>Avisos desligados</span></div>
+  <p class="hint" id="stHint">Toque em Ativar avisos e permita as notificações. Com esta página aberta, o celular avisa 5 minutos antes e na hora de cada pausa e intervalo.</p>
+  <button class="btn" id="bAtivar" type="button">Ativar avisos</button>
+  <div class="row2">
+   <button class="btn sec" id="bAgora" type="button">Testar agora</button>
+   <button class="btn sec" id="b10" type="button">Testar em 10 s</button>
+  </div>
+  <div class="cont" id="cont"></div>
+  <p class="hint">No teste de 10 s, saia desta tela ou bloqueie o celular depois de tocar: o aviso chega como notificação.</p>
+ </div></div>
+
+ <div class="card" id="lista"></div>
+</main>
+
+<div class="alerta" id="alerta" role="alert">
+ <div class="t" id="aT"></div>
+ <div class="n" id="aN"></div>
+ <div class="p" id="aP"></div>
+ <button type="button" id="aOk">Entendi</button>
+</div>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const chave=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const ANTES=5; /* minutos de antecedência do primeiro aviso */
+
+/* ---------- lê o GBD do dia (mesmo arquivo da tela do GBD) ---------- */
+function lerTexto(txt){
+ const postoDe={},evs=[];let sec='';
+ for(const raw of String(txt||'').split('\n')){
+  const l=raw.trim();if(!l||/^━+$/.test(l))continue;
+  const m=l.match(/^\S+\s+\*([^*]+)\*$/);
+  if(m&&m[1]===m[1].toUpperCase()){sec=/PAUSA/.test(m[1])?'pau':/INTERV/.test(m[1])?'int':/POSTO/.test(m[1])?'pos':'';continue}
+  const sp=l.split('▸');if(sp.length<2)continue;
+  const esq=sp[0].replace(/\*/g,'').replace(/^\S+\s+/,'').trim(),dir=sp.slice(1).join('▸').replace(/\*/g,'').trim();
+  const nomes=dir.split(/\s*(?:,|\be\b|→)\s*/).map(x=>x.trim()).filter(Boolean);
+  if(sec==='pos')nomes.forEach(n=>{postoDe[n]=postoDe[n]?postoDe[n]+' / '+esq:esq});
+  else if(sec==='pau'||sec==='int'){const h=esq.match(/(\d{1,2})h(\d{2})?/);if(h)evs.push({tipo:sec,rot:esq,h:+h[1],mi:+(h[2]||0),nomes})}
+ }
+ return {postoDe,evs};
+}
+let EVS=[],POSTO={},DIA=null;
+async function carregar(){
+ let D=null;
+ try{const r=await fetch('gbd-dados.json',{cache:'no-store'});D=await r.json()}catch(_){}
+ const agora=new Date(),d=new Date(agora);if(agora.getHours()>=22)d.setDate(d.getDate()+1);
+ DIA=chave(d);
+ const dd=D&&D.dias&&D.dias[DIA];
+ if(!dd){$('#sub').textContent='Não achei o GBD de hoje. O teste usa horários de exemplo.';
+  EVS=[{tipo:'pau',rot:'15h00',h:15,mi:0,nomes:['Agente A']},{tipo:'int',rot:'18h–19h',h:18,mi:0,nomes:['Agente B']}];renderLista();return}
+ const o=lerTexto(dd.txt);EVS=o.evs;POSTO=o.postoDe;
+ const [a,m,dia]=DIA.split('-');$('#sub').textContent=`GBD da tarde de ${dia}/${m}/${a}. Os horários abaixo são os avisos que o celular daria hoje.`;
+ renderLista();
+}
+const quando=e=>{const [a,m,d]=DIA.split('-').map(Number);return new Date(a,m-1,d,e.h,e.mi,0)};
+function renderLista(){
+ const agora=Date.now();let prox=null;
+ for(const e of EVS){const t=quando(e).getTime();if(t>agora&&(!prox||t<quando(prox).getTime()))prox=e}
+ const bloco=(tipo,tit)=>{const es=EVS.filter(e=>e.tipo===tipo);if(!es.length)return '';
+  return `<div class="sec ${tipo}"><h2>${tit}</h2>`+es.map(e=>{const t=quando(e).getTime(),pass=t<=agora;
+   const f=Math.round((t-agora)/60000),qd=pass?'já passou':f<60?`em ${f} min`:`em ${Math.floor(f/60)}h${f%60?pad(f%60):''}`;
+   return `<div class="ev${pass?' passou':''}${e===prox?' prox':''}"><span class="h">${esc(e.rot)}</span><b>${esc(e.nomes.join(', '))}</b><small>${qd}</small></div>`}).join('')+'</div>'};
+ $('#lista').innerHTML=bloco('pau','Pausa')+bloco('int','Intervalo');
+}
+
+/* ---------- notificação ---------- */
+let REG=null;
+async function registrar(){
+ if(!('serviceWorker' in navigator))return null;
+ try{REG=await navigator.serviceWorker.register('sw.js');await navigator.serviceWorker.ready;REG=await navigator.serviceWorker.getRegistration()||REG}catch(_){REG=null}
+ return REG;
+}
+function estado(){
+ const s=$('#st'),h=$('#stHint'),b=$('#bAtivar');
+ if(!('Notification' in window)){s.className='st no';s.lastChild.textContent='Este navegador não mostra notificações';
+  h.textContent='No iPhone, as notificações só funcionam com o BFU instalado na tela de início (iOS 16.4 ou mais novo). O aviso dentro da página continua funcionando.';b.disabled=true;return}
+ const p=Notification.permission;
+ if(p==='granted'){s.className='st on';s.lastChild.textContent='Avisos ligados';h.textContent=`Com esta página aberta, o celular avisa ${ANTES} minutos antes e na hora de cada pausa e intervalo.`;b.textContent='Avisos ativados';b.disabled=true}
+ else if(p==='denied'){s.className='st no';s.lastChild.textContent='Notificações bloqueadas';h.textContent='Libere em: cadeado ao lado do endereço › Permissões › Notificações. O aviso dentro da página continua funcionando.';b.disabled=true}
+}
+async function ativar(){
+ if(!('Notification' in window))return;
+ await registrar();
+ const p=await Notification.requestPermission();estado();
+ if(p==='granted')avisar({tipo:'pau',rot:'teste',nomes:['Avisos ligados']},'ok');
+}
+function textos(e,modo){
+ const tipo=e.tipo==='pau'?'Pausa':'Intervalo',ic=e.tipo==='pau'?'☕':'🍽️';
+ const quem=e.nomes.map(n=>POSTO[n]?`${n} (${POSTO[n]})`:n).join(', ');
+ if(modo==='ok')return {t:'🔔 Avisos de pausa e intervalo',c:'Pronto: este celular vai avisar enquanto o GBD estiver aberto.',n:'Avisos ligados'};
+ if(modo==='antes')return {t:`${ic} ${tipo} em ${ANTES} min · ${e.rot}`,c:`Prepare-se: ${quem}`,n:e.nomes.join(', ')};
+ return {t:`${ic} ${tipo} agora · ${e.rot}`,c:`Pode sair: ${quem}`,n:e.nomes.join(', ')};
+}
+async function avisar(e,modo){
+ const x=textos(e,modo);
+ /* aviso dentro da página */
+ const a=$('#alerta');a.className='alerta '+(e.tipo||'');
+ const ps=(e.nomes||[]).map(n=>POSTO[n]).filter(Boolean).join(' · ');
+ $('#aT').textContent=x.t;$('#aN').textContent=x.n;$('#aP').textContent=modo==='ok'?x.c:(ps?ps+' · ':'')+(modo==='antes'?`sai em ${ANTES} minutos`:'pode sair agora');
+ requestAnimationFrame(()=>a.classList.add('on'));
+ try{navigator.vibrate&&navigator.vibrate([300,150,300,150,500])}catch(_){}
+ /* notificação do sistema */
+ if(!('Notification' in window)||Notification.permission!=='granted')return;
+ const op={body:x.c,icon:'../icon-192.png',badge:'../icon-192.png',tag:'gbd-'+(e.rot||'t')+'-'+modo,renotify:true,vibrate:[300,150,300],requireInteraction:modo!=='antes',data:{url:location.href}};
+ try{const r=REG||await navigator.serviceWorker.getRegistration();if(r){await r.showNotification(x.t,op);return}}catch(_){}
+ try{new Notification(x.t,op)}catch(_){}
+}
+$('#aOk').onclick=()=>$('#alerta').classList.remove('on');
+$('#bAtivar').onclick=ativar;
+
+/* testes */
+function proximo(){const agora=Date.now();return EVS.find(e=>quando(e).getTime()>agora)||EVS[0]}
+$('#bAgora').onclick=async()=>{if(!REG)await registrar();const e=proximo();if(e)avisar(e,'hora')};
+let tTeste=null;
+$('#b10').onclick=async()=>{
+ if(!REG)await registrar();
+ clearInterval(tTeste);let n=10;$('#cont').textContent=`Aviso em ${n} s…`;
+ tTeste=setInterval(()=>{n--;if(n>0){$('#cont').textContent=`Aviso em ${n} s…`;return}
+  clearInterval(tTeste);$('#cont').textContent='';const e=proximo();if(e)avisar(e,'hora')},1000);
+};
+
+/* avisos de verdade: confere a cada 20 s; guarda o que já avisou para não repetir */
+const feitos=new Set((()=>{try{return JSON.parse(sessionStorage.getItem('gbd-avisos')||'[]')}catch(_){return []}})());
+function conferir(){
+ if(!DIA)return;const agora=Date.now();
+ for(const e of EVS){const t=quando(e).getTime();
+  for(const [modo,em] of [['antes',t-ANTES*60000],['hora',t]]){
+   const id=DIA+e.tipo+e.rot+modo;
+   if(agora>=em&&agora<em+10*60000&&!feitos.has(id)){feitos.add(id);try{sessionStorage.setItem('gbd-avisos',JSON.stringify([...feitos]))}catch(_){}avisar(e,modo)}
+  }}
+ renderLista();
+}
+setInterval(conferir,20000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)conferir()});
+
+estado();
+if('Notification' in window&&Notification.permission==='granted')registrar();
+carregar().then(conferir);
+</script>
+</body>
+</html>

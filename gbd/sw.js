@@ -1,4 +1,6 @@
-const C='gbd-bfu-v15',F=['index.html','manifest.webmanifest','gbd-dados.json','../icon-192.png','../icon-512.png'];
+const C='gbd-bfu-v16',F=['index.html','manifest.webmanifest','gbd-dados.json','../icon-192.png','../icon-512.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>Promise.all(F.map(u=>c.add(u).catch(()=>{})))).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x.startsWith('gbd-bfu')&&x!==C).map(x=>caches.delete(x)))).then(()=>self.clients.claim()));});
 self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(fetch(e.request).then(r=>{const c=r.clone();caches.open(C).then(x=>x.put(e.request,c));return r;}).catch(()=>caches.match(e.request,{ignoreSearch:true}).then(r=>r||caches.match('index.html'))));});
+/* toque na notificação de pausa ou intervalo: volta para a página aberta ou abre de novo */
+self.addEventListener('notificationclick',e=>{e.notification.close();const u=(e.notification.data&&e.notification.data.url)||'./';e.waitUntil(clients.matchAll({type:'window',includeUncontrolled:true}).then(cs=>{const c=cs.find(x=>x.url.split('#')[0]===u.split('#')[0])||cs[0];return c?c.focus():clients.openWindow(u);}));});
