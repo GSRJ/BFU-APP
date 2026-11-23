@@ -49,6 +49,7 @@ h1{margin:0;font:400 28px/1.1 var(--fc)}
 .alerta button{margin-top:12px;width:100%;border:0;border-radius:9px;padding:12px;font:700 15px/1 var(--f);background:#fff;color:var(--mar)}
 .alerta.pau{border-left:8px solid var(--pau2)}.alerta.int{border-left:8px solid var(--int2)}
 .cont{font:700 15px/1 var(--f);color:var(--az);text-align:center;margin-top:8px;min-height:15px}
+@media(min-width:700px){.alerta{left:auto;right:20px;top:20px;width:400px;transform:translateX(130%)}.alerta.on{transform:none}}
 </style>
 </head>
 <body>
@@ -61,14 +62,14 @@ h1{margin:0;font:400 28px/1.1 var(--fc)}
 
  <div class="card"><div class="cb">
   <div class="st" id="st"><i></i><span>Avisos desligados</span></div>
-  <p class="hint" id="stHint">Toque em Ativar avisos e permita as notificações. Com esta página aberta, o celular avisa 5 minutos antes e na hora de cada pausa e intervalo.</p>
+  <p class="hint" id="stHint">Toque em Ativar avisos e permita as notificações. Com esta página aberta, o aparelho avisa 5 minutos antes e na hora de cada pausa e intervalo.</p>
   <button class="btn" id="bAtivar" type="button">Ativar avisos</button>
   <div class="row2">
    <button class="btn sec" id="bAgora" type="button">Testar agora</button>
    <button class="btn sec" id="b10" type="button">Testar em 10 s</button>
   </div>
   <div class="cont" id="cont"></div>
-  <p class="hint">No teste de 10 s, saia desta tela ou bloqueie o celular depois de tocar: o aviso chega como notificação.</p>
+  <p class="hint">No teste de 10 s, depois de tocar, saia desta tela (no computador, minimize o navegador ou troque de aba): o aviso chega como notificação.</p>
  </div></div>
 
  <div class="card" id="lista"></div>
@@ -114,7 +115,7 @@ async function carregar(){
  if(!dd){$('#sub').textContent='Não achei o GBD de hoje. O teste usa horários de exemplo.';
   EVS=[{tipo:'pau',rot:'15h00',h:15,mi:0,nomes:['Agente A']},{tipo:'int',rot:'18h–19h',h:18,mi:0,nomes:['Agente B']}];renderLista();return}
  const o=lerTexto(dd.txt);EVS=o.evs;POSTO=o.postoDe;
- const [a,m,dia]=DIA.split('-');$('#sub').textContent=`GBD da tarde de ${dia}/${m}/${a}. Os horários abaixo são os avisos que o celular daria hoje.`;
+ const [a,m,dia]=DIA.split('-');$('#sub').textContent=`GBD da tarde de ${dia}/${m}/${a}. Os horários abaixo são os avisos que o aparelho daria hoje.`;
  renderLista();
 }
 const quando=e=>{const [a,m,d]=DIA.split('-').map(Number);return new Date(a,m-1,d,e.h,e.mi,0)};
@@ -140,7 +141,7 @@ function estado(){
  if(!('Notification' in window)){s.className='st no';s.lastChild.textContent='Este navegador não mostra notificações';
   h.textContent='No iPhone, as notificações só funcionam com o BFU instalado na tela de início (iOS 16.4 ou mais novo). O aviso dentro da página continua funcionando.';b.disabled=true;return}
  const p=Notification.permission;
- if(p==='granted'){s.className='st on';s.lastChild.textContent='Avisos ligados';h.textContent=`Com esta página aberta, o celular avisa ${ANTES} minutos antes e na hora de cada pausa e intervalo.`;b.textContent='Avisos ativados';b.disabled=true}
+ if(p==='granted'){s.className='st on';s.lastChild.textContent='Avisos ligados';h.textContent=`Com esta página aberta, o aparelho avisa ${ANTES} minutos antes e na hora de cada pausa e intervalo.`;b.textContent='Avisos ativados';b.disabled=true}
  else if(p==='denied'){s.className='st no';s.lastChild.textContent='Notificações bloqueadas';h.textContent='Libere em: cadeado ao lado do endereço › Permissões › Notificações. O aviso dentro da página continua funcionando.';b.disabled=true}
 }
 async function ativar(){
@@ -152,7 +153,7 @@ async function ativar(){
 function textos(e,modo){
  const tipo=e.tipo==='pau'?'Pausa':'Intervalo',ic=e.tipo==='pau'?'☕':'🍽️';
  const quem=e.nomes.map(n=>POSTO[n]?`${n} (${POSTO[n]})`:n).join(', ');
- if(modo==='ok')return {t:'🔔 Avisos de pausa e intervalo',c:'Pronto: este celular vai avisar enquanto o GBD estiver aberto.',n:'Avisos ligados'};
+ if(modo==='ok')return {t:'🔔 Avisos de pausa e intervalo',c:'Pronto: este aparelho vai avisar enquanto o GBD estiver aberto.',n:'Avisos ligados'};
  if(modo==='antes')return {t:`${ic} ${tipo} em ${ANTES} min · ${e.rot}`,c:`Prepare-se: ${quem}`,n:e.nomes.join(', ')};
  return {t:`${ic} ${tipo} agora · ${e.rot}`,c:`Pode sair: ${quem}`,n:e.nomes.join(', ')};
 }
