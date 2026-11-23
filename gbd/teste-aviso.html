@@ -62,7 +62,7 @@ h1{margin:0;font:400 28px/1.1 var(--fc)}
 
  <div class="card"><div class="cb">
   <div class="st" id="st"><i></i><span>Avisos desligados</span></div>
-  <p class="hint" id="stHint">Toque em Ativar avisos e permita as notificações. Com esta página aberta, o aparelho avisa 5 minutos antes e na hora de cada pausa e intervalo.</p>
+  <p class="hint" id="stHint">Toque em Ativar avisos e permita as notificações. Com esta página aberta, o aparelho avisa com som na hora de cada pausa e intervalo.</p>
   <button class="btn" id="bAtivar" type="button">Ativar avisos</button>
   <div class="row2">
    <button class="btn sec" id="bAgora" type="button">Testar agora</button>
@@ -88,7 +88,6 @@ const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const pad=n=>String(n).padStart(2,'0');
 const chave=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-const ANTES=5; /* minutos de antecedência do primeiro aviso */
 
 /* ---------- lê o GBD do dia (mesmo arquivo da tela do GBD) ---------- */
 function lerTexto(txt){
@@ -129,6 +128,19 @@ function renderLista(){
  $('#lista').innerHTML=bloco('pau','Pausa')+bloco('int','Intervalo');
 }
 
+/* ---------- som: três toques curtos, tocados pela própria página ---------- */
+let AC=null;
+function liberarSom(){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume()}catch(_){}}
+function tocar(){
+ try{liberarSom();if(!AC)return;const t0=AC.currentTime+.05;
+  [[880,0],[1175,.22],[1568,.44]].forEach(([f,d])=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=f;
+   g.gain.setValueAtTime(0,t0+d);g.gain.linearRampToValueAtTime(.35,t0+d+.02);g.gain.exponentialRampToValueAtTime(.001,t0+d+.5);
+   o.connect(g).connect(AC.destination);o.start(t0+d);o.stop(t0+d+.55)});
+ }catch(_){}
+}
+/* o navegador só libera som depois de um toque na página */
+addEventListener('pointerdown',liberarSom,{once:true});
+
 /* ---------- notificação ---------- */
 let REG=null;
 async function registrar(){
@@ -141,7 +153,7 @@ function estado(){
  if(!('Notification' in window)){s.className='st no';s.lastChild.textContent='Este navegador não mostra notificações';
   h.textContent='No iPhone, as notificações só funcionam com o BFU instalado na tela de início (iOS 16.4 ou mais novo). O aviso dentro da página continua funcionando.';b.disabled=true;return}
  const p=Notification.permission;
- if(p==='granted'){s.className='st on';s.lastChild.textContent='Avisos ligados';h.textContent=`Com esta página aberta, o aparelho avisa ${ANTES} minutos antes e na hora de cada pausa e intervalo.`;b.textContent='Avisos ativados';b.disabled=true}
+ if(p==='granted'){s.className='st on';s.lastChild.textContent='Avisos ligados';h.textContent='Com esta página aberta, o aparelho avisa com som na hora de cada pausa e intervalo.';b.textContent='Avisos ativados';b.disabled=true}
  else if(p==='denied'){s.className='st no';s.lastChild.textContent='Notificações bloqueadas';h.textContent='Libere em: cadeado ao lado do endereço › Permissões › Notificações. O aviso dentro da página continua funcionando.';b.disabled=true}
 }
 async function ativar(){
@@ -154,20 +166,20 @@ function textos(e,modo){
  const tipo=e.tipo==='pau'?'Pausa':'Intervalo',ic=e.tipo==='pau'?'☕':'🍽️';
  const quem=e.nomes.map(n=>POSTO[n]?`${n} (${POSTO[n]})`:n).join(', ');
  if(modo==='ok')return {t:'🔔 Avisos de pausa e intervalo',c:'Pronto: este aparelho vai avisar enquanto o GBD estiver aberto.',n:'Avisos ligados'};
- if(modo==='antes')return {t:`${ic} ${tipo} em ${ANTES} min · ${e.rot}`,c:`Prepare-se: ${quem}`,n:e.nomes.join(', ')};
  return {t:`${ic} ${tipo} agora · ${e.rot}`,c:`Pode sair: ${quem}`,n:e.nomes.join(', ')};
 }
 async function avisar(e,modo){
  const x=textos(e,modo);
+ tocar();
  /* aviso dentro da página */
  const a=$('#alerta');a.className='alerta '+(e.tipo||'');
  const ps=(e.nomes||[]).map(n=>POSTO[n]).filter(Boolean).join(' · ');
- $('#aT').textContent=x.t;$('#aN').textContent=x.n;$('#aP').textContent=modo==='ok'?x.c:(ps?ps+' · ':'')+(modo==='antes'?`sai em ${ANTES} minutos`:'pode sair agora');
+ $('#aT').textContent=x.t;$('#aN').textContent=x.n;$('#aP').textContent=modo==='ok'?x.c:(ps?ps+' · ':'')+'pode sair agora';
  requestAnimationFrame(()=>a.classList.add('on'));
  try{navigator.vibrate&&navigator.vibrate([300,150,300,150,500])}catch(_){}
  /* notificação do sistema */
  if(!('Notification' in window)||Notification.permission!=='granted')return;
- const op={body:x.c,icon:'../icon-192.png',badge:'../icon-192.png',tag:'gbd-'+(e.rot||'t')+'-'+modo,renotify:true,vibrate:[300,150,300],requireInteraction:modo!=='antes',data:{url:location.href}};
+ const op={body:x.c,icon:'../icon-192.png',badge:'../icon-192.png',tag:'gbd-'+(e.rot||'t')+'-'+modo,renotify:true,vibrate:[300,150,300],requireInteraction:true,silent:false,data:{url:location.href}};
  try{const r=REG||await navigator.serviceWorker.getRegistration();if(r){await r.showNotification(x.t,op);return}}catch(_){}
  try{new Notification(x.t,op)}catch(_){}
 }
@@ -190,7 +202,7 @@ const feitos=new Set((()=>{try{return JSON.parse(sessionStorage.getItem('gbd-avi
 function conferir(){
  if(!DIA)return;const agora=Date.now();
  for(const e of EVS){const t=quando(e).getTime();
-  for(const [modo,em] of [['antes',t-ANTES*60000],['hora',t]]){
+  for(const [modo,em] of [['hora',t]]){
    const id=DIA+e.tipo+e.rot+modo;
    if(agora>=em&&agora<em+10*60000&&!feitos.has(id)){feitos.add(id);try{sessionStorage.setItem('gbd-avisos',JSON.stringify([...feitos]))}catch(_){}avisar(e,modo)}
   }}
