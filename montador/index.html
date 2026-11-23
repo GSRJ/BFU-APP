@@ -1167,10 +1167,11 @@ function renderCiclo(){
   const bc=el('button','btn pri sm','Copiar');bc.onclick=()=>copiar(textoGBD(k),'GBD de '+br(k)+' copiado');
   const be=el('button','btn sm','Editar postos');
   const bt=el('button','btn sm','Trocar dois');
+  const bh=el('button','btn sm','Trocar pausa/intervalo');
   const bf=el('button','btn sm','Ausência hoje');
   const bk=el('button','btn sm'+(confirmado(k)?'':' pri'),confirmado(k)?'Voltar a previsto':'Confirmar');
   bk.onclick=()=>alternarConfirmado(k);
-  ac.append(bc,bk,be,bt,bf);
+  ac.append(bc,bk,be,bt,bh,bf);
   if(d.travado&&!d.realizado){
    const bl=el('button','btn sm danger','Soltar');
    bl.onclick=()=>{delete S.manuais[k];salvar();limparCache(k);renderCiclo()};
@@ -1182,6 +1183,7 @@ function renderCiclo(){
    ed.classList.toggle('on',!ja);ed.dataset.modo=ja?'':fn.name;if(!ja)fn(ed,k)};
   be.onclick=()=>abrir(montarEditor);
   bt.onclick=()=>abrir(montarTroca);
+ bh.onclick=()=>abrir(montarTrocaHora);
   bf.onclick=()=>abrir(montarAusencia);
   card.appendChild(ed);
   box.appendChild(card);
@@ -1265,6 +1267,35 @@ function montarTroca(ed,k){
  };
  r.appendChild(b);ed.appendChild(r);
  ed.appendChild(el('div','aviso i','O dia fica fixado e os dias seguintes do ciclo são remontados em cima da troca.'));
+}
+function montarTrocaHora(ed,k){
+ ed.innerHTML='';
+ const d=dia(k),c0=d.cafe||{},j0=d.janta||{};
+ const ids=disponiveis(k).filter(id=>c0[id]||j0[id]);
+ if(ids.length<2){ed.appendChild(el('div','aviso i','Não há dois agentes com pausa ou intervalo nesse dia.'));return}
+ const mk=lbl=>{const r=el('div','erow');r.appendChild(el('label',null,lbl));const s=el('select');
+  ids.forEach(id=>s.appendChild(new Option(`${nome(id)} · pausa ${c0[id]||"—"} · interv. ${j0[id]||"—"}`,id)));
+  r.appendChild(s);ed.appendChild(r);return s};
+ const s1=mk('Primeiro'),s2=mk('Segundo');s2.value=ids[1];
+ const r0=el('div','erow');r0.appendChild(el('label',null,'Trocar'));
+ const so=el('select');[['ambos','Pausa e intervalo'],['c','Só a pausa'],['j','Só o intervalo']].forEach(([v,t])=>so.appendChild(new Option(t,v)));
+ r0.appendChild(so);ed.appendChild(r0);
+ const r=el('div','erow');r.appendChild(el('span'));
+ const b=el('button','btn pri sm','Trocar horários');
+ b.onclick=()=>{
+  const x=s1.value,y=s2.value,o=so.value;if(x===y)return toast('Escolha dois agentes diferentes');
+  const c={...c0},j={...j0};
+  const troca=(m,rot)=>{if(!m[x]||!m[y]){toast(`${nome(m[x]?y:x)} não tem ${rot} nesse dia`);return false}
+   if(m[x]===m[y]){toast(`Os dois já têm ${rot} no mesmo horário`);return false}[m[x],m[y]]=[m[y],m[x]];return true};
+  if(o!=='j'&&!troca(c,'pausa'))return;
+  if(o!=='c'&&!troca(j,'intervalo'))return;
+  const mapa=(()=>{const m={};for(const p of ORDEM)if(d.postos[p])m[p]=d.postos[p].slice();return m})();
+  const ant=S.manuais[k];S.manuais[k]={...(ant&&ant.asl?{asl:ant.asl}:{}),p:mapa,c,j};
+  salvar();limparCache(k);renderCiclo();
+  toast(`${o==='c'?'Pausa':o==='j'?'Intervalo':'Pausa e intervalo'} de ${nome(x)} e ${nome(y)} trocados`);
+ };
+ r.appendChild(b);ed.appendChild(r);
+ ed.appendChild(el('div','aviso i','Os postos continuam iguais e o dia fica fixado. Se depois mudar os postos do dia, a pausa e o intervalo são refeitos.'));
 }
 function montarAusencia(ed,k){
  ed.innerHTML='';
