@@ -108,6 +108,24 @@ details.wpp summary::before{content:"▸ "}
 details.wpp[open] summary::before{content:"▾ "}
 .tnot{display:block;text-align:center;padding:13px;border-radius:10px;border:2px solid var(--az);color:var(--az);background:#fff;font:700 15px/1 var(--f);text-decoration:none}
 .tnot:active{background:#E8EEF8}
+/* avisos de pausa e intervalo */
+.avc .cb{display:flex;flex-direction:column;gap:6px}
+.avst{display:flex;align-items:center;gap:9px;font-weight:700;font-size:15px}
+.avst i{width:11px;height:11px;border-radius:50%;background:#B8C3D1;flex:none}
+.avst.on i{background:#1E8C6B}.avst.no i{background:#C2201C}
+.avhint{margin:0;color:var(--mut);font-size:13.5px;line-height:1.4}
+.avprox{margin:0;font-size:14px;color:var(--tx)}
+.avbtn{width:100%;border:0;border-radius:10px;padding:14px;font:700 16px/1 var(--f);background:var(--az);color:#fff;margin-top:6px;cursor:pointer}
+.avbtn.off{background:#fff;color:var(--az);border:2px solid var(--az)}
+.avbtn:disabled{opacity:.45}
+.avpop{position:fixed;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top));z-index:30;background:var(--mar,#10294A);color:#fff;border-radius:14px;padding:16px 16px 14px;box-shadow:0 10px 30px rgba(10,30,56,.35);transform:translateY(-150%);transition:transform .35s cubic-bezier(.2,.9,.3,1)}
+.avpop.on{transform:none}
+.avpop .t{font:700 13px/1 var(--f);color:#B9C8DD}
+.avpop .n{font:700 23px/1.2 var(--f);margin:6px 0 4px}
+.avpop .p{font-size:14px;color:#D7E4FB}
+.avpop button{margin-top:12px;width:100%;border:0;border-radius:9px;padding:12px;font:700 15px/1 var(--f);background:#fff;color:#10294A}
+.avpop.pau{border-left:8px solid #F6C66B}.avpop.int{border-left:8px solid #8FD3BE}
+@media(min-width:700px){.avpop{left:auto;right:20px;top:20px;width:400px}}
 /* botões */
 .btn{background:#fff;border:1px solid var(--li);border-radius:8px;padding:7px 12px;font:600 14px/1.1 var(--f);color:var(--tx)}
 .btn:hover{border-color:var(--az);color:var(--az)}
@@ -198,10 +216,18 @@ footer .off{display:inline-block;padding:4px 10px;border-radius:999px;background
   </div>
   <div id="alerta"></div>
   <div id="conteudo"></div>
+  <div class="card avc" id="avisos" hidden><div class="cb">
+    <div class="avst" id="avSt"><i></i><span>Avisos desligados</span></div>
+    <p class="avhint" id="avHint">Toque em Ativar avisos e permita as notificações. Com o GBD aberto, o aparelho avisa com som na hora de cada pausa e intervalo.</p>
+    <p class="avprox" id="avProx" hidden></p>
+    <button class="avbtn" id="avBtn" type="button">Ativar avisos</button>
+  </div></div>
   <a class="tnot" href="teste-aviso.html" onclick="event.preventDefault();location.replace('teste-aviso.html'+location.search)">🔔 Testar notificações</a>
 </main>
 <footer><span class="off">Funciona sem internet: mostra o último GBD publicado.</span><br>Desenvolvido por AAS Gerson</footer>
 <div class="toast" id="toast"></div>
+<div class="avpop" id="avPop" role="alert"><div class="t" id="avPt"></div><div class="n" id="avPn"></div><div class="p" id="avPp"></div><button type="button" id="avOk">Entendi</button></div>
+
 <script>
 "use strict";
 /* dados embutidos na publicação; o arquivo gbd-dados.json, quando existir, substitui */
@@ -286,6 +312,7 @@ async function carregar(silencioso){
 /* ---------- render ---------- */
 function render(){
  const al=$('#alerta');al.innerHTML='';
+ const avb=$('#avisos');if(avb){avb.hidden=true;$('main').insertBefore(avb,$('.tnot'))}
  const box=$('#conteudo');box.innerHTML='';
 
  D=DADOS[turno||'tarde']||null;
@@ -377,9 +404,11 @@ function render(){
  }
  else c.appendChild(el('div','cb',el('p','hint','Sem GBD para esta data.').textContent));
  box.appendChild(c);
+ if(dd&&verDia===foco)box.appendChild($('#avisos'));
 
  /* ciclo do posto de rodízio até a data */
  if(dd&&dd.ciclo&&D.ciclos&&(D.ciclos[dd.ciclo]||verCiclo))montarCiclo(box,dd);
+ if(typeof atualizarAvisos==='function'){atualizarAvisos();avConferir();}
 
 }
 
@@ -568,6 +597,107 @@ const IN_HUB=/\/gbd\/(index\.html)?$/.test(location.pathname);
 const IN_FRAME=(()=>{try{return window.parent!==window&&parent.location.origin===location.origin;}catch(_){return false;}})();
 function goHub(){if(IN_FRAME){parent.postMessage({bfu:'home'},location.origin);}else location.href='../index.html';}
 if(IN_HUB||IN_FRAME){document.body.classList.add('in-hub');const hb=$('#hubBack');hb.hidden=false;hb.onclick=goHub;}
+
+
+/* ---------- avisos de pausa e intervalo (mesma lógica da página de teste) ---------- */
+const AV_KEY='gbd-avisos-on';
+let avOn=(()=>{try{return localStorage.getItem(AV_KEY)==='1'}catch(_){return false}})();
+let AV_EVS=[],AV_POSTO={},AV_DIA=null,AV_REG=null,AV_CTX=null;
+function avLer(txt){
+ const postoDe={},evs=[];let sec='';
+ for(const raw of String(txt||'').split('\n')){
+  const l=raw.trim();if(!l||/^━+$/.test(l))continue;
+  const m=l.match(/^\S+\s+\*([^*]+)\*$/);
+  if(m&&m[1]===m[1].toUpperCase()){sec=/PAUSA|CAF/.test(m[1])?'pau':/INTERV|JANT|ALMO/.test(m[1])?'int':/POSTO/.test(m[1])?'pos':'';continue}
+  const sp=l.split('▸');if(sp.length<2)continue;
+  const esq=sp[0].replace(/\*/g,'').replace(/^\S+\s+/,'').trim(),dir=sp.slice(1).join('▸').replace(/\*/g,'').trim();
+  const nomes=dir.split(/\s*(?:,|\be\b|→)\s*/).map(x=>x.trim()).filter(Boolean);
+  if(sec==='pos')nomes.forEach(n=>{postoDe[n]=postoDe[n]?postoDe[n]+' / '+esq:esq});
+  else if(sec==='pau'||sec==='int'){const hm=esq.match(/(\d{1,2})h(\d{2})?/);if(hm)evs.push({tipo:sec,rot:esq,h:+hm[1],mi:+(hm[2]||0),nomes})}
+ }
+ return {postoDe,evs};
+}
+function avQuando(e){const [a,m,d]=AV_DIA.split('-').map(Number);const t=new Date(a,m-1,d,e.h,e.mi,0);
+ /* turno da noite: horário de madrugada é do dia seguinte */
+ if((turno||'tarde')==='noite'&&e.h<12)t.setDate(t.getDate()+1);return t}
+function avPreparar(){
+ const dd=D&&D.dias&&foco?D.dias[foco]:null;
+ if(!dd){AV_EVS=[];AV_DIA=null;return false}
+ const o=avLer(dd.txt);AV_EVS=o.evs;AV_POSTO=o.postoDe;AV_DIA=foco;return AV_EVS.length>0;
+}
+function avProximo(){const agora=Date.now();let p=null;for(const e of AV_EVS){const t=avQuando(e).getTime();if(t>agora&&(!p||t<avQuando(p).getTime()))p=e}return p}
+function atualizarAvisos(){
+ const box=$('#avisos');if(!box)return;
+ if(!avPreparar()){box.hidden=true;return}
+ box.hidden=false;
+ const s=$('#avSt'),hi=$('#avHint'),b=$('#avBtn'),pr=$('#avProx');
+ const temNot='Notification' in window,perm=temNot?Notification.permission:'none';
+ if(!avOn){s.className='avst';s.lastChild.textContent='Avisos desligados';
+  hi.textContent='Toque em Ativar avisos e permita as notificações. Com o GBD aberto, o aparelho avisa com som na hora de cada pausa e intervalo.';
+  b.textContent='Ativar avisos';b.className='avbtn';}
+ else{
+  if(perm==='granted'){s.className='avst on';s.lastChild.textContent='Avisos ligados';hi.textContent='Com o GBD aberto, o aparelho avisa com som e notificação na hora de cada pausa e intervalo.'}
+  else if(perm==='denied'){s.className='avst no';s.lastChild.textContent='Avisos ligados só na tela';hi.textContent='As notificações deste site estão bloqueadas. Libere em: cadeado ao lado do endereço › Notificações. O aviso com som na tela continua funcionando.'}
+  else if(!temNot){s.className='avst on';s.lastChild.textContent='Avisos ligados na tela';hi.textContent='Este navegador não mostra notificações. No iPhone, só funcionam com o BFU instalado na tela de início. O aviso com som na tela continua funcionando.'}
+  else{s.className='avst on';s.lastChild.textContent='Avisos ligados na tela';hi.textContent='Falta permitir as notificações. Toque em Ativar avisos de novo para permitir.'}
+  b.textContent=perm==='default'?'Permitir notificações':'Desativar avisos';b.className='avbtn'+(perm==='default'?'':' off');
+ }
+ const p=avProximo();
+ if(p){const f=Math.round((avQuando(p).getTime()-Date.now())/60000),qd=f<60?`em ${f} min`:`em ${Math.floor(f/60)}h${f%60?String(f%60).padStart(2,'0'):''}`;
+  pr.hidden=false;pr.innerHTML=`Próximo aviso: <b>${esc(p.rot)}</b> · ${p.tipo==='pau'?'Pausa':'Intervalo'} de ${esc(p.nomes.join(', '))} (${qd})`;}
+ else{pr.hidden=false;pr.textContent='Não há mais pausa nem intervalo hoje.'}
+}
+function avSomLiberar(){try{AV_CTX=AV_CTX||new (window.AudioContext||window.webkitAudioContext)();if(AV_CTX.state==='suspended')AV_CTX.resume()}catch(_){}}
+function avTocar(){
+ try{avSomLiberar();if(!AV_CTX)return;const t0=AV_CTX.currentTime+.05;
+  [[880,0],[1175,.22],[1568,.44]].forEach(([f,d])=>{const o=AV_CTX.createOscillator(),g=AV_CTX.createGain();o.type='sine';o.frequency.value=f;
+   g.gain.setValueAtTime(0,t0+d);g.gain.linearRampToValueAtTime(.35,t0+d+.02);g.gain.exponentialRampToValueAtTime(.001,t0+d+.5);
+   o.connect(g).connect(AV_CTX.destination);o.start(t0+d);o.stop(t0+d+.55)});
+ }catch(_){}
+}
+addEventListener('pointerdown',avSomLiberar,{once:true});
+async function avRegistrar(){
+ if(!('serviceWorker' in navigator)||!/^https?:/.test(location.protocol))return null;
+ try{await navigator.serviceWorker.register('sw.js');AV_REG=await navigator.serviceWorker.getRegistration('./')||await navigator.serviceWorker.ready}catch(_){AV_REG=null}
+ return AV_REG;
+}
+async function avisar(e,modo){
+ const ok=modo==='ok',tipo=e.tipo==='pau'?'Pausa':'Intervalo',ic=e.tipo==='pau'?'☕':'🍽️';
+ const quem=(e.nomes||[]).map(n=>AV_POSTO[n]?`${n} (${AV_POSTO[n]})`:n).join(', ');
+ const titulo=ok?'🔔 Avisos de pausa e intervalo':`${ic} ${tipo} agora · ${e.rot}`;
+ const corpo=ok?'Pronto: este aparelho vai avisar enquanto o GBD estiver aberto.':`Pode sair: ${quem}`;
+ avTocar();
+ const a=$('#avPop');a.className='avpop '+(ok?'':e.tipo);
+ const ps=(e.nomes||[]).map(n=>AV_POSTO[n]).filter(Boolean).join(' · ');
+ $('#avPt').textContent=titulo;$('#avPn').textContent=ok?'Avisos ligados':e.nomes.join(', ');$('#avPp').textContent=ok?corpo:(ps?ps+' · ':'')+'pode sair agora';
+ requestAnimationFrame(()=>a.classList.add('on'));
+ try{navigator.vibrate&&navigator.vibrate([300,150,300,150,500])}catch(_){}
+ if(!('Notification' in window)||Notification.permission!=='granted')return;
+ const op={body:corpo,icon:'../icon-192.png',badge:'../icon-192.png',tag:'gbd-'+(e.rot||'t')+'-'+modo,renotify:true,vibrate:[300,150,300],requireInteraction:true,silent:false,data:{url:location.href}};
+ try{const r=AV_REG||await navigator.serviceWorker.getRegistration('./');if(r){await r.showNotification(titulo,op);return}}catch(_){}
+ try{new Notification(titulo,op)}catch(_){}
+}
+$('#avOk').onclick=()=>$('#avPop').classList.remove('on');
+$('#avBtn').onclick=async()=>{
+ avSomLiberar();
+ const perm=('Notification' in window)?Notification.permission:'none';
+ if(avOn&&perm!=='default'){avOn=false;try{localStorage.setItem(AV_KEY,'0')}catch(_){};atualizarAvisos();toast('Avisos desligados');return}
+ avOn=true;try{localStorage.setItem(AV_KEY,'1')}catch(_){}
+ await avRegistrar();
+ if('Notification' in window&&Notification.permission==='default'){try{await Notification.requestPermission()}catch(_){}}
+ atualizarAvisos();
+ avisar({tipo:'pau',rot:'teste',nomes:['Avisos ligados']},'ok');
+};
+/* confere a cada 20 s; guarda o que já avisou para não repetir */
+const AV_FEITOS=new Set((()=>{try{return JSON.parse(sessionStorage.getItem('gbd-avisos')||'[]')}catch(_){return []}})());
+function avConferir(){
+ if(!avOn||!AV_DIA)return;const agora=Date.now();
+ for(const e of AV_EVS){const t=avQuando(e).getTime(),id=AV_DIA+e.tipo+e.rot;
+  if(agora>=t&&agora<t+10*60000&&!AV_FEITOS.has(id)){AV_FEITOS.add(id);try{sessionStorage.setItem('gbd-avisos',JSON.stringify([...AV_FEITOS]))}catch(_){}avisar(e,'hora')}}
+}
+setInterval(()=>{avConferir();if(!$('#avisos').hidden)atualizarAvisos()},20000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)avConferir()});
+if(avOn&&'Notification' in window&&Notification.permission==='granted')avRegistrar();
 
 /* ---------- ciclo de vida ---------- */
 if('serviceWorker' in navigator&&/^https?:/.test(location.protocol)){navigator.serviceWorker.register('sw.js').catch(()=>{});}

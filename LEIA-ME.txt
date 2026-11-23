@@ -41,3 +41,8 @@ variáveis de ambiente da Vercel, nunca no celular e nunca neste repositório:
   PUBLICAR_SENHA  senha digitada no montador, 12 caracteres ou mais
 Para conferir se as variáveis estão no ar: abra /api/publicar no navegador. Responde
 {"pronto":true} quando as duas existem.
+
+Atualização 23/11 (avisos no GBD): a página do GBD ganhou o cartão "Avisos de pausa e intervalo", logo abaixo
+do GBD de hoje, com o botão "Ativar avisos". Ligado, o aparelho toca um som, mostra um aviso na tela e manda
+notificação na hora de cada pausa e intervalo do GBD do dia, enquanto a página estiver aberta. A escolha fica
+guardada no aparelho; o mesmo botão desliga. A página teste-aviso.html continua para testar as notificações.
