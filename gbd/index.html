@@ -106,8 +106,8 @@ details.wpp summary{padding:11px 14px;font:600 14px/1.2 var(--f);color:var(--az)
 details.wpp summary::-webkit-details-marker{display:none}
 details.wpp summary::before{content:"▸ "}
 details.wpp[open] summary::before{content:"▾ "}
-.tnot{flex:none;display:inline-flex;align-items:center;height:38px;padding:0 12px;border-radius:9px;background:var(--az);color:#fff;font:700 14.5px/1 var(--f);text-decoration:none;white-space:nowrap}
-.tnot:active{filter:brightness(.9)}
+.tnot{display:block;text-align:center;padding:13px;border-radius:10px;border:2px solid var(--az);color:var(--az);background:#fff;font:700 15px/1 var(--f);text-decoration:none}
+.tnot:active{background:#E8EEF8}
 /* avisos de pausa e intervalo */
 .avc .cb{display:flex;flex-direction:column;gap:6px}
 .avst{display:flex;align-items:center;gap:9px;font-weight:700;font-size:15px}
@@ -208,7 +208,6 @@ footer .off{display:inline-block;padding:4px 10px;border-radius:999px;background
   <button class="hubback" id="hubBack" type="button" hidden aria-label="Voltar à tela inicial do BFU"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg><b>Início</b></button>
   <div class="logo">BFU</div>
   <b>Estação Barra Funda</b>
-  <a class="tnot" aria-label="Testar notificações" href="teste-aviso.html" onclick="event.preventDefault();location.replace('teste-aviso.html'+location.search)">🔔 Testar</a>
 </header>
 <main>
   <div class="hello">
@@ -223,6 +222,7 @@ footer .off{display:inline-block;padding:4px 10px;border-radius:999px;background
     <p class="avprox" id="avProx" hidden></p>
     <button class="avbtn" id="avBtn" type="button">Ativar avisos</button>
   </div></div>
+  <a class="tnot" href="teste-aviso.html" onclick="event.preventDefault();location.replace('teste-aviso.html'+location.search)">🔔 Testar notificações</a>
 </main>
 <footer><span class="off">Funciona sem internet: mostra o último GBD publicado.</span><br>Desenvolvido por AAS Gerson</footer>
 <div class="toast" id="toast"></div>
