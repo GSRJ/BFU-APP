@@ -198,7 +198,7 @@ footer .off{display:inline-block;padding:4px 10px;border-radius:999px;background
   </div>
   <div id="alerta"></div>
   <div id="conteudo"></div>
-  <a class="tnot" href="teste-aviso.html">🔔 Testar notificações</a>
+  <a class="tnot" href="teste-aviso.html" onclick="event.preventDefault();location.replace('teste-aviso.html'+location.search)">🔔 Testar notificações</a>
 </main>
 <footer><span class="off">Funciona sem internet: mostra o último GBD publicado.</span><br>Desenvolvido por AAS Gerson</footer>
 <div class="toast" id="toast"></div>
