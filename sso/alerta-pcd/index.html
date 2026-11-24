@@ -123,6 +123,11 @@ label.cfg input[type=range]{flex:1}
     <label class="cfg">Avisar imagem parada após <input type="range" id="rPar" min="1" max="15" step="1" value="3"> <b id="vPar">3 min</b></label>
     <label class="cfg">Limiar do texto <input type="range" id="rLim" min="80" max="230" step="5" value="140"> <b id="vLim">140</b></label>
     <p class="dica">Se o texto lido sair vazio ou com sujeira, mexa no limiar e toque em "Ler agora". Esta janela pode ser minimizada. A janela do sinótico não: pode ficar atrás de outras, mas minimizada a imagem congela, e o app avisa "imagem parada".</p>
+    <div class="row">
+      <button class="btn" id="bNotif" type="button">Ativar notificações</button>
+      <button class="btn" id="bTeste" type="button">Testar aviso em 10 s</button>
+    </div>
+    <p class="dica" id="notifEst"></p>
     <div class="aviso">É um aviso de apoio. Ele não substitui a comunicação com o CCO nem a proteção de quem está na via.</div>
   </section>
 
@@ -149,6 +154,7 @@ const cv=$('#cv'),cx=cv.getContext('2d',{willReadFrequently:true}),video=$('#vid
 let track=null,cap=null,imgFonte=null,fonteArquivo=false,frame=null,ocr=null,rodando=false,ocupado=false,ticker=null,marcando=false,perdas=0;
 let assinatura=null,desdeMudou=Date.now(),avisouParado=false,inicioCiclo=0,avisouTravou=false;
 const estadoTrem={}; // prefixo -> {onde,quando}
+let nCiclo=0;
 const presenca={};   // prefixo|zona -> {hist,falta,avisado}
 
 /* ---------- fonte da imagem ---------- */
@@ -305,14 +311,23 @@ const PARES={O:'0',D:'0',Q:'0',I:'1',L:'1',J:'1',Z:'2',S:'5',B:'8',G:'6'};
 const canon=s=>s.toUpperCase().replace(/[^A-Z0-9]/g,'').replace(/[ODQILJZSBG]/g,c=>PARES[c]);
 const limpo=s=>s.toUpperCase().replace(/[^A-Z0-9]/g,'');
 function procurar(linhas,p,cp){
-  let id=null,exato=false;
-  for(const l of linhas){
-    const partes=l.split(/\s+/).map(limpo).filter(Boolean).concat(limpo(l));
-    for(const r of partes){const i=canon(r).indexOf(cp);if(i<0)continue;
-      // mostra o prefixo como foi digitado e o resto como foi lido (5120X288 vira S120X288)
-      const lido=p+r.slice(i+p.length);if(!id||r.includes(p))id=lido;if(r.includes(p))exato=true}
-  }
-  return {id,exato};
+  const achados=[];
+  const add=(r,i)=>{
+    // mostra o prefixo como foi digitado e o resto como foi lido (5120X288 vira S120X288)
+    const id=p+r.slice(i+p.length),exato=r.includes(p),o=achados.find(x=>parecido(x.id,id));
+    if(o){if(exato&&!o.exato){o.id=id;o.exato=true}}else achados.push({id,exato});
+  };
+  for(const l of linhas)for(const r of l.split(/\s+/).map(limpo)){const i=canon(r).indexOf(cp);if(i>=0)add(r,i)}
+  if(!achados.length)for(const l of linhas){const r=limpo(l),i=canon(r).indexOf(cp);if(i>=0)add(r,i)}
+  return achados;
+}
+// dois prefixos lidos são o mesmo trem se um começa pelo outro ou se diferem em um caractere
+function parecido(a,b){
+  a=canon(a);b=canon(b);if(a.startsWith(b)||b.startsWith(a))return true;
+  if(Math.abs(a.length-b.length)>1)return false;
+  const m=[...Array(b.length+1).keys()];
+  for(let i=1;i<=a.length;i++){let ant=m[0];m[0]=i;for(let j=1;j<=b.length;j++){const t=m[j];m[j]=Math.min(m[j]+1,m[j-1]+1,ant+(a[i-1]===b[j-1]?0:1));ant=t}}
+  return m[b.length]<=1;
 }
 // imagem parada: compara uma miniatura do quadro com a do ciclo anterior
 const mini=document.createElement('canvas');mini.width=160;mini.height=90;
@@ -352,7 +367,7 @@ function hora(){return new Date().toLocaleTimeString('pt-BR')}
 async function ciclo(){
   if(!rodando)return;
   if(ocupado){if(!avisouTravou&&Date.now()-inicioCiclo>45000){avisouTravou=true;falha('O leitor parou de responder. Pare e comece a vigiar de novo.','Leitor travado')}return}
-  ocupado=true;inicioCiclo=Date.now();avisouTravou=false;
+  ocupado=true;inicioCiclo=Date.now();avisouTravou=false;nCiclo++;
   try{
     const f=imgFonte?frame:await pegarQuadro();
     if(!f){perdas++;if(perdas===3)falha('Perdi a imagem do painel.');return}
@@ -367,17 +382,23 @@ async function ciclo(){
     for(const p of cfg.prefixos){
       const cp=canon(p);
       for(const {z,linhas} of res){
-        const k=p+'|'+z.id,s=presenca[k]||(presenca[k]={hist:[],falta:0,avisado:false});
-        const {id,exato}=procurar(linhas,p,cp);
-        s.hist=s.hist.concat(!!id).slice(-3);
-        if(id){
-          s.falta=0;
+        const k=p+'|'+z.id,s=presenca[k]||(presenca[k]={cand:[],avisados:[]});
+        const achados=procurar(linhas,p,cp);
+        for(const a of achados){
           estadoTrem[p]={onde:z.nome,quando:hora().slice(0,5),agora:true};
+          const av=s.avisados.find(x=>parecido(x.id,a.id));
+          if(av){av.ult=nCiclo;continue}
+          let c=s.cand.find(x=>parecido(x.id,a.id));
+          if(!c){c={id:a.id,n:0};s.cand.push(c)}
+          c.n++;c.ult=nCiclo;if(a.exato)c.id=a.id;
           // leitura exata avisa na hora; leitura aproximada (S lido como 5 etc.) precisa aparecer 2 vezes em 3 leituras
-          if(!s.avisado&&(exato||s.hist.filter(Boolean).length>=2)){s.avisado=true;avisar(p,z.nome,id)}
-        }else{
-          s.falta++;
-          if(s.avisado&&s.falta>=2){s.avisado=false;registrar(p+' saiu de '+z.nome);if(estadoTrem[p]&&estadoTrem[p].onde===z.nome)estadoTrem[p].agora=false}
+          if(a.exato||c.n>=2){s.cand.splice(s.cand.indexOf(c),1);s.avisados.push({id:c.id,ult:nCiclo});avisar(p,z.nome,c.id)}
+        }
+        s.cand=s.cand.filter(c=>nCiclo-c.ult<3);
+        // trem que não aparece há 2 leituras saiu da área; a área volta a avisar para ele
+        for(const a of s.avisados.filter(a=>nCiclo-a.ult>=2)){
+          s.avisados.splice(s.avisados.indexOf(a),1);registrar(a.id+' saiu de '+z.nome);
+          if(!s.avisados.length&&estadoTrem[p]&&estadoTrem[p].onde===z.nome&&!achados.length)estadoTrem[p].agora=false;
         }
       }
     }
@@ -398,7 +419,7 @@ function pararRelogio(){if(ticker){ticker.terminate();ticker=null}}
 let wake=null;
 $('#bIniciar').onclick=async()=>{
   somCtx();
-  if('Notification' in window&&Notification.permission==='default')Notification.requestPermission().catch(()=>{});
+  if('Notification' in window&&Notification.permission==='default')Notification.requestPermission().then(notifEstado).catch(()=>{});
   try{await prepararOCR()}catch(e){estado('Não carregou o leitor: '+e.message,true);return}
   rodando=true;perdas=0;assinatura=null;desdeMudou=Date.now();avisouParado=false;
   try{wake=await navigator.wakeLock.request('screen')}catch(e){}
@@ -422,7 +443,7 @@ $('#bLer').onclick=async()=>{
 let actx=null,repete=null;
 function somCtx(){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();actx.resume()}catch(e){}}
 function bip(grave){
-  if(!actx)return;const t0=actx.currentTime;
+  if(!actx)return;try{actx.resume()}catch(e){}const t0=actx.currentTime;
   for(let i=0;i<3;i++){const o=actx.createOscillator(),g=actx.createGain();o.type='square';o.frequency.value=grave?440:880;
     g.gain.setValueAtTime(0.0001,t0+i*0.35);g.gain.exponentialRampToValueAtTime(0.25,t0+i*0.35+0.02);g.gain.exponentialRampToValueAtTime(0.0001,t0+i*0.35+0.25);
     o.connect(g).connect(actx.destination);o.start(t0+i*0.35);o.stop(t0+i*0.35+0.3)}
@@ -440,7 +461,7 @@ function mostrar(tit,msg,isFalha){
   bip(isFalha);clearInterval(repete);let n=0;
   repete=setInterval(()=>{if(++n>6||$('#alerta').hidden){clearInterval(repete);return}bip(isFalha)},5000);
   try{navigator.vibrate&&navigator.vibrate([400,200,400])}catch(e){}
-  try{if('Notification' in window&&Notification.permission==='granted')new Notification(tit,{body:msg,icon:'../../icon-192.png',requireInteraction:true,tag:tit+msg})}catch(e){}
+  try{if('Notification' in window&&Notification.permission==='granted'){const n=new Notification(tit,{body:msg,icon:'../../icon-192.png',requireInteraction:true,tag:tit+msg+Date.now()});n.onclick=()=>{try{parent.focus();window.focus()}catch(e){}n.close()}}}catch(e){}
 }
 $('#aOk').onclick=()=>{$('#alerta').hidden=true;clearInterval(repete);pendentes=[]};
 function avisar(p,onde,id){
@@ -470,6 +491,19 @@ $('#rPar').value=cfg.paradoMin;$('#vPar').textContent=cfg.paradoMin+' min';
 $('#rPar').oninput=e=>{cfg.paradoMin=+e.target.value;$('#vPar').textContent=cfg.paradoMin+' min';salvar()};
 $('#rInt').oninput=e=>{cfg.intervalo=+e.target.value;$('#vInt').textContent=cfg.intervalo+' s';salvar();if(ticker)ticker.postMessage(cfg.intervalo*1000)};
 $('#rLim').oninput=e=>{cfg.limiar=+e.target.value;$('#vLim').textContent=cfg.limiar;salvar()};
+function notifEstado(){
+  const e=$('#notifEst'),b=$('#bNotif');
+  if(!('Notification' in window)){e.textContent='Este navegador não mostra notificações. Com a janela minimizada, o aviso é só o som e a voz.';b.hidden=true;return}
+  const p=Notification.permission;b.hidden=p==='granted';
+  e.textContent=p==='granted'?'Notificações ativadas.':p==='denied'?'Notificações bloqueadas. Libere no cadeado ao lado do endereço do site, em Notificações, e recarregue a página.':'Notificações ainda não ativadas.';
+}
+$('#bNotif').onclick=async()=>{somCtx();try{await Notification.requestPermission()}catch(e){}notifEstado()};
+$('#bTeste').onclick=()=>{
+  somCtx();if('Notification' in window&&Notification.permission==='default')Notification.requestPermission().then(notifEstado).catch(()=>{});
+  $('#bTeste').disabled=true;$('#bTeste').textContent='Minimize a janela agora…';
+  setTimeout(()=>{$('#bTeste').disabled=false;$('#bTeste').textContent='Testar aviso em 10 s';registrar('Teste de aviso');mostrar('TESTE','Se você ouviu o bipe e viu a notificação, o aviso funciona.');falar('Teste do alerta P C D')},10000);
+};
+notifEstado();
 listarZonas();listarTrens();
 </script>
 </body>
