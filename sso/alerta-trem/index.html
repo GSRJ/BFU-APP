@@ -397,7 +397,12 @@ const limpo=s=>s.toUpperCase().replace(/[^A-Z0-9]/g,'');
 // essas formas viram U, V, Y, 0 ou 11, e todas valem como U na hora de procurar
 const ALT={U:'U|V|Y|0|11'};
 const escRe=c=>c.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-const padrao=cp=>new RegExp([...cp].map(c=>ALT[c]?'(?:'+ALT[c]+')':escRe(c)).join(''));
+const parte=c=>ALT[c]?'(?:'+ALT[c]+')':escRe(c);
+// prefixo de 4 ou mais caracteres também vale com um caractere perdido depois do primeiro
+// (U510 lido como US1); essa leitura é aproximada e precisa se repetir para avisar
+const padrao=cp=>{const cs=[...cp],alts=[cs.map(parte).join('')];
+  if(cs.length>=4)for(let k=1;k<cs.length;k++)alts.push(cs.filter((_,j)=>j!==k).map(parte).join(''));
+  return new RegExp(alts.map(a=>'(?:'+a+')').join('|'))};
 function procurar(linhas,p,cp){
   const achados=[],re=padrao(cp);
   const add=(r,i,n)=>{
