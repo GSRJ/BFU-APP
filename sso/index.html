@@ -16,16 +16,9 @@ body{background:#EEEEE9;color:var(--k);font:500 16px/1.4 var(--f);min-height:100
 .top{display:flex;align-items:center;gap:10px;background:var(--k);color:#fff;border-bottom:5px solid var(--y);padding:calc(10px + env(safe-area-inset-top)) 14px 10px}
 .top b{font:700 25px/1 var(--fc);flex:1;min-width:0}
 .back{flex:none;height:40px;padding:0 12px;border:2px solid var(--y);border-radius:9px;background:transparent;color:var(--y);font:700 18px/1 var(--fc);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center}
-.sair{flex:none;height:36px;padding:0 10px;border:2px solid #777;border-radius:9px;background:transparent;color:#ddd;font:700 16px/1 var(--fc);cursor:pointer}
-.sair[hidden]{display:none}
 main{flex:1;width:100%;max-width:540px;margin:0 auto;padding:22px 16px 40px;display:flex;flex-direction:column;gap:12px}
 h1{margin:0;font:700 34px/1 var(--fc)}
 p.sub{margin:0;color:#55554F;font-size:15px}
-form{display:flex;flex-direction:column;gap:10px;background:#fff;border:2px solid var(--k);border-radius:12px;padding:16px}
-label{font:700 20px/1 var(--fc)}
-input{font:700 28px/1 var(--fc);letter-spacing:.08em;border:2px solid var(--k);border-radius:10px;padding:12px;width:100%}
-button.ent{min-height:54px;border:2px solid var(--k);border-radius:10px;background:var(--y);color:var(--k);font:700 24px/1 var(--fc);cursor:pointer}
-.erro{margin:0;color:#B71C1C;font-weight:700;font-size:15px}
 .erro[hidden],[hidden]{display:none!important}
 .menu{display:flex;flex-direction:column;gap:10px}
 .menu h1{margin-bottom:2px}
@@ -47,21 +40,9 @@ button.ent{min-height:54px;border:2px solid var(--k);border-radius:10px;backgrou
 <header class="top">
   <a class="back" id="inicio" href="../index.html">Início</a>
   <b>Apoio SSO</b>
-  <button class="sair" id="sair" type="button" hidden>Sair</button>
 </header>
 <main>
-  <section id="login" hidden>
-    <h1>Acesso restrito</h1>
-    <p class="sub" style="margin:6px 0 14px">Digite sua matrícula para entrar.</p>
-    <form id="f">
-      <label for="mat">Matrícula</label>
-      <input id="mat" inputmode="numeric" autocomplete="off" maxlength="12" required>
-      <p class="erro" id="erro" hidden>Matrícula sem acesso ao Apoio SSO.</p>
-      <button class="ent">Entrar</button>
-    </form>
-  </section>
-
-  <section id="menu" class="menu" hidden>
+  <section id="menu" class="menu">
     <h1>Ferramentas</h1>
     <p class="sub">Toque na ferramenta para abrir.</p>
     <a class="card" href="falar-estacao/index.html" style="--c:#1FAF55">
@@ -82,24 +63,10 @@ button.ent{min-height:54px;border:2px solid var(--k);border-radius:10px;backgrou
     <div class="breve">Outras ferramentas entram aqui.</div>
   </section>
 </main>
-<script src="acesso.js"></script>
 <script>
 const $=s=>document.querySelector(s);
 const dentro=window.parent!==window;
 $('#inicio').onclick=e=>{if(dentro){e.preventDefault();parent.postMessage({bfu:'home'},location.origin)}};
-function mostrar(){
-  const ok=apoioLiberado();
-  $('#login').hidden=ok;$('#menu').hidden=!ok;$('#sair').hidden=!ok;
-  if(!ok)setTimeout(()=>$('#mat').focus(),50);
-}
-$('#f').onsubmit=async e=>{
-  e.preventDefault();
-  const ok=await apoioEntrar($('#mat').value);
-  $('#erro').hidden=ok;
-  if(ok){$('#mat').value='';mostrar()}else $('#mat').select();
-};
-$('#sair').onclick=()=>{apoioSair();mostrar()};
-mostrar();
 </script>
 </body>
 </html>
