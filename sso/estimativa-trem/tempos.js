@@ -1,7 +1,7 @@
 // Tabela de tempos da ESTIMATIVA DE TREM.
 // Um trecho por linha: estação; estação; minutos. Cada trecho vale nos dois sentidos.
 // Viagens entre estações distantes somam os trechos do caminho.
-// Quem editar a tabela na página guarda a versão dela só naquele computador.
+// A página usa sempre esta tabela. A fonte é a imagem fonte-linha11.jpg, ao lado deste arquivo.
 //
 // Linha 11: tempo médio de percurso entre estações vizinhas, tirado da matriz
 // "Tempo de percurso entre estações da Linha 11". Todos os pares da matriz são a

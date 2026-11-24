@@ -64,4 +64,4 @@ não há sinótico. Escolhe-se o trem, a estação de partida, a de chegada, a h
 moldes do ALERTA TREM (aviso na tela, bipe, voz, notificação, janela fixada, título piscando), com
 observações por viagem. A tabela do site (Linha 11, BFU a EST) fica em sso/estimativa-trem/tempos.js, um trecho por linha
 ("estação; estação; minutos", vale nos dois sentidos); viagens longas somam os trechos do caminho. Quem editar
-a tabela na página guarda a versão só naquele computador.
+Ela é sempre a tabela usada; a página não aceita outra. A imagem da matriz, fonte dos tempos, está em sso/estimativa-trem/fonte-linha11.jpg e aparece na página.
