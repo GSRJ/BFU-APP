@@ -398,11 +398,12 @@ const limpo=s=>s.toUpperCase().replace(/[^A-Z0-9]/g,'');
 const ALT={U:'U|V|Y|0|11'};
 const escRe=c=>c.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
 const parte=c=>ALT[c]?'(?:'+ALT[c]+')':escRe(c);
-// prefixo de 4 ou mais caracteres também vale com um caractere perdido depois do primeiro
-// (U510 lido como US1); essa leitura é aproximada e precisa se repetir para avisar
-const padrao=cp=>{const cs=[...cp],alts=[cs.map(parte).join('')];
-  if(cs.length>=4)for(let k=1;k<cs.length;k++)alts.push(cs.filter((_,j)=>j!==k).map(parte).join(''));
-  return new RegExp(alts.map(a=>'(?:'+a+')').join('|'))};
+// prefixo de 4 ou mais caracteres também vale sem o último caractere (U510 lido como US1),
+// desde que depois não venha outro número: S125 não conta como S120. Essa leitura é
+// aproximada e precisa se repetir para avisar
+const padrao=cp=>{const cs=[...cp];let r='(?:'+cs.map(parte).join('')+')';
+  if(cs.length>=4)r+='|(?:'+cs.slice(0,-1).map(parte).join('')+'(?![0-9]))';
+  return new RegExp(r)};
 function procurar(linhas,p,cp){
   const achados=[],re=padrao(cp);
   const add=(r,i,n)=>{
