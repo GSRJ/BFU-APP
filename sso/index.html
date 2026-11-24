@@ -27,16 +27,20 @@ input{font:700 28px/1 var(--fc);letter-spacing:.08em;border:2px solid var(--k);b
 button.ent{min-height:54px;border:2px solid var(--k);border-radius:10px;background:var(--y);color:var(--k);font:700 24px/1 var(--fc);cursor:pointer}
 .erro{margin:0;color:#B71C1C;font-weight:700;font-size:15px}
 .erro[hidden],[hidden]{display:none!important}
-.card{display:flex;align-items:center;gap:14px;text-decoration:none;color:#fff;background:#3B1A10;border-radius:14px;padding:16px;min-height:100px}
-.card .ic{flex:none;width:56px;height:56px;border-radius:50%;display:grid;place-items:center;background:var(--c)}
-.card .ic svg{width:30px;height:30px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.menu{display:flex;flex-direction:column;gap:10px}
+.menu h1{margin-bottom:2px}
+.card{display:flex;align-items:center;gap:14px;text-decoration:none;color:var(--k);background:#fff;border:2px solid #D6D6CE;border-radius:14px;padding:14px;min-height:88px}
+.card:active{background:#F7F7F3;border-color:var(--k)}
+.card:focus-visible{outline:3px solid var(--y);outline-offset:2px}
+.card .ic{flex:none;width:52px;height:52px;border-radius:12px;display:grid;place-items:center;background:var(--c)}
+.card .ic svg{width:28px;height:28px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .card .tx{flex:1;min-width:0}
-.card .tx b{display:block;font:700 30px/1 var(--fc)}
-.card .tx span{display:block;font-size:14px;color:#F3D6CB;margin-top:5px;line-height:1.25}
-.card .go{flex:none;width:40px;height:40px;border-radius:50%;background:var(--y);display:grid;place-items:center}
-.card .go::before{content:"";width:10px;height:10px;border-top:3px solid var(--k);border-right:3px solid var(--k);transform:rotate(45deg);margin-left:-4px}
-.card:active{filter:brightness(1.2)}
-.breve{border:2px dashed #8E8E86;border-radius:12px;padding:14px;color:#55554F;font-size:14px;text-align:center}
+.card .tx b{display:block;font:700 24px/1.05 var(--fc)}
+.card .tx span{display:block;font-size:14px;color:#55554F;margin-top:4px;line-height:1.3}
+.card .go{flex:none;width:12px;height:12px;border-top:3px solid #8E8E86;border-right:3px solid #8E8E86;transform:rotate(45deg);margin-right:6px}
+.pc{display:inline-flex!important;align-items:center;gap:5px;margin:0 0 6px!important;padding:4px 8px;border-radius:6px;background:var(--k);color:var(--y)!important;font:700 13px/1 var(--fc)!important;letter-spacing:.06em}
+.pc svg{width:14px;height:14px;stroke:var(--y);fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.breve{border:2px dashed #BDBDB5;border-radius:12px;padding:12px;color:#55554F;font-size:14px;text-align:center}
 </style>
 </head>
 <body>
@@ -57,21 +61,22 @@ button.ent{min-height:54px;border:2px solid var(--k);border-radius:10px;backgrou
     </form>
   </section>
 
-  <section id="menu" hidden style="display:flex;flex-direction:column;gap:12px">
+  <section id="menu" class="menu" hidden>
     <h1>Ferramentas</h1>
-    <a class="card" href="alerta-trem/index.html">
-      <div class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 17V7a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v10"/><path d="M5 12h14M8 20l-2 2M16 20l2 2M5 17h14v1a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z"/><path d="M9 15h.01M15 15h.01"/></svg></div>
-      <div class="tx"><b>ALERTA TREM</b><span>Avisa quando um trem passa pela estação escolhida no sinótico</span></div>
-      <div class="go" aria-hidden="true"></div>
-    </a>
-    <a class="card" href="estimativa-trem/index.html">
-      <div class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9.5 2.5h5"/></svg></div>
-      <div class="tx"><b>ESTIMATIVA DE TREM</b><span>Sem sinótico: avisa 5, 10 ou 15 minutos antes da chegada, pela tabela de tempos</span></div>
-      <div class="go" aria-hidden="true"></div>
-    </a>
-    <a class="card" href="falar-estacao/index.html" style="background:#0F3B24;--c:#1FAF55">
+    <p class="sub">Toque na ferramenta para abrir.</p>
+    <a class="card" href="falar-estacao/index.html" style="--c:#1FAF55">
       <div class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.6-5.2A8.5 8.5 0 1 1 21 12z"/><path d="M9 10h.01M12 10h.01M15 10h.01"/></svg></div>
-      <div class="tx"><b>FALAR COM ESTAÇÃO</b><span>WhatsApp das estações das Linhas 11, 12 e 13</span></div>
+      <div class="tx"><b>Falar com estação</b><span>WhatsApp das estações das Linhas 11, 12 e 13</span></div>
+      <div class="go" aria-hidden="true"></div>
+    </a>
+    <a class="card" href="estimativa-trem/index.html" style="--c:#0B7A75">
+      <div class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9.5 2.5h5"/></svg></div>
+      <div class="tx"><b>Estimativa de trem</b><span>Avisa 5, 10 ou 15 min antes do trem chegar, pela tabela de tempos</span></div>
+      <div class="go" aria-hidden="true"></div>
+    </a>
+    <a class="card" href="alerta-trem/index.html" style="--c:#E64A19">
+      <div class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 17V7a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v10"/><path d="M5 12h14M8 20l-2 2M16 20l2 2M5 17h14v1a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z"/><path d="M9 15h.01M15 15h.01"/></svg></div>
+      <div class="tx"><span class="pc"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>SÓ NO COMPUTADOR</span><b>Alerta trem</b><span>Lê o sinótico na tela do PC e avisa quando o trem passa na estação. Não funciona no celular.</span></div>
       <div class="go" aria-hidden="true"></div>
     </a>
     <div class="breve">Outras ferramentas entram aqui.</div>
