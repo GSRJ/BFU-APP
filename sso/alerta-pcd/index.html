@@ -118,11 +118,12 @@ label.cfg input[type=range]{flex:1}
     <div class="row">
       <button class="btn go" id="bIniciar" disabled>Começar a vigiar</button>
       <button class="btn stop" id="bParar" hidden>Parar</button>
+      <button class="btn" id="bPip" type="button" hidden>Abrir janela flutuante</button>
     </div>
     <label class="cfg">Ler a cada <input type="range" id="rInt" min="1" max="10" step="1" value="2"> <b id="vInt">2 s</b></label>
     <label class="cfg">Avisar imagem parada após <input type="range" id="rPar" min="1" max="15" step="1" value="3"> <b id="vPar">3 min</b></label>
     <label class="cfg">Limiar do texto <input type="range" id="rLim" min="80" max="230" step="5" value="140"> <b id="vLim">140</b></label>
-    <p class="dica">Se o texto lido sair vazio ou com sujeira, mexa no limiar e toque em "Ler agora". Esta janela pode ser minimizada. A janela do sinótico não: pode ficar atrás de outras, mas minimizada a imagem congela, e o app avisa "imagem parada".</p>
+    <p class="dica">Se o texto lido sair vazio ou com sujeira, mexa no limiar e toque em "Ler agora". Ao começar, abre uma janelinha flutuante que fica por cima de tudo e fica amarela no aviso (Chrome e Edge). Esta janela pode ser minimizada. A janela do sinótico não: pode ficar atrás de outras, mas minimizada a imagem congela, e o app avisa "imagem parada".</p>
     <div class="row">
       <button class="btn" id="bNotif" type="button">Ativar notificações</button>
       <button class="btn" id="bTeste" type="button">Testar aviso em 10 s</button>
@@ -418,6 +419,7 @@ function pararRelogio(){if(ticker){ticker.terminate();ticker=null}}
 
 let wake=null;
 $('#bIniciar').onclick=async()=>{
+  abrirPip(); // precisa vir antes de qualquer espera: o Chrome só abre com o clique ainda valendo
   somCtx();
   if('Notification' in window&&Notification.permission==='default')Notification.requestPermission().then(notifEstado).catch(()=>{});
   try{await prepararOCR()}catch(e){estado('Não carregou o leitor: '+e.message,true);return}
@@ -425,10 +427,12 @@ $('#bIniciar').onclick=async()=>{
   try{wake=await navigator.wakeLock.request('screen')}catch(e){}
   $('#bIniciar').hidden=true;$('#bParar').hidden=false;
   iniciarRelogio();estado();ciclo();
+  $('#bPip').hidden=!pipPossivel()||!!pip;
 };
 $('#bParar').onclick=()=>{
   rodando=false;pararRelogio();if(wake){wake.release().catch(()=>{});wake=null}
   $('#bIniciar').hidden=false;$('#bParar').hidden=true;estado();
+  if(pip)pip.close();
 };
 document.addEventListener('visibilitychange',async()=>{if(rodando&&!document.hidden&&!wake){try{wake=await navigator.wakeLock.request('screen')}catch(e){}}});
 $('#bFoto').onclick=capturar;
@@ -457,18 +461,81 @@ function mostrar(tit,msg,isFalha){
   const ant=$('#aAnt');ant.innerHTML='';
   pendentes.slice(1).forEach(x=>{const li=document.createElement('li');li.textContent=x.h+' · '+x.tit+' '+x.msg;ant.appendChild(li)});
   ant.hidden=pendentes.length<2;
+  piscar(tit,msg);pipDesenhar();
   $('#alerta').classList.toggle('f',!!isFalha);$('#alerta').hidden=false;
   bip(isFalha);clearInterval(repete);let n=0;
   repete=setInterval(()=>{if(++n>6||$('#alerta').hidden){clearInterval(repete);return}bip(isFalha)},5000);
   try{navigator.vibrate&&navigator.vibrate([400,200,400])}catch(e){}
   try{if('Notification' in window&&Notification.permission==='granted'){const n=new Notification(tit,{body:msg,icon:'../../icon-192.png',requireInteraction:true,tag:tit+msg+Date.now()});n.onclick=()=>{try{parent.focus();window.focus()}catch(e){}n.close()}}}catch(e){}
 }
-$('#aOk').onclick=()=>{$('#alerta').hidden=true;clearInterval(repete);pendentes=[]};
+$('#aOk').onclick=()=>{$('#alerta').hidden=true;clearInterval(repete);pendentes=[];pararPiscar();pipDesenhar()};
 function avisar(p,onde,id){
   const msg='Trem '+(id||p)+' em '+onde+' às '+hora().slice(0,5);
   registrar(msg);mostrar(id||p,'em '+onde);falar('Atenção. Trem '+p.split('').join(' ')+' em '+onde);
 }
 function falha(msg,tit){registrar(msg,true);mostrar(tit||'Sem imagem',msg,true);falar(msg);estado()}
+/* ---------- título da aba piscando ---------- */
+const TITULO=document.title;let pisca=null,piscaOn=false;
+function piscar(tit,msg){
+  pararPiscar();
+  const txt='🔴 '+(tit+' '+msg).toUpperCase();
+  // relógio num worker para continuar piscando com a aba em segundo plano
+  pisca=new Worker(URL.createObjectURL(new Blob(['setInterval(()=>postMessage(1),900)'],{type:'text/javascript'})));
+  pisca.onmessage=()=>{piscaOn=!piscaOn;document.title=piscaOn?txt:'ALERTA PCD'};
+  document.title=txt;piscaOn=true;
+}
+function pararPiscar(){if(pisca){pisca.terminate();pisca=null}document.title=TITULO}
+
+/* ---------- janela flutuante, sempre por cima (Document Picture-in-Picture) ---------- */
+let pip=null;
+const pipPossivel=()=>'documentPictureInPicture' in window&&window.top===window;
+async function abrirPip(){
+  if(!pipPossivel()||pip)return;
+  try{pip=await documentPictureInPicture.requestWindow({width:340,height:220})}catch(e){pip=null;return}
+  const d=pip.document;
+  d.title='ALERTA PCD';
+  d.head.innerHTML='<meta charset="utf-8"><style>'+
+   'html,body{margin:0;height:100%;font:600 15px/1.25 system-ui,"Segoe UI",Arial,sans-serif}'+
+   'body{display:flex;flex-direction:column;background:#141414;color:#fff}'+
+   '.cab{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:4px solid #FFC61A;font-weight:800;letter-spacing:.02em}'+
+   '.cab i{margin-left:auto;font-style:normal;font-size:12px;padding:3px 8px;border-radius:6px;background:#444}'+
+   '.cab i.on{background:#1B7F4B}.cab i.err{background:#C62828}'+
+   '.corpo{flex:1;display:flex;flex-direction:column;justify-content:center;gap:4px;padding:10px 12px;min-height:0;overflow:hidden}'+
+   '.corpo b{font-size:40px;line-height:1;font-weight:900;letter-spacing:.02em}'+
+   '.corpo p{margin:0;font-size:20px;font-weight:800}'+
+   '.corpo small{color:#aaa;font-size:13px;font-weight:500}'+
+   'ul{margin:4px 0 0;padding:0;list-style:none;font-size:13px}'+
+   'button{margin:0 12px 12px;min-height:40px;border:2px solid #141414;border-radius:8px;background:#fff;color:#141414;font:800 17px system-ui,sans-serif;cursor:pointer}'+
+   'body.alerta{background:#FFC61A;color:#141414;animation:p 1s steps(2) infinite}body.falha{background:#FFCDD2;color:#141414}'+
+   'body.alerta .corpo small,body.falha .corpo small{color:#333}'+
+   '@keyframes p{50%{background:#FFE07A}}'+
+   '</style>';
+  d.body.innerHTML='<div class="cab">ALERTA PCD<i id="est"></i></div><div class="corpo" id="corpo"></div><button id="ok" hidden>Ciente</button>';
+  d.getElementById('ok').onclick=()=>$('#aOk').click();
+  pip.addEventListener('pagehide',()=>{pip=null;$('#bPip').hidden=!pipPossivel()||!rodando});
+  $('#bPip').hidden=true;
+  pipDesenhar();
+}
+function pipDesenhar(){
+  if(!pip)return;
+  const d=pip.document,c=d.getElementById('corpo'),e=d.getElementById('est'),ok=d.getElementById('ok');
+  const est=$('#estado');e.textContent=est.textContent;e.className=est.classList.contains('on')?'on':est.classList.contains('err')?'err':'';
+  c.innerHTML='';
+  const alertaAberto=!$('#alerta').hidden&&pendentes.length;
+  d.body.className=alertaAberto?(pendentes[0].f?'falha':'alerta'):'';
+  ok.hidden=!alertaAberto;
+  const add=(tag,txt)=>{const el=d.createElement(tag);el.textContent=txt;c.appendChild(el);return el};
+  if(alertaAberto){
+    const a=pendentes[0];add('b',a.tit);add('p',a.msg);add('small','às '+a.h);
+    if(pendentes.length>1){const ul=add('ul','');pendentes.slice(1,4).forEach(x=>{const li=d.createElement('li');li.textContent=x.h+' · '+x.tit+' '+x.msg;ul.appendChild(li)})}
+  }else{
+    add('p',rodando?'Vigiando '+cfg.prefixos.join(', '):'Parado');
+    add('small',cfg.zonas.map(z=>z.nome).join(' · ')||'Nenhuma área marcada');
+    const vistos=cfg.prefixos.filter(p=>estadoTrem[p]).map(p=>p+': '+(estadoTrem[p].agora?'agora em ':'último em ')+estadoTrem[p].onde+' '+estadoTrem[p].quando);
+    if(vistos.length)add('small',vistos.join(' · '));
+  }
+}
+
 function registrar(msg,isFalha){
   const el=$('#log');if(el.querySelector('p'))el.innerHTML='';
   const d=document.createElement('div');if(isFalha)d.className='f';
@@ -481,9 +548,10 @@ function estado(txt,erro){
   const e=$('#estado');
   const pronto=!!frame&&cfg.zonas.length>0&&cfg.prefixos.length>0;
   $('#bIniciar').disabled=!pronto;
-  if(txt){e.textContent=txt;e.className='est'+(erro?' err':'');return}
-  if(rodando&&!imgFonte&&!track){e.textContent='Sem imagem';e.className='est err';return}
+  if(txt){e.textContent=txt;e.className='est'+(erro?' err':'');pipDesenhar();return}
+  if(rodando&&!imgFonte&&!track){e.textContent='Sem imagem';e.className='est err';pipDesenhar();return}
   e.textContent=rodando?'Vigiando':'Parado';e.className='est'+(rodando?' on':'');
+  pipDesenhar();
 }
 $('#rInt').value=cfg.intervalo;$('#vInt').textContent=cfg.intervalo+' s';
 $('#rLim').value=cfg.limiar;$('#vLim').textContent=cfg.limiar;
@@ -503,6 +571,7 @@ $('#bTeste').onclick=()=>{
   $('#bTeste').disabled=true;$('#bTeste').textContent='Minimize a janela agora…';
   setTimeout(()=>{$('#bTeste').disabled=false;$('#bTeste').textContent='Testar aviso em 10 s';registrar('Teste de aviso');mostrar('TESTE','Se você ouviu o bipe e viu a notificação, o aviso funciona.');falar('Teste do alerta P C D')},10000);
 };
+$('#bPip').onclick=abrirPip;
 notifEstado();
 listarZonas();listarTrens();
 </script>
