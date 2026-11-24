@@ -77,7 +77,8 @@ main{max-width:1180px;margin:0 auto;padding:16px 16px 60px;display:grid;gap:14px
 .lnk{border:0;background:none;padding:4px 0;font:700 14px var(--f);color:var(--k);text-decoration:underline;cursor:pointer}
 input[type=file]{display:none}
 #iPref{font:800 22px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase}
-#iPref::placeholder{font:500 16px/1 var(--f);letter-spacing:0;text-transform:none}
+#iNum{font:700 18px/1 var(--mono);letter-spacing:.04em;text-transform:uppercase}
+#iNum::placeholder,#iPref::placeholder{font:500 16px/1 var(--f);letter-spacing:0;text-transform:none}
 .tela{position:relative;background:#1E1E1B;border-radius:12px;overflow:hidden;line-height:0;min-height:180px}
 .tela.marcando{cursor:crosshair;touch-action:none;outline:4px solid var(--y)}
 .tela canvas{width:100%;height:auto;display:block}
@@ -92,9 +93,11 @@ video{display:none}
 .t{position:relative;display:flex;flex-direction:column;gap:10px;border:2px solid var(--ln);border-left:6px solid var(--tl);border-radius:14px;padding:12px 12px 12px 14px;background:#fff}
 .t .cab{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .t .placa{font:800 21px/1 var(--mono);letter-spacing:.08em;color:#F2F2F2;background:#2D2F32;border-radius:8px;padding:8px 12px}
-.t .info{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0}
+.t .info{display:grid;grid-template-columns:repeat(auto-fit,minmax(84px,1fr));gap:6px;margin:0}
 .t .info div{background:var(--tl2);border-radius:9px;padding:6px 9px;min-width:0}
 .t .info dt{font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#3C6E6B}
+.t .info div.num{grid-column:1/-1;display:flex;align-items:baseline;gap:10px}
+.t .info div.num dd{font-family:var(--mono);letter-spacing:.06em}
 .t .info dd{margin:0;font-size:15.5px;font-weight:800;color:#0A4E4A;overflow-wrap:anywhere}
 .t .info dd.vz{color:#8AA9A6;font-weight:700}
 .t .obs{font-size:15px;background:#F4F4F0;border-radius:9px;padding:8px 10px;white-space:pre-wrap}
@@ -168,7 +171,8 @@ label.cfg input[type=range]{flex:1;accent-color:var(--k)}
         <label class="campo"><span>Carro</span><select id="iCarro"><option value="">—</option><option value="1">1º</option><option value="2">2º</option><option value="3">3º</option><option value="4">4º</option><option value="5">5º</option><option value="6">6º</option><option value="7">7º</option><option value="8">8º</option></select></label>
         <label class="campo"><span>Porta</span><select id="iPorta"><option value="">—</option><option value="1">1ª</option><option value="2">2ª</option><option value="3">3ª</option><option value="4">4ª</option></select></label>
       </div>
-      <label class="campo"><span>Observações <em>(opcional)</em></span><textarea id="iObs" maxlength="300" placeholder="Nº do carro ou qualquer outra informação"></textarea></label>
+      <label class="campo"><span>Nº do carro <em>(opcional)</em></span><input type="text" id="iNum" maxlength="12" autocomplete="off" placeholder="Letras e números (ex: 7A23)"></label>
+      <label class="campo"><span>Observações <em>(opcional)</em></span><textarea id="iObs" maxlength="300" placeholder="Qualquer outra informação"></textarea></label>
       <button class="btn pri" id="bAddTrem">Adicionar trem</button>
     </form>
     <div class="trens" id="trens"></div>
@@ -334,8 +338,8 @@ $('#fPref').onsubmit=e=>{
   if(v.length<2)return;
   if(!cfg.prefixos.includes(v))cfg.prefixos.push(v);
   cfg.obs[v]=$('#iObs').value.trim();
-  cfg.info[v]={tipo:$('#iTipo').value,porta:$('#iPorta').value,carro:$('#iCarro').value};
-  ['#iPref','#iObs','#iTipo','#iPorta','#iCarro'].forEach(s=>$(s).value='');botaoAdd();
+  cfg.info[v]={tipo:$('#iTipo').value,porta:$('#iPorta').value,carro:$('#iCarro').value,num:$('#iNum').value.toUpperCase().replace(/[^A-Z0-9]/g,'')};
+  ['#iPref','#iObs','#iTipo','#iPorta','#iCarro','#iNum'].forEach(s=>$(s).value='');botaoAdd();
   salvar();listarTrens();
   // fixa o aviso na tela ao adicionar; se já estiver fixado, listarTrens já atualizou a janela
   if(!pip&&pipPossivel())abrirPip();
@@ -344,7 +348,7 @@ $('#fPref').onsubmit=e=>{
 function botaoAdd(){const v=$('#iPref').value.toUpperCase().replace(/[^A-Z0-9]/g,'');$('#bAddTrem').textContent=cfg.prefixos.includes(v)?'Salvar alterações do '+v:'Adicionar trem'}
 $('#iPref').addEventListener('input',botaoAdd);
 // tipo, carro e porta em texto: "Cadeirante · 5º carro · 2ª porta"
-function infoPartes(p){const i=cfg.info[p]||{};return [i.tipo,i.carro?i.carro+'º carro':'',i.porta?i.porta+'ª porta':''].filter(Boolean)}
+function infoPartes(p){const i=cfg.info[p]||{};return [i.tipo,i.carro?i.carro+'º carro':'',i.porta?i.porta+'ª porta':'',i.num?'carro nº '+i.num:''].filter(Boolean)}
 function detalhes(p){return [infoPartes(p).join(' · '),cfg.obs[p]||''].filter(Boolean).join('\n')}
 function listarTrens(){
   const el=$('#trens');el.innerHTML='';
@@ -355,16 +359,16 @@ function listarTrens(){
     d.innerHTML='<div class="cab"><b class="placa"></b><span class="ac"><button class="x" type="button">Editar</button><button class="x rm" type="button">Remover</button></span></div><dl class="info"></dl><div class="obs"></div><div class="st"><span class="pt"></span><span class="tx"></span></div>';
     d.querySelector('.placa').textContent=p;
     const i0=cfg.info[p]||{},inf=d.querySelector('.info');
-    [['Tipo',i0.tipo],['Carro',i0.carro&&i0.carro+'º'],['Porta',i0.porta&&i0.porta+'ª']].forEach(([r,v])=>{
+    [['Tipo',i0.tipo],['Carro',i0.carro&&i0.carro+'º'],['Porta',i0.porta&&i0.porta+'ª']].concat(i0.num?[['Nº do carro',i0.num]]:[]).forEach(([r,v])=>{
       const c=document.createElement('div'),dt=document.createElement('dt'),dd=document.createElement('dd');
-      dt.textContent=r;dd.textContent=v||'—';if(!v)dd.className='vz';c.append(dt,dd);inf.appendChild(c)});
-    inf.hidden=!(i0.tipo||i0.carro||i0.porta);
+      dt.textContent=r;dd.textContent=v||'—';if(!v)dd.className='vz';if(r==='Nº do carro')c.className='num';c.append(dt,dd);inf.appendChild(c)});
+    inf.hidden=!(i0.tipo||i0.carro||i0.porta||i0.num);
     const ob=d.querySelector('.obs'),txt=cfg.obs[p]||'';
     ob.textContent=txt;ob.hidden=!txt;
     d.querySelector('.st .tx').textContent=s?(s.agora?'Agora em ':'Visto por último em ')+s.onde+' às '+s.quando:'Ainda não visto';
     const [bEd,bRm]=d.querySelectorAll('.ac button');
     // editar: volta o trem para o formulário; o botão vira "Salvar alterações"
-    bEd.onclick=()=>{const inf=cfg.info[p]||{};$('#iPref').value=p;$('#iTipo').value=inf.tipo||'';$('#iPorta').value=inf.porta||'';$('#iCarro').value=inf.carro||'';$('#iObs').value=txt;botaoAdd();$('#fPref').scrollIntoView({behavior:'smooth',block:'center'});$('#iTipo').focus()};
+    bEd.onclick=()=>{const inf=cfg.info[p]||{};$('#iPref').value=p;$('#iTipo').value=inf.tipo||'';$('#iPorta').value=inf.porta||'';$('#iCarro').value=inf.carro||'';$('#iNum').value=inf.num||'';$('#iObs').value=txt;botaoAdd();$('#fPref').scrollIntoView({behavior:'smooth',block:'center'});$('#iTipo').focus()};
     bRm.onclick=()=>{cfg.prefixos.splice(i,1);delete cfg.obs[p];delete cfg.info[p];delete estadoTrem[p];salvar();listarTrens()};
     el.appendChild(d);
   });
