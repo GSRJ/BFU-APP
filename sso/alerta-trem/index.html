@@ -4,142 +4,143 @@
 <meta charset="utf-8">
 <meta name="color-scheme" content="only light">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0E1A2B">
+<meta name="theme-color" content="#141414">
 <meta name="robots" content="noindex">
 <title>ALERTA TREM · BFU</title>
 <link rel="icon" href="../../icon-192.png">
 <script src="../acesso.js"></script>
 <script>if(!apoioLiberado())location.replace("../index.html")</script>
 <style>
-:root{--nv:#0E1A2B;--nv2:#1B2A40;--or:#FF5A1F;--or2:#FFE3D6;--tl:#0B7A75;--tl2:#DDF2F0;--rd:#C62828;--bg:#F2F4F7;--ln:#DFE3E9;--tx:#162030;--mt:#5B6576;--f:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
-*{box-sizing:border-box}
+:root{--y:#FFC61A;--k:#141414;--bg:#EEEEE9;--ln:#D6D6CE;--mt:#5E5E57;--tx:#141414;--nv:#141414;--or:#E64A19;--or2:#FFE6DC;--tl:#0B7A75;--tl2:#DDF2F0;--rd:#C62828;--f:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;--mono:ui-monospace,Consolas,monospace}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0}
-body{background:var(--bg);color:var(--tx);font:500 15px/1.45 var(--f);min-height:100dvh}
-.top{display:flex;align-items:center;gap:12px;background:var(--nv);color:#fff;padding:calc(10px + env(safe-area-inset-top)) 16px 10px;position:sticky;top:0;z-index:6}
-.top a{color:#B9C4D4;font-weight:600;font-size:14px;text-decoration:none;padding:7px 10px;border-radius:8px;border:1px solid #33445E}
-.top a:hover{background:var(--nv2)}
-.marca{display:flex;align-items:center;gap:9px;flex:1;min-width:0}
-.marca svg{flex:none;width:30px;height:30px;padding:5px;border-radius:8px;background:var(--or);stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
-.marca b{font-size:20px;font-weight:800;letter-spacing:.04em;white-space:nowrap}
-.est{font-weight:700;font-size:13px;padding:6px 11px;border-radius:999px;background:#33445E;color:#fff;white-space:nowrap}
+body{background:var(--bg);color:var(--tx);font:500 16px/1.45 var(--f);min-height:100dvh}
+[hidden]{display:none!important}
+.top{position:sticky;top:0;z-index:6;display:flex;align-items:center;gap:10px;background:var(--k);color:#fff;border-bottom:5px solid var(--y);padding:calc(10px + env(safe-area-inset-top)) 14px 10px}
+.top .back{flex:none;color:var(--y);font-weight:700;font-size:14px;text-decoration:none;padding:8px 10px;border:2px solid var(--y);border-radius:9px;white-space:nowrap}
+.top b{flex:1;min-width:0;font-size:20px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card{background:#fff;border:2px solid var(--ln);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:14px}
+h2{margin:0;font-size:21px;font-weight:800;line-height:1.15;display:flex;align-items:center;gap:10px}
+.n{flex:none;display:inline-grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--y);color:var(--k);font-size:17px;font-weight:900}
+p.dica{margin:0;color:var(--mt);font-size:15px}
+p.dica a{color:var(--k);font-weight:700}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;border:2px solid var(--ln);border-radius:12px;background:#fff;color:var(--tx);font:700 16px/1.1 var(--f);cursor:pointer;padding:8px 16px;text-decoration:none}
+.btn:hover:not(:disabled){border-color:var(--k)}
+.btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.btn.pri{background:var(--k);border-color:var(--k);color:#fff}
+.btn.go{background:var(--y);border-color:var(--k);color:var(--k);min-height:58px;font-size:20px;font-weight:800;width:100%}
+.btn.go svg{fill:var(--k);stroke:none}
+.btn.stop{background:var(--rd);border-color:var(--rd);color:#fff;min-height:58px;font-size:20px;font-weight:800;width:100%}
+.btn.fix{border-color:var(--k)}
+.btn.on,.btn.pri.on{background:var(--y);border-color:var(--k);color:var(--k)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.mini{min-height:36px;font-size:14px;padding:4px 12px;border-radius:9px}
+.campo{display:flex;flex-direction:column;gap:6px;min-width:0}
+.campo>span{font-size:16px;font-weight:800;color:var(--k)}
+.campo>span em{font-style:normal;font-weight:500;color:var(--mt)}
+input[type=text],input[type=time],select,textarea{font:600 18px/1.3 var(--f);color:var(--tx);border:2px solid var(--ln);border-radius:12px;padding:12px;width:100%;background:#fff;min-width:0;min-height:52px}
+input:focus,select:focus,textarea:focus{outline:3px solid var(--y);border-color:var(--k)}
+textarea{resize:vertical;min-height:72px;font-size:16px}
+details.mais{background:#fff;border:2px solid var(--ln);border-radius:14px;padding:0}
+details.mais summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;padding:14px 16px;font-size:17px;font-weight:800}
+details.mais summary::-webkit-details-marker{display:none}
+details.mais summary::after{content:"";margin-left:auto;width:9px;height:9px;border-right:3px solid var(--mt);border-bottom:3px solid var(--mt);transform:rotate(45deg);margin-top:-4px}
+details.mais[open] summary::after{transform:rotate(-135deg);margin-top:4px}
+details.mais .corpo{display:flex;flex-direction:column;gap:12px;padding:0 16px 16px}
+.log{display:flex;flex-direction:column;gap:8px}
+.log div{font-size:14px;border-left:3px solid var(--or);padding:2px 8px}
+.log div.f{border-color:var(--rd)}
+.log time{font-weight:700;margin-right:6px;color:var(--mt)}
+.aviso{background:#E3E3DC;border-radius:12px;padding:12px 14px;font-size:14px;color:#3F3F3A}
+#alerta{position:fixed;inset:0;z-index:50;background:rgba(20,20,20,.85);display:grid;place-items:center;padding:16px}
+#alerta[hidden]{display:none}
+#alerta .box{background:var(--or);color:#fff;border-radius:20px;padding:24px;max-width:540px;width:100%;text-align:center;display:flex;flex-direction:column;gap:12px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+#alerta.f .box{background:var(--rd)}
+#alerta .rot{font-size:14px;font-weight:800;letter-spacing:.14em;opacity:.9}
+#alerta h3{margin:0;font:900 48px/1 var(--mono);letter-spacing:.03em}
+#alerta p{margin:0;font-size:22px;font-weight:800}
+#alerta .aobs{background:rgba(255,255,255,.95);color:var(--tx);border-radius:12px;padding:10px 12px;font-size:17px;font-weight:700;text-align:left;white-space:pre-wrap}
+#alerta ul{margin:0;padding:8px 10px;list-style:none;text-align:left;border-top:1px solid rgba(255,255,255,.4);font-size:14px;font-weight:600}
+#alerta .btn{background:#fff;color:var(--tx);border:0;min-height:54px;font-size:19px;width:100%}
+.est{flex:none;font-weight:800;font-size:14px;padding:7px 12px;border-radius:999px;background:#3A3A36;color:#fff;white-space:nowrap}
 .est.on{background:var(--tl)}
 .est.err{background:var(--rd)}
-.cmd{position:sticky;top:56px;z-index:5;background:#fff;border-bottom:1px solid var(--ln);box-shadow:0 2px 8px rgba(14,26,43,.06)}
-.cmd .in{max-width:1180px;margin:0 auto;padding:10px 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-.prog{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:14px;color:var(--mt)}
-.prog .barra{width:120px;height:8px;border-radius:9px;background:var(--ln);overflow:hidden}
-.prog .barra i{display:block;height:100%;width:0;background:var(--or);transition:width .3s}
-main{max-width:1180px;margin:0 auto;padding:18px 16px 80px;display:grid;gap:16px}
-@media(min-width:960px){main{grid-template-columns:minmax(0,1fr) 380px;align-items:start}}
-.col{display:flex;flex-direction:column;gap:16px;min-width:0}
-.card{background:#fff;border:1px solid var(--ln);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 2px rgba(14,26,43,.05)}
-h2{margin:0;font-size:17px;font-weight:800;display:flex;align-items:center;gap:9px}
-.n{flex:none;display:inline-grid;place-items:center;width:24px;height:24px;border-radius:7px;background:var(--nv);color:#fff;font-size:13px;font-weight:800}
-p.dica{margin:0;color:var(--mt);font-size:13.5px}
-p.dica a{color:var(--tl);font-weight:700}
-.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:42px;border:1px solid #C9D0DA;border-radius:10px;background:#fff;color:var(--tx);font:700 14.5px/1.1 var(--f);cursor:pointer;padding:8px 14px}
-.btn:hover:not(:disabled){background:#F6F8FA}
-.btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
-.btn.pri{background:var(--tl);border-color:var(--tl);color:#fff}
-.btn.pri:hover:not(:disabled){background:#096661}
-.btn.go{background:var(--or);border-color:var(--or);color:#fff;min-height:46px;font-size:16px;padding:8px 20px}
-.btn.go:hover:not(:disabled){background:#E84A12}
-.btn.stop{background:var(--rd);border-color:var(--rd);color:#fff;min-height:46px;font-size:16px}
-.btn.fix{border-color:var(--nv);color:var(--nv)}
-.btn.on{background:var(--nv);border-color:var(--nv);color:#fff}
-.btn:disabled{opacity:.45;cursor:not-allowed}
-.btn.mini{min-height:32px;font-size:13px;padding:4px 10px}
-.btn[hidden]{display:none}
-.campo{display:flex;flex-direction:column;gap:4px}
-.campo span{font-size:12.5px;font-weight:700;color:var(--mt);text-transform:uppercase;letter-spacing:.05em}
-input[type=text],textarea{font:600 16px/1.3 var(--f);color:var(--tx);border:1px solid #C9D0DA;border-radius:10px;padding:10px 12px;width:100%;background:#fff}
-input[type=text]:focus,textarea:focus{outline:2px solid var(--tl);border-color:var(--tl)}
-#iPref{font:800 22px/1 ui-monospace,Consolas,monospace;letter-spacing:.06em;text-transform:uppercase}
-textarea{resize:vertical;min-height:64px}
+.soPc{display:none;align-items:flex-start;gap:12px;margin:16px 16px 0;padding:14px 16px;border-radius:14px;background:var(--k);color:#fff;font-size:15px}
+.soPc svg{flex:none;width:28px;height:28px;stroke:var(--y);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.soPc b{display:block;color:var(--y);font-size:17px;margin-bottom:2px}
+@media (max-width:820px),(pointer:coarse){.soPc{display:flex}}
+main{max-width:1180px;margin:0 auto;padding:16px 16px 60px;display:grid;gap:14px}
+@media(min-width:960px){main{grid-template-columns:minmax(0,1fr) 400px;align-items:start}}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0}
+.btn.grande{min-height:58px;font-size:18px;width:100%}
+.outras{margin:0;font-size:14px;color:var(--mt);display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}
+.lnk{border:0;background:none;padding:4px 0;font:700 14px var(--f);color:var(--k);text-decoration:underline;cursor:pointer}
 input[type=file]{display:none}
-.tela{position:relative;background:#0B0F16;border-radius:10px;overflow:hidden;line-height:0;min-height:160px}
-.tela.marcando{cursor:crosshair;touch-action:none;outline:3px solid var(--or)}
+#iPref{font:800 22px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase}
+.tela{position:relative;background:#1E1E1B;border-radius:12px;overflow:hidden;line-height:0;min-height:180px}
+.tela.marcando{cursor:crosshair;touch-action:none;outline:4px solid var(--y)}
 .tela canvas{width:100%;height:auto;display:block}
-.tela .vazio[hidden]{display:none}
-.tela .vazio{position:absolute;inset:0;display:grid;place-items:center;color:#8A96A8;font:500 14px/1.4 var(--f);padding:20px;text-align:center}
+.tela .vazio{position:absolute;inset:0;display:grid;place-items:center;color:#B5B5AD;font:600 15px/1.4 var(--f);padding:20px;text-align:center}
 video{display:none}
-.zonas,.trens,.log{display:flex;flex-direction:column;gap:8px}
-.z{border:1px solid var(--ln);border-left:4px solid var(--or);border-radius:10px;padding:8px 10px;display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center}
-.z b{font-size:15px}
-.z b small{font-weight:600;color:var(--tl);margin-left:6px}
-.z .lido{grid-column:1/-1;font:500 12.5px/1.3 ui-monospace,Consolas,monospace;color:var(--mt);word-break:break-all}
+.zonas,.trens{display:flex;flex-direction:column;gap:8px}
+.z{border:2px solid var(--ln);border-left:6px solid var(--or);border-radius:12px;padding:8px 10px;display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center}
+.z b{font-size:16px}
+.z b small{font-weight:700;color:var(--tl);margin-left:6px}
+.z .lido{grid-column:1/-1;font:500 12.5px/1.3 var(--mono);color:var(--mt);word-break:break-all}
 .z img{grid-column:1/-1;max-width:100%;max-height:64px;border:1px solid var(--ln);border-radius:4px;image-rendering:pixelated;background:#fff}
-.t{display:grid;grid-template-columns:1fr auto;gap:2px 8px;border:1px solid var(--ln);border-radius:12px;padding:10px 12px;background:#fff}
-.t b{font:800 21px/1 ui-monospace,Consolas,monospace;letter-spacing:.04em}
-.t .obs{grid-column:1/-1;font-size:14px;color:var(--tx);background:var(--bg);border-radius:8px;padding:6px 8px;white-space:pre-wrap}
+.t{display:grid;grid-template-columns:1fr auto;gap:4px 8px;border:2px solid var(--ln);border-radius:12px;padding:10px 12px;background:#fff}
+.t b{font:800 22px/1 var(--mono);letter-spacing:.04em}
+.t .obs{grid-column:1/-1;font-size:15px;background:#F4F4F0;border-radius:8px;padding:6px 8px;white-space:pre-wrap}
 .t .obs.vazia{color:var(--mt);font-style:italic}
 .t .st{grid-column:1/-1;font-size:13px;color:var(--mt)}
 .t .ac{display:flex;gap:4px}
 .t.visto{border-color:var(--or);background:var(--or2)}
-.x{border:0;background:none;font-size:13px;font-weight:700;line-height:1;cursor:pointer;padding:6px 8px;color:var(--mt);border-radius:6px}
-.x:hover{background:var(--bg);color:var(--tx)}
-details.card{gap:0}
-details.card summary{cursor:pointer;font-size:17px;font-weight:800;list-style:none;display:flex;align-items:center;gap:9px}
-details.card summary::after{content:"+";margin-left:auto;font-size:20px;color:var(--mt)}
-details.card[open] summary::after{content:"–"}
-details.card[open] summary{margin-bottom:12px}
-details .corpo{display:flex;flex-direction:column;gap:12px}
-.log div{font-size:13.5px;border-left:3px solid var(--or);padding:2px 8px}
-.log div.f{border-color:var(--rd)}
-.log time{font-weight:700;margin-right:6px;color:var(--mt)}
-label.cfg{display:flex;align-items:center;gap:8px;font-size:13.5px}
-label.cfg input[type=range]{flex:1;accent-color:var(--tl)}
-#alerta{position:fixed;inset:0;z-index:50;background:rgba(14,26,43,.82);display:grid;place-items:center;padding:16px}
-#alerta[hidden]{display:none}
-#alerta .box{background:var(--or);color:#fff;border-radius:20px;padding:24px;max-width:540px;width:100%;text-align:center;display:flex;flex-direction:column;gap:12px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
-#alerta.f .box{background:var(--rd)}
-#alerta .rot{font-size:13px;font-weight:800;letter-spacing:.14em;opacity:.85}
-#alerta h3{margin:0;font:900 48px/1 ui-monospace,Consolas,monospace;letter-spacing:.03em}
-#alerta p{margin:0;font-size:22px;font-weight:800}
-#alerta .aobs{background:rgba(255,255,255,.95);color:var(--tx);border-radius:12px;padding:10px 12px;font-size:17px;font-weight:700;text-align:left;white-space:pre-wrap}
-#alerta .aobs[hidden]{display:none}
-#alerta ul{margin:0;padding:8px 10px;list-style:none;text-align:left;border-top:1px solid rgba(255,255,255,.4);font-size:14px;font-weight:600}
-#alerta .btn{background:#fff;color:var(--tx);border:0;min-height:48px;font-size:17px}
-.aviso{background:var(--tl2);border-radius:10px;padding:10px 12px;font-size:13px;color:#0A4E4A}
+.x{border:0;background:none;font-size:14px;font-weight:700;line-height:1;cursor:pointer;padding:8px;color:var(--mt);border-radius:6px}
+.x:hover{background:#EEEEE9;color:var(--tx)}
+form.add{display:flex;flex-direction:column;gap:12px}
+.inicio{border-color:var(--k)}
+.falta{margin:0;font-size:15px;font-weight:700;color:#8E1B1B;background:#FDECEC;border-radius:10px;padding:10px 12px}
+.inicio:has(#bIniciar:not(:disabled)) .falta{display:none}
+.prog{display:flex;flex-direction:column;gap:6px;font-size:15px;font-weight:700}
+.prog .barra{height:10px;border-radius:9px;background:#E3E3DC;overflow:hidden}
+.prog .barra i{display:block;height:100%;width:0;background:var(--or);transition:width .3s}
+label.cfg{display:flex;align-items:center;gap:8px;font-size:14px}
+label.cfg input[type=range]{flex:1;accent-color:var(--k)}
 </style>
 </head>
 <body>
 <header class="top">
-  <a href="../index.html">‹ ApoioSSO</a>
-  <div class="marca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16V6a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3v10"/><path d="M6 11h12M6 16h12v1.5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 17.5z"/><path d="M8 19l-2 2.5M16 19l2 2.5"/></svg><b>ALERTA TREM</b></div>
+  <a class="back" href="../index.html">‹ ApoioSSO</a>
+  <b>Alerta trem</b>
   <span class="est" id="estado">Parado</span>
 </header>
 
-<div class="cmd"><div class="in">
-  <button class="btn go" id="bIniciar" disabled><svg viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></svg>Começar a vigiar</button>
-  <button class="btn stop" id="bParar" hidden>Parar</button>
-  <button class="btn fix" id="bPip" type="button"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="14" rx="2"/><rect x="12" y="11" width="7" height="5" rx="1"/></svg>Fixar aviso na tela</button>
-  <div class="prog" id="prog" hidden><span id="progTxt">0 de 0 áreas avisadas</span><span class="barra"><i id="progBar"></i></span></div>
-</div></div>
+<div class="soPc" role="note"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg><div><b>Só funciona no computador</b>O Alerta trem lê o sinótico na tela do PC. Abra esta página no Chrome ou no Edge do computador do sinótico.</div></div>
 
 <main>
 <div class="col">
   <section class="card">
-    <h2><span class="n">1</span>Imagem do sinótico</h2>
-    <p class="dica">No computador do sinótico, toque em "Compartilhar a tela" e escolha a janela do painel. A câmera serve para um celular apontado para o monitor. Para treinar sem o painel, abra o <a href="simulador.html" target="_blank" rel="noopener">simulador de sinótico</a> em outra janela e compartilhe essa janela.</p>
-    <div class="row">
-      <button class="btn pri" id="bTela"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>Compartilhar a tela</button>
-      <button class="btn" id="bCam">Câmera</button>
-      <label class="btn" for="fImg">Imagem de teste</label>
-      <input type="file" id="fImg" accept="image/*">
-    </div>
+    <h2><span class="n">1</span>Mostre o sinótico</h2>
+    <p class="dica">Toque no botão e escolha a janela do painel do sinótico.</p>
+    <button class="btn pri grande" id="bTela"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>Compartilhar a tela do sinótico</button>
+    <p class="outras">Outras formas:
+      <button class="lnk" id="bCam" type="button">câmera apontada para o monitor</button>
+      <label class="lnk" for="fImg">imagem de teste</label>
+      <a class="lnk" href="simulador.html" target="_blank" rel="noopener">simulador para treinar</a>
+    </p>
+    <input type="file" id="fImg" accept="image/*">
   </section>
 
   <section class="card">
-    <h2><span class="n">2</span>Áreas das estações</h2>
-    <p class="dica">Toque em "Marcar área" e arraste um retângulo sobre o trecho da estação, pegando o lugar onde o prefixo aparece. Dê um nome à área. Pode marcar várias.</p>
+    <h2><span class="n">2</span>Marque as estações</h2>
+    <p class="dica">Toque em <b>Marcar área</b> e arraste um retângulo sobre o lugar onde o prefixo do trem aparece na estação. Dê um nome à área. Pode marcar várias.</p>
     <div class="row">
-      <button class="btn" id="bMarcar" disabled>Marcar área</button>
+      <button class="btn pri" id="bMarcar" disabled>Marcar área</button>
       <button class="btn" id="bFoto" disabled>Atualizar imagem</button>
       <button class="btn" id="bLer" disabled>Ler agora</button>
     </div>
-    <div class="tela" id="tela"><canvas id="cv" width="800" height="450"></canvas><div class="vazio" id="telaVazia">Escolha a imagem do sinótico no passo 1.</div></div>
+    <div class="tela" id="tela"><canvas id="cv" width="800" height="450"></canvas><div class="vazio" id="telaVazia">A imagem do sinótico aparece aqui depois do passo 1.</div></div>
     <video id="video" playsinline muted></video>
     <div class="zonas" id="zonas"></div>
   </section>
@@ -147,17 +148,26 @@ label.cfg input[type=range]{flex:1;accent-color:var(--tl)}
 
 <div class="col">
   <section class="card">
-    <h2><span class="n">3</span>Trens</h2>
-    <form id="fPref" style="display:flex;flex-direction:column;gap:10px">
-      <label class="campo"><span>Trem (prefixo)</span><input type="text" id="iPref" placeholder="S120" maxlength="12" autocomplete="off"></label>
-      <label class="campo"><span>Observações</span><textarea id="iObs" maxlength="300" placeholder="Ex.: Tipo de PCD, porta/carro, nº do carro ou qualquer outra informação"></textarea></label>
+    <h2><span class="n">3</span>Trens para avisar</h2>
+    <form id="fPref" class="add">
+      <label class="campo"><span>Prefixo do trem</span><input type="text" id="iPref" placeholder="S120" maxlength="12" autocomplete="off"></label>
+      <label class="campo"><span>Observações <em>(opcional)</em></span><textarea id="iObs" maxlength="300" placeholder="Tipo de PCD, porta/carro, nº do carro…"></textarea></label>
       <button class="btn pri">Adicionar trem</button>
     </form>
-    <p class="dica">Basta o começo do prefixo: "S120" avisa para S120X288, S120M004 e assim por diante. As observações aparecem no aviso e são lidas em voz alta.</p>
+    <p class="dica">Basta o começo do prefixo: "S120" avisa para S120X288, S120M004 e outros. As observações aparecem no aviso e são lidas em voz alta.</p>
     <div class="trens" id="trens"></div>
   </section>
 
-  <details class="card">
+  <section class="card inicio">
+    <h2><span class="n">4</span>Comece a vigiar</h2>
+    <p class="falta">Faça os passos 1, 2 e 3 para liberar o botão.</p>
+    <button class="btn go" id="bIniciar" disabled><svg viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></svg>Começar a vigiar</button>
+    <button class="btn stop" id="bParar" hidden>Parar</button>
+    <div class="prog" id="prog" hidden><span id="progTxt">0 de 0 áreas avisadas</span><span class="barra"><i id="progBar"></i></span></div>
+    <button class="btn fix" id="bPip" type="button"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="14" rx="2"/><rect x="12" y="11" width="7" height="5" rx="1"/></svg>Fixar aviso na tela</button>
+  </section>
+
+  <details class="mais">
     <summary>Ajustes e teste</summary>
     <div class="corpo">
       <label class="cfg">Ler a cada <input type="range" id="rInt" min="1" max="10" step="1" value="2"> <b id="vInt">2 s</b></label>
@@ -172,10 +182,10 @@ label.cfg input[type=range]{flex:1;accent-color:var(--tl)}
     </div>
   </details>
 
-  <section class="card">
-    <h2>Registro</h2>
-    <div class="log" id="log"><p class="dica">Nenhum aviso ainda.</p></div>
-  </section>
+  <details class="mais">
+    <summary>Histórico de avisos</summary>
+    <div class="corpo"><div class="log" id="log"><p class="dica">Nenhum aviso ainda.</p></div></div>
+  </details>
 
   <div class="aviso">É um aviso de apoio. Ele não substitui a comunicação com o CCO nem a proteção de quem está na via.</div>
 </div>

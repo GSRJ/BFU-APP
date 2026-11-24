@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="color-scheme" content="only light">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0E1A2B">
+<meta name="theme-color" content="#141414">
 <meta name="robots" content="noindex">
 <title>ESTIMATIVA DE TREM · BFU</title>
 <link rel="icon" href="../../icon-192.png">
@@ -12,157 +12,140 @@
 <script>if(!apoioLiberado())location.replace("../index.html")</script>
 <script src="tempos.js"></script>
 <style>
-:root{--nv:#0E1A2B;--nv2:#1B2A40;--or:#FF5A1F;--or2:#FFE3D6;--tl:#0B7A75;--tl2:#DDF2F0;--rd:#C62828;--bg:#F2F4F7;--ln:#DFE3E9;--tx:#162030;--mt:#5B6576;--f:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;--mono:ui-monospace,Consolas,monospace}
-*{box-sizing:border-box}
+:root{--y:#FFC61A;--k:#141414;--bg:#EEEEE9;--ln:#D6D6CE;--mt:#5E5E57;--tx:#141414;--nv:#141414;--or:#E64A19;--or2:#FFE6DC;--tl:#0B7A75;--tl2:#DDF2F0;--rd:#C62828;--f:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;--mono:ui-monospace,Consolas,monospace}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0}
-body{background:var(--bg);color:var(--tx);font:500 15px/1.45 var(--f);min-height:100dvh}
-.top{display:flex;align-items:center;gap:12px;background:var(--nv);color:#fff;padding:calc(10px + env(safe-area-inset-top)) 16px 10px;position:sticky;top:0;z-index:6}
-.top a{color:#B9C4D4;font-weight:600;font-size:14px;text-decoration:none;padding:7px 10px;border-radius:8px;border:1px solid #33445E;white-space:nowrap}
-.marca{display:flex;align-items:center;gap:9px;flex:1;min-width:0}
-.marca svg{flex:none;width:30px;height:30px;padding:5px;border-radius:8px;background:var(--or);stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
-.marca b{font-size:20px;font-weight:800;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.relogio{font:800 18px var(--mono);color:#fff;white-space:nowrap}
-.cmd{position:sticky;top:56px;z-index:5;background:#fff;border-bottom:1px solid var(--ln);box-shadow:0 2px 8px rgba(14,26,43,.06)}
-.cmd .in{max-width:1180px;margin:0 auto;padding:10px 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-.cmd .res{margin-left:auto;font-size:14px;color:var(--mt)}
-main{max-width:1180px;margin:0 auto;padding:18px 16px 80px;display:grid;gap:16px}
-@media(min-width:960px){main{grid-template-columns:420px minmax(0,1fr);align-items:start}}
-.col{display:flex;flex-direction:column;gap:16px;min-width:0}
-.card{background:#fff;border:1px solid var(--ln);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 2px rgba(14,26,43,.05)}
-h2{margin:0;font-size:17px;font-weight:800;display:flex;align-items:center;gap:9px}
-.n{flex:none;display:inline-grid;place-items:center;width:24px;height:24px;border-radius:7px;background:var(--nv);color:#fff;font-size:13px;font-weight:800}
-p.dica{margin:0;color:var(--mt);font-size:13.5px}
+body{background:var(--bg);color:var(--tx);font:500 16px/1.45 var(--f);min-height:100dvh}
+[hidden]{display:none!important}
+.top{position:sticky;top:0;z-index:6;display:flex;align-items:center;gap:10px;background:var(--k);color:#fff;border-bottom:5px solid var(--y);padding:calc(10px + env(safe-area-inset-top)) 14px 10px}
+.top .back{flex:none;color:var(--y);font-weight:700;font-size:14px;text-decoration:none;padding:8px 10px;border:2px solid var(--y);border-radius:9px;white-space:nowrap}
+.top b{flex:1;min-width:0;font-size:20px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card{background:#fff;border:2px solid var(--ln);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:14px}
+h2{margin:0;font-size:21px;font-weight:800;line-height:1.15;display:flex;align-items:center;gap:10px}
+.n{flex:none;display:inline-grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--y);color:var(--k);font-size:17px;font-weight:900}
+p.dica{margin:0;color:var(--mt);font-size:15px}
+p.dica a{color:var(--k);font-weight:700}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.dois{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:42px;border:1px solid #C9D0DA;border-radius:10px;background:#fff;color:var(--tx);font:700 14.5px/1.1 var(--f);cursor:pointer;padding:8px 14px}
-.btn:hover:not(:disabled){background:#F6F8FA}
-.btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
-.btn.pri{background:var(--tl);border-color:var(--tl);color:#fff}
-.btn.pri:hover:not(:disabled){background:#096661}
-.btn.go{background:var(--or);border-color:var(--or);color:#fff;min-height:48px;font-size:16px}
-.btn.go:hover:not(:disabled){background:#E84A12}
-.btn.fix{border-color:var(--nv);color:var(--nv)}
-.btn:disabled{opacity:.45;cursor:not-allowed}
-.btn.mini{min-height:30px;font-size:13px;padding:4px 10px}
-.campo{display:flex;flex-direction:column;gap:4px;min-width:0}
-.campo>span{font-size:12.5px;font-weight:700;color:var(--mt);text-transform:uppercase;letter-spacing:.05em}
-input[type=text],input[type=time],select,textarea{font:600 16px/1.3 var(--f);color:var(--tx);border:1px solid #C9D0DA;border-radius:10px;padding:10px 12px;width:100%;background:#fff;min-width:0}
-input:focus,select:focus,textarea:focus{outline:2px solid var(--tl);border-color:var(--tl)}
-#iTrem{font:800 20px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase}
-textarea{resize:vertical;min-height:64px}
-.trechos{width:100%;border-collapse:collapse;font-size:14px}.trechos td{padding:5px 8px;border-bottom:1px solid var(--ln)}.trechos td:first-child{font-family:var(--mono);font-weight:700}.trechos td:last-child{text-align:right;font-family:var(--mono)}
-.fonte{margin:0;display:flex;flex-direction:column;gap:6px}.fonte img{width:100%;height:auto;display:block;border:1px solid var(--ln);border-radius:8px}.fonte figcaption{font-size:12.5px;color:var(--mt)}
-.hora{display:flex;gap:6px}
-.hora input{flex:1}
-.prazos{display:flex;gap:8px;flex-wrap:wrap}
-.prazos label{position:relative}
-.prazos input{position:absolute;opacity:0;pointer-events:none}
-.prazos span{display:inline-flex;align-items:center;justify-content:center;min-width:72px;min-height:42px;padding:6px 12px;border:1px solid #C9D0DA;border-radius:10px;font-weight:800;cursor:pointer;background:#fff}
-.prazos input:checked+span{background:var(--nv);border-color:var(--nv);color:#fff}
-.prazos input:focus-visible+span{outline:2px solid var(--tl)}
-.previa{background:var(--tl2);border-radius:10px;padding:10px 12px;color:#0A4E4A;font-weight:700}
-.previa.ruim{background:#FDECEC;color:#8E1B1B}
-.previa small{display:block;font-weight:500}
-.lista{display:flex;flex-direction:column;gap:10px}
-.v{border:1px solid var(--ln);border-left:5px solid var(--tl);border-radius:12px;padding:12px;display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:center;background:#fff}
-.v.perto{border-left-color:var(--or);background:var(--or2)}
-.v.chegou{border-left-color:#8A96A8;background:#F6F7F9}
-.v .id{font:800 20px/1 var(--mono);letter-spacing:.04em}
-.v .rota{font-size:14px;font-weight:700}
-.v .rota small{display:block;font-weight:500;color:var(--mt)}
-.v .falta{grid-row:1/3;grid-column:2;text-align:right;font:900 34px/1 var(--mono)}
-.v .falta small{display:block;font:700 12px var(--f);color:var(--mt);text-transform:uppercase;letter-spacing:.05em;margin-top:4px}
-.v .chips{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap}
-.v .chips i{font-style:normal;font-size:12.5px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--bg);color:var(--mt)}
-.v .chips i.ok{background:var(--nv);color:#fff}
-.v .obs{grid-column:1/-1;font-size:14px;background:var(--bg);border-radius:8px;padding:6px 8px;white-space:pre-wrap}
-.v .ac{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap}
-.vazio{color:var(--mt);font-size:14px;text-align:center;padding:18px;border:1px dashed #C9D0DA;border-radius:12px}
-details.card{gap:0}
-details.card summary{cursor:pointer;font-size:17px;font-weight:800;list-style:none;display:flex;align-items:center;gap:9px}
-details.card summary::after{content:"+";margin-left:auto;font-size:20px;color:var(--mt)}
-details.card[open] summary::after{content:"–"}
-details.card[open] summary{margin-bottom:12px}
-details .corpo{display:flex;flex-direction:column;gap:12px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;border:2px solid var(--ln);border-radius:12px;background:#fff;color:var(--tx);font:700 16px/1.1 var(--f);cursor:pointer;padding:8px 16px;text-decoration:none}
+.btn:hover:not(:disabled){border-color:var(--k)}
+.btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.btn.pri{background:var(--k);border-color:var(--k);color:#fff}
+.btn.go{background:var(--y);border-color:var(--k);color:var(--k);min-height:58px;font-size:20px;font-weight:800;width:100%}
+.btn.go svg{fill:var(--k);stroke:none}
+.btn.stop{background:var(--rd);border-color:var(--rd);color:#fff;min-height:58px;font-size:20px;font-weight:800;width:100%}
+.btn.fix{border-color:var(--k)}
+.btn.on,.btn.pri.on{background:var(--y);border-color:var(--k);color:var(--k)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.mini{min-height:36px;font-size:14px;padding:4px 12px;border-radius:9px}
+.campo{display:flex;flex-direction:column;gap:6px;min-width:0}
+.campo>span{font-size:16px;font-weight:800;color:var(--k)}
+.campo>span em{font-style:normal;font-weight:500;color:var(--mt)}
+input[type=text],input[type=time],select,textarea{font:600 18px/1.3 var(--f);color:var(--tx);border:2px solid var(--ln);border-radius:12px;padding:12px;width:100%;background:#fff;min-width:0;min-height:52px}
+input:focus,select:focus,textarea:focus{outline:3px solid var(--y);border-color:var(--k)}
+textarea{resize:vertical;min-height:72px;font-size:16px}
+details.mais{background:#fff;border:2px solid var(--ln);border-radius:14px;padding:0}
+details.mais summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;padding:14px 16px;font-size:17px;font-weight:800}
+details.mais summary::-webkit-details-marker{display:none}
+details.mais summary::after{content:"";margin-left:auto;width:9px;height:9px;border-right:3px solid var(--mt);border-bottom:3px solid var(--mt);transform:rotate(45deg);margin-top:-4px}
+details.mais[open] summary::after{transform:rotate(-135deg);margin-top:4px}
+details.mais .corpo{display:flex;flex-direction:column;gap:12px;padding:0 16px 16px}
 .log{display:flex;flex-direction:column;gap:8px}
-.log div{font-size:13.5px;border-left:3px solid var(--or);padding:2px 8px}
+.log div{font-size:14px;border-left:3px solid var(--or);padding:2px 8px}
+.log div.f{border-color:var(--rd)}
 .log time{font-weight:700;margin-right:6px;color:var(--mt)}
-.est{font-size:13px;color:var(--mt)}
-.est.ruim{color:#8E1B1B;font-weight:700}
-#alerta{position:fixed;inset:0;z-index:50;background:rgba(14,26,43,.82);display:grid;place-items:center;padding:16px}
+.aviso{background:#E3E3DC;border-radius:12px;padding:12px 14px;font-size:14px;color:#3F3F3A}
+#alerta{position:fixed;inset:0;z-index:50;background:rgba(20,20,20,.85);display:grid;place-items:center;padding:16px}
 #alerta[hidden]{display:none}
 #alerta .box{background:var(--or);color:#fff;border-radius:20px;padding:24px;max-width:540px;width:100%;text-align:center;display:flex;flex-direction:column;gap:12px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
-#alerta .rot{font-size:13px;font-weight:800;letter-spacing:.14em;opacity:.85}
-#alerta h3{margin:0;font:900 46px/1 var(--mono);letter-spacing:.03em}
+#alerta.f .box{background:var(--rd)}
+#alerta .rot{font-size:14px;font-weight:800;letter-spacing:.14em;opacity:.9}
+#alerta h3{margin:0;font:900 48px/1 var(--mono);letter-spacing:.03em}
 #alerta p{margin:0;font-size:22px;font-weight:800}
 #alerta .aobs{background:rgba(255,255,255,.95);color:var(--tx);border-radius:12px;padding:10px 12px;font-size:17px;font-weight:700;text-align:left;white-space:pre-wrap}
-#alerta .aobs[hidden],#alerta ul[hidden]{display:none}
 #alerta ul{margin:0;padding:8px 10px;list-style:none;text-align:left;border-top:1px solid rgba(255,255,255,.4);font-size:14px;font-weight:600}
-#alerta .btn{background:#fff;color:var(--tx);border:0;min-height:48px;font-size:17px}
-.aviso{background:var(--tl2);border-radius:10px;padding:10px 12px;font-size:13px;color:#0A4E4A}
+#alerta .btn{background:#fff;color:var(--tx);border:0;min-height:54px;font-size:19px;width:100%}
+.relogio{flex:none;font:800 17px var(--mono);color:#fff}
+main{max-width:640px;margin:0 auto;padding:16px 16px 60px;display:flex;flex-direction:column;gap:14px}
+.cab{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.cab .res{margin-left:auto;font-size:14px;color:var(--mt);font-weight:600}
+form.passos{display:flex;flex-direction:column;gap:18px}
+.dois{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#iTrem{font:800 22px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase}
+.hora{display:flex;gap:8px}
+.hora input{flex:1}
+.prazos{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.prazos label{position:relative}
+.prazos input{position:absolute;opacity:0;pointer-events:none}
+.prazos span{display:flex;align-items:center;justify-content:center;min-height:52px;border:2px solid var(--ln);border-radius:12px;font-size:18px;font-weight:800;cursor:pointer;background:#fff}
+.prazos input:checked+span{background:var(--k);border-color:var(--k);color:var(--y)}
+.prazos input:focus-visible+span{outline:3px solid var(--y)}
+.previa{background:var(--tl2);border-radius:12px;padding:12px 14px;color:#0A4E4A;font-weight:800;font-size:17px}
+.previa.ruim{background:#FDECEC;color:#8E1B1B}
+.previa small{display:block;font-weight:500;font-size:13px;margin-top:4px}
+.lista{display:flex;flex-direction:column;gap:10px}
+.v{border:2px solid var(--ln);border-left:8px solid var(--tl);border-radius:14px;padding:12px 14px;display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:center;background:#fff}
+.v.perto{border-color:var(--or);background:var(--or2)}
+.v.chegou{border-color:#B5B5AD;background:#F4F4F0}
+.v .id{font:800 22px/1 var(--mono);letter-spacing:.04em}
+.v .rota{font-size:15px;font-weight:700}
+.v .rota small{display:block;font-weight:500;color:var(--mt);font-size:13px}
+.v .falta{grid-row:1/3;grid-column:2;text-align:right;font:900 38px/1 var(--mono)}
+.v .falta small{display:block;font:700 12px var(--f);color:var(--mt);text-transform:uppercase;letter-spacing:.05em;margin-top:4px}
+.v .chips{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap}
+.v .chips i{font-style:normal;font-size:13px;font-weight:700;padding:4px 10px;border-radius:999px;background:#EEEEE9;color:var(--mt)}
+.v .chips i.ok{background:var(--k);color:var(--y)}
+.v .obs{grid-column:1/-1;font-size:15px;background:#F4F4F0;border-radius:8px;padding:6px 8px;white-space:pre-wrap}
+.v .ac{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap}
+.vazio{color:var(--mt);font-size:15px;text-align:center;padding:16px;border:2px dashed #BDBDB5;border-radius:12px}
+.trechos{width:100%;border-collapse:collapse;font-size:14px}.trechos td{padding:5px 8px;border-bottom:1px solid var(--ln)}.trechos td:first-child{font-family:var(--mono);font-weight:700}.trechos td:last-child{text-align:right;font-family:var(--mono)}
+.fonte{margin:0;display:flex;flex-direction:column;gap:6px}.fonte img{width:100%;height:auto;display:block;border:1px solid var(--ln);border-radius:8px}.fonte figcaption{font-size:13px;color:var(--mt)}
+.est{font-size:13px;color:var(--mt);margin:0}
+.est.ruim{color:#8E1B1B;font-weight:700}
 </style>
 </head>
 <body>
 <header class="top">
-  <a href="../index.html">‹ ApoioSSO</a>
-  <div class="marca"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9.5 2.5h5"/></svg><b>ESTIMATIVA DE TREM</b></div>
+  <a class="back" href="../index.html">‹ ApoioSSO</a>
+  <b>Estimativa de trem</b>
   <span class="relogio" id="relogio">--:--:--</span>
 </header>
 
-<div class="cmd"><div class="in">
-  <button class="btn fix" id="bPip" type="button"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="14" rx="2"/><rect x="12" y="11" width="7" height="5" rx="1"/></svg><span>Fixar aviso na tela</span></button>
-  <span class="res" id="resumo">Nenhuma viagem em andamento</span>
-</div></div>
-
 <main>
-<div class="col">
+  <section class="card" id="secViagens" hidden>
+    <div class="cab"><h2>Trens a caminho</h2><span class="res" id="resumo"></span></div>
+    <div class="lista" id="lista"></div>
+    <button class="btn fix" id="bPip" type="button"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="14" rx="2"/><rect x="12" y="11" width="7" height="5" rx="1"/></svg><span>Fixar aviso na tela</span></button>
+  </section>
+
   <section class="card">
-    <h2><span class="n">1</span>Nova viagem</h2>
-    <form id="fViagem" style="display:flex;flex-direction:column;gap:12px">
-      <label class="campo"><span>Trem (prefixo ou identificação)</span><input type="text" id="iTrem" placeholder="S120" maxlength="14" autocomplete="off"></label>
-      <div class="dois">
-        <label class="campo"><span>Estação de partida</span><select id="iOrig"></select></label>
-        <label class="campo"><span>Estação de chegada</span><select id="iDest"></select></label>
+    <h2>Novo aviso</h2>
+    <p class="dica">Preencha os 4 passos e toque em Começar. O app conta o tempo e avisa antes de o trem chegar.</p>
+    <form id="fViagem" class="passos">
+      <label class="campo"><span><span class="n">1</span> Qual trem?</span><input type="text" id="iTrem" placeholder="S120" maxlength="14" autocomplete="off"></label>
+      <div class="campo"><span><span class="n">2</span> De onde para onde?</span>
+        <div class="dois">
+          <label class="campo"><span><em>Sai de</em></span><select id="iOrig"></select></label>
+          <label class="campo"><span><em>Chega em</em></span><select id="iDest"></select></label>
+        </div>
       </div>
-      <label class="campo"><span>Saiu da partida às</span>
+      <label class="campo"><span><span class="n">3</span> Que horas saiu?</span>
         <span class="hora"><input type="time" id="iHora" step="60"><button class="btn" type="button" id="bAgora">Agora</button></span>
       </label>
-      <div class="campo"><span>Avisar antes da chegada</span>
+      <div class="campo"><span><span class="n">4</span> Avisar quanto tempo antes?</span>
         <div class="prazos">
           <label><input type="checkbox" value="15"><span>15 min</span></label>
           <label><input type="checkbox" value="10"><span>10 min</span></label>
           <label><input type="checkbox" value="5" checked><span>5 min</span></label>
         </div>
       </div>
-      <label class="campo"><span>Observações</span><textarea id="iObs" maxlength="300" placeholder="Ex.: Tipo de PCD, porta/carro, nº do carro ou qualquer outra informação"></textarea></label>
+      <label class="campo"><span>Observações <em>(opcional)</em></span><textarea id="iObs" maxlength="300" placeholder="Tipo de PCD, porta/carro, nº do carro…"></textarea></label>
       <div class="previa" id="previa">Escolha as estações.</div>
       <button class="btn go" id="bComecar">Começar contagem</button>
     </form>
-    <p class="dica">O aviso também toca na hora prevista da chegada. A estimativa usa a tabela de tempos; atrasos na via não entram na conta.</p>
   </section>
 
-  <details class="card" id="dTabela">
-    <summary>Tabela de tempos</summary>
-    <div class="corpo">
-      <p class="dica">Tempo médio de percurso entre estações vizinhas da Linha 11. Viagens entre estações distantes somam os trechos do caminho, o que dá os mesmos tempos da matriz.</p>
-      <table class="trechos" id="tTrechos"></table>
-      <p class="est" id="tabEst"></p>
-      <figure class="fonte">
-        <a href="fonte-linha11.jpg" target="_blank" rel="noopener"><img src="fonte-linha11.jpg" alt="Matriz Tempo de percurso entre estações da Linha 11" loading="lazy"></a>
-        <figcaption>Fonte: matriz "Tempo de percurso entre estações da Linha 11". Toque na imagem para ampliar.</figcaption>
-      </figure>
-    </div>
-  </details>
-</div>
-
-<div class="col">
-  <section class="card">
-    <h2><span class="n">2</span>Viagens em andamento</h2>
-    <div class="lista" id="lista"></div>
-  </section>
-
-  <details class="card">
-    <summary>Notificações e teste</summary>
+  <details class="mais">
+    <summary>Testar som e notificações</summary>
     <div class="corpo">
       <div class="row">
         <button class="btn" id="bNotif" type="button">Ativar notificações</button>
@@ -173,13 +156,25 @@ details .corpo{display:flex;flex-direction:column;gap:12px}
     </div>
   </details>
 
-  <section class="card">
-    <h2>Registro</h2>
-    <div class="log" id="log"><p class="dica">Nenhum aviso ainda.</p></div>
-  </section>
+  <details class="mais" id="dTabela">
+    <summary>Tabela de tempos</summary>
+    <div class="corpo">
+      <p class="dica">Tempo médio entre estações vizinhas da Linha 11. Viagens longas somam os trechos do caminho. Atrasos na via não entram na conta.</p>
+      <table class="trechos" id="tTrechos"></table>
+      <p class="est" id="tabEst"></p>
+      <figure class="fonte">
+        <a href="fonte-linha11.jpg" target="_blank" rel="noopener"><img src="fonte-linha11.jpg" alt="Matriz Tempo de percurso entre estações da Linha 11" loading="lazy"></a>
+        <figcaption>Fonte: matriz "Tempo de percurso entre estações da Linha 11". Toque na imagem para ampliar.</figcaption>
+      </figure>
+    </div>
+  </details>
+
+  <details class="mais">
+    <summary>Histórico de avisos</summary>
+    <div class="corpo"><div class="log" id="log"><p class="dica">Nenhum aviso ainda.</p></div></div>
+  </details>
 
   <div class="aviso">É uma estimativa pela tabela de tempos. Ela não substitui a comunicação com o CCO nem a proteção de quem está na via.</div>
-</div>
 </main>
 
 <div id="alerta" hidden><div class="box"><span class="rot" id="aRot">TREM CHEGANDO</span><h3 id="aTit">S120</h3><p id="aMsg"></p><div class="aobs" id="aObs" hidden></div><ul id="aAnt" hidden></ul><button class="btn" id="aOk">Ciente</button></div></div>
@@ -247,7 +242,7 @@ function aplicarTabela(){
   for(let i=0;i<estacoes.length-1;i++){const a=estacoes[i],b=estacoes[i+1],m=grafo.get(a).get(b);if(m==null)continue;
     const tr=t.insertRow();tr.insertCell().textContent=a+' – '+b;tr.insertCell().textContent=fmtMin(m)}
   const o=$('#iOrig').value,d=$('#iDest').value;
-  for(const s of ['#iOrig','#iDest']){const el=$(s);el.innerHTML='<option value="">Escolha…</option>';estacoes.forEach(x=>el.add(new Option(NOMES[x]?x+' · '+NOMES[x]:x,x)))}
+  for(const s of ['#iOrig','#iDest']){const el=$(s);el.innerHTML='<option value="">Escolha…</option>';estacoes.forEach(x=>el.add(new Option(NOMES[x]?NOMES[x]+' ('+x+')':x,x)))}
   if(estacoes.includes(o))$('#iOrig').value=o;if(estacoes.includes(d))$('#iDest').value=d;
   previa();
 }
@@ -299,6 +294,7 @@ function contagem(ms){
 }
 function listar(){
   const el=$('#lista');el.innerHTML='';
+  $('#secViagens').hidden=!cfg.viagens.length;
   if(!cfg.viagens.length){el.innerHTML='<div class="vazio">Nenhuma viagem em andamento.</div>'}
   cfg.viagens.forEach(v=>{
     const d=document.createElement('div');d.className='v';d.id='v-'+v.k;
@@ -474,6 +470,7 @@ $('#bTeste').onclick=()=>{
 // o som só pode começar depois de um toque na página
 addEventListener('pointerdown',somCtx,{once:true});
 
+if(!pipPossivel())$('#bPip').hidden=true;
 notifEstado();aplicarTabela();agoraNoCampo();listar();botaoPip();
 </script>
 </body>
