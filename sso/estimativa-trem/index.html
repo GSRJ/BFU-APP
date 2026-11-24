@@ -137,7 +137,7 @@ form.passos{display:flex;flex-direction:column;gap:18px}
           <label><input type="checkbox" value="5" checked><span>5 min</span></label>
         </div>
       </div>
-      <label class="campo"><span>Observações <em>(opcional)</em></span><textarea id="iObs" maxlength="300" placeholder="Tipo de PCD, porta/carro, nº do carro…"></textarea></label>
+      <label class="campo"><span>Observações <em>(opcional)</em></span><textarea id="iObs" maxlength="300" placeholder="Tipo de PCD, carro/porta, nº do carro…"></textarea></label>
       <div class="previa" id="previa">Escolha as estações.</div>
       <button class="btn go" id="bComecar">Começar contagem</button>
     </form>
@@ -303,7 +303,7 @@ function listar(){
     const sm=document.createElement('small');sm.textContent='Saída '+hm(v.saida)+' · chegada prevista '+hm(v.chegada)+' · '+fmtMin(v.min);r.appendChild(sm);
     const ob=d.querySelector('.obs');ob.textContent=v.obs;ob.hidden=!v.obs;
     const [bO,bR]=d.querySelectorAll('.ac button');
-    bO.onclick=()=>{const n=prompt('Observações do trem '+v.id+' (tipo de PCD, porta/carro, nº do carro…):',v.obs);if(n!==null){v.obs=n.trim();salvar();listar()}};
+    bO.onclick=()=>{const n=prompt('Observações do trem '+v.id+' (tipo de PCD, carro/porta, nº do carro…):',v.obs);if(n!==null){v.obs=n.trim();salvar();listar()}};
     bR.onclick=()=>{if(confirm('Remover a viagem do '+v.id+'?')){cfg.viagens=cfg.viagens.filter(x=>x!==v);salvar();listar()}};
     el.appendChild(d);
   });

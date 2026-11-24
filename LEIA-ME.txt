@@ -52,7 +52,7 @@ matrícula liberada. A lista fica em sso/acesso.js e guarda o SHA-256 de "bfu-ap
 não o número. Para liberar alguém, gere o hash e acrescente na lista:
   echo -n "bfu-apoio-sso:MATRICULA" | sha256sum
 O acesso é verificado no navegador; serve para afastar curioso, não protege dado sigiloso.
-Dentro do ApoioSSO está o ALERTA TREM (sso/alerta-trem/; o endereço antigo alerta-pcd redireciona). Cada trem da lista tem observações (tipo de PCD, porta/carro, nº do carro), que aparecem no aviso e são lidas em voz alta. "Fixar aviso na tela" abre uma janela que fica por cima de tudo; o botão Fechar dela só aparece depois que todas as áreas marcadas tiveram pelo menos um aviso. Ele captura a tela do computador que mostra o
+Dentro do ApoioSSO está o ALERTA TREM (sso/alerta-trem/; o endereço antigo alerta-pcd redireciona). Cada trem da lista tem observações (tipo de PCD, carro/porta, nº do carro), que aparecem no aviso e são lidas em voz alta. "Fixar aviso na tela" abre uma janela que fica por cima de tudo; o botão Fechar dela só aparece depois que todas as áreas marcadas tiveram pelo menos um aviso. Ele captura a tela do computador que mostra o
 sinótico (ou a câmera, ou um print para teste), lê os prefixos dos trens por OCR dentro das áreas marcadas e
 avisa com som, voz e notificação quando um prefixo da lista aparece numa área. O leitor (Tesseract.js 5.1.1,
 licença Apache 2.0) e o arquivo de inglês ficam em sso/alerta-trem/lib/, para funcionar em rede que
