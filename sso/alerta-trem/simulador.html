@@ -98,7 +98,8 @@ function estados(){
   for(const t of trens){st[t.via+':'+t.pos]='trem';st[t.via+':'+(t.pos-VIAS[t.via].dir)]='trem'}
   return st;
 }
-const mono=(px,w)=>(w||700)+' '+px+'px ui-monospace,Consolas,"Courier New",monospace';
+// sinótico usa fonte fina (peso normal), como nas telas de supervisão
+const mono=(px)=>"400 "+px+"px Tahoma,Verdana,Arial,sans-serif";
 function texto(t,x,y,cor,fonte,al){cx.font=fonte;cx.fillStyle=cor;cx.textAlign=al||'left';cx.fillText(t,x,y);cx.textAlign='left'}
 
 function desenhar(){
@@ -107,11 +108,11 @@ function desenhar(){
   cx.setTransform(r*dpr,0,0,r*dpr,(innerWidth-W*r)/2*dpr,(innerHeight-H*r)/2*dpr);
   cx.fillStyle=COR.fundo;cx.fillRect(-2000,-2000,W+4000,H+4000);
   cx.textBaseline='alphabetic';
-  texto('SINÓTICO DE TESTE · LINHA FICTÍCIA',X0,52,COR.cinza,mono(18,600));
-  texto(new Date().toLocaleTimeString('pt-BR'),X1,52,COR.cinza,mono(18,600),'right');
+  texto('SINÓTICO DE TESTE · LINHA FICTÍCIA',X0,52,COR.cinza,mono(18));
+  texto(new Date().toLocaleTimeString('pt-BR'),X1,52,COR.cinza,mono(18),'right');
   // legenda
   [['trem','Trem'],['liberado','Caminho liberado'],['liberando','Em liberação']].forEach(([k,n],i)=>{
-    const x=X0+470+i*230;cx.fillStyle=COR[k];cx.fillRect(x,40,44,8);texto(n,x+54,50,COR.cinza,'600 15px system-ui,sans-serif');
+    const x=X0+470+i*230;cx.fillStyle=COR[k];cx.fillRect(x,40,44,8);texto(n,x+54,50,COR.cinza,mono(15));
   });
   const st=estados();
   // AMVs: o "X" entre duas vias
@@ -119,8 +120,8 @@ function desenhar(){
   for(const a of AMVS){
     const x=X0+a.s*SW+GAP,x2=X0+(a.s+1)*SW-GAP,ya=VIAS[a.a].y,yb=VIAS[a.b].y;
     cx.beginPath();cx.moveTo(x,ya);cx.lineTo(x2,yb);cx.moveTo(x,yb);cx.lineTo(x2,ya);cx.stroke();
-    texto(String(20+a.s*2+1),x+SW/2-34,(ya+yb)/2+5,COR.texto,mono(15,600));
-    texto(String(20+a.s*2+3),x+SW/2+14,(ya+yb)/2+5,COR.texto,mono(15,600));
+    texto(String(20+a.s*2+1),x+SW/2-34,(ya+yb)/2+5,COR.texto,mono(15));
+    texto(String(20+a.s*2+3),x+SW/2+14,(ya+yb)/2+5,COR.texto,mono(15));
   }
   // caixas das estações entre os pares de vias
   for(const e of ESTACOES){
@@ -128,16 +129,16 @@ function desenhar(){
     const yc=(VIAS[1].y+VIAS[2].y)/2;
     cx.lineWidth=4;cx.strokeStyle=COR.azul;cx.fillStyle='#1B1D20';
     cx.fillRect(x-36,yc-20,72,40);cx.strokeRect(x-36,yc-20,72,40);
-    texto(e.cod,x,yc+9,COR.texto,mono(25,700),'center');
+    texto(e.cod,x,yc+9,COR.texto,mono(25),'center');
     // etiqueta auxiliar, como "BAS2 C"
     cx.lineWidth=2;cx.strokeStyle='#E6E6E6';cx.strokeRect(x-36,yc+34,62,26);
-    texto(e.cod+'2',x-5,yc+54,COR.texto,mono(17,700),'center');
-    cx.fillStyle=COR.azul;cx.fillRect(x+28,yc+34,24,26);texto('C',x+40,yc+54,COR.texto,mono(17,700),'center');
-    texto(e.nome,x,yc-30,COR.cinza,'600 13px system-ui,sans-serif','center');
+    texto(e.cod+'2',x-5,yc+54,COR.texto,mono(17),'center');
+    cx.fillStyle=COR.azul;cx.fillRect(x+28,yc+34,24,26);texto('C',x+40,yc+54,COR.texto,mono(17),'center');
+    texto(e.nome,x,yc-30,COR.cinza,mono(13),'center');
   }
   for(let v=0;v<VIAS.length;v++){
     const via=VIAS[v],y=via.y;
-    texto(via.nome,X0-62,y-26,COR.cinza,'600 14px system-ui,sans-serif');
+    texto(via.nome,X0-62,y-26,COR.cinza,mono(14));
     // pontas da via
     cx.fillStyle=COR.livre;cx.fillRect(X0-34,y-4,34-GAP/2,8);cx.fillRect(X1+GAP/2,y-4,34,8);
     for(let s=0;s<NSEC;s++){
@@ -151,7 +152,7 @@ function desenhar(){
         const cxp=sx+(via.dir>0?-9:9);
         cx.fillRect(Math.min(sx,cxp),sy-1,9,2);
         cx.fillStyle=fr?'#E46A8A':'#2BD94A';cx.beginPath();cx.arc(cxp,sy,5,0,7);cx.fill();
-        texto(String(30+v*20+s),sx,sy-12,COR.texto,mono(14,600),'center');
+        texto(String(30+v*20+s),sx,sy-12,COR.texto,mono(14),'center');
         // seta verde de sentido
         const ax=x+SW/2,ay=y+12;
         cx.fillStyle='#2BD94A';cx.beginPath();
@@ -163,8 +164,8 @@ function desenhar(){
         const bx=x+SW/2-13,by=y-52;
         cx.fillStyle=COR.plat;cx.fillRect(bx,by,26,36);
         cx.fillStyle=COR.platTx;cx.fillRect(bx+5,by+17,16,1.5);
-        texto(String(via.plat*2-1),bx+13,by+14,COR.platTx,mono(12,700),'center');
-        texto(String(via.plat*2),bx+13,by+31,COR.platTx,mono(12,700),'center');
+        texto(String(via.plat*2-1),bx+13,by+14,COR.platTx,mono(12),'center');
+        texto(String(via.plat*2),bx+13,by+31,COR.platTx,mono(12),'center');
       }
     }
   }
@@ -172,9 +173,9 @@ function desenhar(){
   for(const t of trens){
     if(t.pos<0||t.pos>=NSEC)continue;
     const via=VIAS[t.via],x=X0+t.pos*SW+SW/2,y=via.y+31;
-    cx.font=mono(19,700);const w=cx.measureText(t.id).width;
+    cx.font=mono(19);const w=cx.measureText(t.id).width;
     cx.fillStyle=COR.fundo;cx.fillRect(x-w/2-4,y-17,w+8,22);
-    texto(t.id,x,y,COR.texto,mono(19,700),'center');
+    texto(t.id,x,y,COR.texto,mono(19),'center');
   }
 }
 

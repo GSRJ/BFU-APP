@@ -153,8 +153,8 @@ label.cfg input[type=range]{flex:1;accent-color:var(--k)}
       <label class="campo"><span>Prefixo do trem</span><input type="text" id="iPref" placeholder="S120" maxlength="12" autocomplete="off"></label>
       <div class="tres">
         <label class="campo"><span>Tipo</span><select id="iTipo"><option value="">—</option><option>DV</option><option>MR</option><option>TEA</option><option>Idoso</option><option>Cadeirante</option><option>Cadeirante motorizado</option><option>Outro</option></select></label>
-        <label class="campo"><span>Porta</span><select id="iPorta"><option value="">—</option><option value="1">1ª</option><option value="2">2ª</option><option value="3">3ª</option><option value="4">4ª</option></select></label>
         <label class="campo"><span>Carro</span><select id="iCarro"><option value="">—</option><option value="1">1º</option><option value="2">2º</option><option value="3">3º</option><option value="4">4º</option><option value="5">5º</option><option value="6">6º</option><option value="7">7º</option><option value="8">8º</option></select></label>
+        <label class="campo"><span>Porta</span><select id="iPorta"><option value="">—</option><option value="1">1ª</option><option value="2">2ª</option><option value="3">3ª</option><option value="4">4ª</option></select></label>
       </div>
       <label class="campo"><span>Observações <em>(opcional)</em></span><textarea id="iObs" maxlength="300" placeholder="Nº do carro ou qualquer outra informação"></textarea></label>
       <button class="btn pri" id="bAddTrem">Adicionar trem</button>
@@ -330,8 +330,8 @@ $('#fPref').onsubmit=e=>{
 // botão diz "Salvar" quando o prefixo digitado já está na lista
 function botaoAdd(){const v=$('#iPref').value.toUpperCase().replace(/[^A-Z0-9]/g,'');$('#bAddTrem').textContent=cfg.prefixos.includes(v)?'Salvar alterações do '+v:'Adicionar trem'}
 $('#iPref').addEventListener('input',botaoAdd);
-// tipo, porta e carro em texto: "Cadeirante · 2ª porta · 5º carro"
-function infoPartes(p){const i=cfg.info[p]||{};return [i.tipo,i.porta?i.porta+'ª porta':'',i.carro?i.carro+'º carro':''].filter(Boolean)}
+// tipo, carro e porta em texto: "Cadeirante · 5º carro · 2ª porta"
+function infoPartes(p){const i=cfg.info[p]||{};return [i.tipo,i.carro?i.carro+'º carro':'',i.porta?i.porta+'ª porta':''].filter(Boolean)}
 function detalhes(p){return [infoPartes(p).join(' · '),cfg.obs[p]||''].filter(Boolean).join('\n')}
 function listarTrens(){
   const el=$('#trens');el.innerHTML='';
