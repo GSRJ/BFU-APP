@@ -560,7 +560,6 @@ function avisar(p,onde,id,zid){
   registrar(msg);mostrar(id||p,'em '+onde,false,obs);falar('Atenção. Trem '+p.split('').join(' ')+' em '+onde+(obs?'. '+obs.replace(/\n/g,'. ').replace(/ · /g,', '):''));
 }
 // quantas áreas marcadas já tiveram pelo menos um aviso
-function todasAvisadas(){return cfg.zonas.length>0&&cfg.zonas.every(z=>areasAvisadas.has(z.id))}
 function progresso(){
   const tot=cfg.zonas.length,ok=cfg.zonas.filter(z=>areasAvisadas.has(z.id)).length;
   $('#progTxt').textContent=ok+' de '+tot+' áreas avisadas';$('#progBar').style.width=(tot?ok/tot*100:0)+'%';
@@ -593,7 +592,7 @@ async function abrirPip(){
    'body{display:flex;flex-direction:column;background:#0E1A2B;color:#fff}'+
    '.cab{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:3px solid #FF5A1F;font-weight:800;letter-spacing:.06em;font-size:13px}'+
    '.cab i{margin-left:auto;font-style:normal;font-size:12px;padding:3px 8px;border-radius:6px;background:#444}'+
-   '.cab i.on{background:#0B7A75}.cab i.err{background:#C62828}'+'.obs{margin-top:4px;background:rgba(255,255,255,.95);color:#162030;border-radius:8px;padding:6px 8px;font-size:15px;font-weight:700;white-space:pre-wrap}'+'.prog{font-size:12px;color:#9FB0C6}body.alerta .prog,body.falha .prog{color:#fff}'+'button.fechar{background:#0B7A75;color:#fff;border-color:#0B7A75}'+
+   '.cab i.on{background:#0B7A75}.cab i.err{background:#C62828}'+'.obs{margin-top:4px;background:rgba(255,255,255,.95);color:#162030;border-radius:8px;padding:6px 8px;font-size:15px;font-weight:700;white-space:pre-wrap}'+'.prog{font-size:12px;color:#9FB0C6}body.alerta .prog,body.falha .prog{color:#fff}'+
    '.corpo{flex:1;display:flex;flex-direction:column;justify-content:center;gap:4px;padding:10px 12px;min-height:0;overflow:hidden}'+
    '.corpo b{font:900 36px/1 ui-monospace,Consolas,monospace;letter-spacing:.02em}'+
    '.corpo p{margin:0;font-size:20px;font-weight:800}'+
@@ -604,9 +603,8 @@ async function abrirPip(){
    'body.alerta .corpo small,body.falha .corpo small{color:#FFE3D6}'+
    '@keyframes p{50%{background:#C2410C}}'+
    '</style>';
-  d.body.innerHTML='<div class="cab">ALERTA TREM<i id="est"></i></div><div class="corpo" id="corpo"></div><div class="bt"><button id="ok" hidden>Ciente</button><button id="fechar" class="fechar" hidden>Fechar</button></div>';
+  d.body.innerHTML='<div class="cab">ALERTA TREM<i id="est"></i></div><div class="corpo" id="corpo"></div><div class="bt"><button id="ok" hidden>Ciente</button></div>';
   d.getElementById('ok').onclick=()=>$('#aOk').click();
-  d.getElementById('fechar').onclick=()=>pip&&pip.close();
   pip.addEventListener('pagehide',()=>{pip=null;botaoPip()});
   botaoPip();
   pipDesenhar();
@@ -619,8 +617,6 @@ function pipDesenhar(){
   const alertaAberto=!$('#alerta').hidden&&pendentes.length;
   d.body.className=alertaAberto?(pendentes[0].f?'falha':'alerta'):'';
   ok.hidden=!alertaAberto;
-  // o Fechar só aparece depois que todas as áreas marcadas tiveram pelo menos um aviso
-  d.getElementById('fechar').hidden=!todasAvisadas();
   const add=(tag,txt)=>{const el=d.createElement(tag);el.textContent=txt;c.appendChild(el);return el};
   if(alertaAberto){
     const a=pendentes[0];add('b',a.tit);add('p',a.msg);if(a.obs)add('div',a.obs).className='obs';add('small','às '+a.h);
@@ -631,7 +627,7 @@ function pipDesenhar(){
     const vistos=cfg.prefixos.filter(p=>estadoTrem[p]).map(p=>p+': '+(estadoTrem[p].agora?'agora em ':'último em ')+estadoTrem[p].onde+' '+estadoTrem[p].quando);
     if(vistos.length)add('small',vistos.join(' · '));
   }
-  if(rodando&&cfg.zonas.length){const ok=cfg.zonas.filter(z=>areasAvisadas.has(z.id)).length;add('small',ok+' de '+cfg.zonas.length+' áreas avisadas'+(todasAvisadas()?' · pode fechar':'')).className='prog'}
+  if(rodando&&cfg.zonas.length){const ok=cfg.zonas.filter(z=>areasAvisadas.has(z.id)).length;add('small',ok+' de '+cfg.zonas.length+' áreas avisadas').className='prog'}
 }
 
 function registrar(msg,isFalha){
