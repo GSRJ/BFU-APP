@@ -174,11 +174,6 @@ main{padding-top:14px}
     <button class="tn tarde" type="button" data-t="tarde"><span class="p"></span><b>Tarde</b><i>14h às 22h</i></button>
     <button class="tn noite" type="button" data-t="noite"><span class="p"></span><b>Noite</b><i>22h às 06h</i><em data-st="noite">verificando…</em></button>
   </div>
-  <a class="card apoio" href="apoio-sso/index.html">
-    <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10.5" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/><path d="M12 14.5v2.5"/></svg></div>
-    <div class="tx"><b>ApoioSSO</b><span>Ferramentas de apoio · entra com a matrícula</span></div>
-    <div class="go" aria-hidden="true"></div>
-  </a>
   <p class="offnote" id="offnote" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0"/><path d="M12 19h.01"/><path d="M3 3l18 18"/></svg><span><b>Funciona sem internet depois de instalado.</b> Dá para fazer a ronda e o reporte sem sinal, e as mensagens saem pelo WhatsApp quando o celular voltar a ter conexão. O GBD também abre sem sinal, mostrando o último que foi publicado.</span></p>
 </main>
 <footer>Desenvolvido por AAS Gerson</footer>
@@ -208,7 +203,7 @@ document.getElementById('dlgOk').onclick=()=>document.getElementById('dlg').clos
 if('serviceWorker' in navigator&&/^https?:/.test(location.protocol)){navigator.serviceWorker.register('sw.js').catch(()=>{});}
 /* abre a Ronda ou o Reporte SSO dentro do BFU; cada um fica carregado para voltar de onde parou */
 const view=document.getElementById('appView'),frames={};
-const APPS={ronda:['ronda/index.html','Ronda'],sso:['reporte-sso/index.html','Reporte SSO'],planta:['reporte-sso/index.html?planta=1','Planta da estação'],pdf:['foto-pdf/index.html','Foto para PDF'],gbd:['gbd/index.html','GBD do dia'],apoio:['apoio-sso/index.html','ApoioSSO']};
+const APPS={ronda:['ronda/index.html','Ronda'],sso:['reporte-sso/index.html','Reporte SSO'],planta:['reporte-sso/index.html?planta=1','Planta da estação'],pdf:['foto-pdf/index.html','Foto para PDF'],gbd:['gbd/index.html','GBD do dia']};
 function openApp(k,push,turno){
   const app=APPS[k];if(!app)return;
   const src=app[0]+(turno?(app[0].includes('?')?'&':'?')+'turno='+turno:'');
@@ -231,7 +226,7 @@ document.querySelectorAll('a.card').forEach(a=>a.addEventListener('click',e=>{
     if(abrir)box.querySelector('.tn.tarde').focus();
     return;
   }
-  openApp(a.classList.contains('apoio')?'apoio':a.classList.contains('ronda')?'ronda':a.classList.contains('planta')?'planta':a.classList.contains('pdf')?'pdf':'sso');
+  openApp(a.classList.contains('ronda')?'ronda':a.classList.contains('planta')?'planta':a.classList.contains('pdf')?'pdf':'sso');
 }));
 document.querySelectorAll('#turnos .tn').forEach(b=>b.addEventListener('click',()=>openApp('gbd',true,b.dataset.t)));
 /* manhã e noite: mostra se o GBD já foi publicado (o arquivo do turno existe) */

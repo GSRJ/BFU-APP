@@ -64,6 +64,7 @@ label.cfg input[type=range]{flex:1}
 #alerta.f .box{background:#FFCDD2}
 #alerta h3{margin:0;font:700 46px/1 var(--fc)}
 #alerta p{margin:0;font:700 24px/1.2 var(--fc)}
+#alerta ul{margin:0;padding:8px 10px;list-style:none;text-align:left;border-top:2px solid rgba(0,0,0,.25);font:700 18px/1.4 var(--fc)}
 .aviso{background:#FFF4CC;border:2px solid var(--y);border-radius:10px;padding:10px;font-size:14px}
 </style>
 </head>
@@ -78,7 +79,7 @@ label.cfg input[type=range]{flex:1}
 <div class="col">
   <section class="card">
     <h2><span class="passo">1</span>De onde vem a imagem do painel</h2>
-    <p class="dica">No computador que mostra o sinótico, escolha "Compartilhar a tela" e selecione a janela ou a tela do painel. A câmera serve para um celular apontado para o monitor. A imagem de teste serve para treinar com um print.</p>
+    <p class="dica">No computador que mostra o sinótico, escolha "Compartilhar a tela" e selecione a janela ou a tela do painel. A câmera serve para um celular apontado para o monitor. A imagem de teste serve para treinar com um print. Para testar sem o painel, abra o <a href="simulador.html" target="_blank" rel="noopener">simulador de sinótico</a> em outra janela e compartilhe essa janela.</p>
     <div class="row">
       <button class="btn pri" id="bTela">Compartilhar a tela</button>
       <button class="btn" id="bCam">Câmera</button>
@@ -119,8 +120,14 @@ label.cfg input[type=range]{flex:1}
       <button class="btn stop" id="bParar" hidden>Parar</button>
     </div>
     <label class="cfg">Ler a cada <input type="range" id="rInt" min="1" max="10" step="1" value="2"> <b id="vInt">2 s</b></label>
+    <label class="cfg">Avisar imagem parada após <input type="range" id="rPar" min="1" max="15" step="1" value="3"> <b id="vPar">3 min</b></label>
     <label class="cfg">Limiar do texto <input type="range" id="rLim" min="80" max="230" step="5" value="140"> <b id="vLim">140</b></label>
-    <p class="dica">Se o texto lido sair vazio ou com sujeira, mexa no limiar e toque em "Ler agora". Deixe esta janela aberta; ela pode ficar atrás do painel.</p>
+    <p class="dica">Se o texto lido sair vazio ou com sujeira, mexa no limiar e toque em "Ler agora". Esta janela pode ser minimizada. A janela do sinótico não: pode ficar atrás de outras, mas minimizada a imagem congela, e o app avisa "imagem parada".</p>
+    <div class="row">
+      <button class="btn" id="bNotif" type="button">Ativar notificações</button>
+      <button class="btn" id="bTeste" type="button">Testar aviso em 10 s</button>
+    </div>
+    <p class="dica" id="notifEst"></p>
     <div class="aviso">É um aviso de apoio. Ele não substitui a comunicação com o CCO nem a proteção de quem está na via.</div>
   </section>
 
@@ -131,7 +138,7 @@ label.cfg input[type=range]{flex:1}
 </div>
 </main>
 
-<div id="alerta" hidden><div class="box"><h3 id="aTit">S120</h3><p id="aMsg"></p><button class="btn" id="aOk">Ciente</button></div></div>
+<div id="alerta" hidden><div class="box"><h3 id="aTit">S120</h3><p id="aMsg"></p><ul id="aAnt" hidden></ul><button class="btn" id="aOk">Ciente</button></div></div>
 
 <script src="lib/tesseract.min.js"></script>
 <script>
@@ -139,14 +146,16 @@ label.cfg input[type=range]{flex:1}
 const $=s=>document.querySelector(s);
 const LIB=new URL('lib/',location.href).href;
 const CHAVE='sinotico-v1';
-let cfg={zonas:[],prefixos:[],intervalo:2,limiar:140};
+let cfg={zonas:[],prefixos:[],intervalo:2,limiar:140,paradoMin:3};
 try{Object.assign(cfg,JSON.parse(localStorage.getItem(CHAVE)||'{}'))}catch(e){}
 const salvar=()=>{try{localStorage.setItem(CHAVE,JSON.stringify(cfg))}catch(e){}};
 
 const cv=$('#cv'),cx=cv.getContext('2d',{willReadFrequently:true}),video=$('#video');
-let track=null,cap=null,imgFonte=null,frame=null,ocr=null,rodando=false,ocupado=false,ticker=null,marcando=false,perdas=0;
+let track=null,cap=null,imgFonte=null,fonteArquivo=false,frame=null,ocr=null,rodando=false,ocupado=false,ticker=null,marcando=false,perdas=0;
+let assinatura=null,desdeMudou=Date.now(),avisouParado=false,inicioCiclo=0,avisouTravou=false;
 const estadoTrem={}; // prefixo -> {onde,quando}
-const presenca={};   // prefixo|zona -> {hits,falta,avisado}
+let nCiclo=0;
+const presenca={};   // prefixo|zona -> {hist,falta,avisado}
 
 /* ---------- fonte da imagem ---------- */
 async function ligarStream(stream){
@@ -156,7 +165,7 @@ async function ligarStream(stream){
   await video.play().catch(()=>{});
   cap=('ImageCapture' in window)?new ImageCapture(track):null;
   track.addEventListener('ended',()=>{track=null;if(rodando)falha('A captura do painel foi encerrada.');estado()});
-  imgFonte=null;
+  imgFonte=null;fonteArquivo=false;
   await new Promise(r=>setTimeout(r,400));
   await capturar();
 }
@@ -171,7 +180,7 @@ $('#bCam').onclick=async()=>{
 };
 $('#fImg').onchange=async e=>{
   const f=e.target.files[0];if(!f)return;
-  pararStream();imgFonte=await createImageBitmap(f);e.target.value='';
+  pararStream();imgFonte=await createImageBitmap(f);fonteArquivo=true;e.target.value='';
   await capturar();
 };
 
@@ -179,7 +188,8 @@ async function pegarQuadro(){
   let src=null,w=0,h=0,bm=null;
   if(imgFonte){src=imgFonte;w=src.width;h=src.height}
   else if(track&&track.readyState==='live'){
-    if(cap){try{bm=await cap.grabFrame();src=bm;w=bm.width;h=bm.height}catch(e){bm=null}}
+    // grabFrame pode ficar esperando para sempre quando a janela capturada é minimizada
+    if(cap){try{bm=await Promise.race([cap.grabFrame(),new Promise((_,n)=>setTimeout(()=>n(new Error('tempo')),2500))]);src=bm;w=bm.width;h=bm.height}catch(e){bm=null}}
     if(!src&&video.videoWidth){src=video;w=video.videoWidth;h=video.videoHeight}
   }
   if(!src)return null;
@@ -299,6 +309,40 @@ function preparar(z){
 // letras que o leitor confunde com números viram a mesma coisa dos dois lados
 const PARES={O:'0',D:'0',Q:'0',I:'1',L:'1',J:'1',Z:'2',S:'5',B:'8',G:'6'};
 const canon=s=>s.toUpperCase().replace(/[^A-Z0-9]/g,'').replace(/[ODQILJZSBG]/g,c=>PARES[c]);
+const limpo=s=>s.toUpperCase().replace(/[^A-Z0-9]/g,'');
+function procurar(linhas,p,cp){
+  const achados=[];
+  const add=(r,i)=>{
+    // mostra o prefixo como foi digitado e o resto como foi lido (5120X288 vira S120X288)
+    const id=p+r.slice(i+p.length),exato=r.includes(p),o=achados.find(x=>parecido(x.id,id));
+    if(o){if(exato&&!o.exato){o.id=id;o.exato=true}}else achados.push({id,exato});
+  };
+  for(const l of linhas)for(const r of l.split(/\s+/).map(limpo)){const i=canon(r).indexOf(cp);if(i>=0)add(r,i)}
+  if(!achados.length)for(const l of linhas){const r=limpo(l),i=canon(r).indexOf(cp);if(i>=0)add(r,i)}
+  return achados;
+}
+// dois prefixos lidos são o mesmo trem se um começa pelo outro ou se diferem em um caractere
+function parecido(a,b){
+  a=canon(a);b=canon(b);if(a.startsWith(b)||b.startsWith(a))return true;
+  if(Math.abs(a.length-b.length)>1)return false;
+  const m=[...Array(b.length+1).keys()];
+  for(let i=1;i<=a.length;i++){let ant=m[0];m[0]=i;for(let j=1;j<=b.length;j++){const t=m[j];m[j]=Math.min(m[j]+1,m[j-1]+1,ant+(a[i-1]===b[j-1]?0:1));ant=t}}
+  return m[b.length]<=1;
+}
+// imagem parada: compara uma miniatura do quadro com a do ciclo anterior
+const mini=document.createElement('canvas');mini.width=160;mini.height=90;
+function verificarParada(f){
+  if(fonteArquivo)return;
+  const g=mini.getContext('2d',{willReadFrequently:true});g.drawImage(f,0,0,160,90);
+  const d=g.getImageData(0,0,160,90).data,a=new Uint8Array(160*90);
+  for(let i=0,p=0;p<a.length;i+=4,p++)a[p]=(d[i]+d[i+1]+d[i+2])/3;
+  let mudou=!assinatura;
+  if(assinatura)for(let p=0;p<a.length;p++)if(Math.abs(a[p]-assinatura[p])>12){mudou=true;break}
+  assinatura=a;
+  if(mudou){desdeMudou=Date.now();if(avisouParado){avisouParado=false;registrar('A imagem do painel voltou a mudar.')}return}
+  const min=(Date.now()-desdeMudou)/60000;
+  if(!avisouParado&&min>=cfg.paradoMin){avisouParado=true;falha('A imagem do painel está parada há '+Math.max(1,Math.round(min))+' min. Veja se a janela do sinótico foi minimizada ou travou.','Imagem parada')}
+}
 
 async function lerZonas(){
   if(!frame||!cfg.zonas.length)return [];
@@ -321,8 +365,9 @@ async function lerZonas(){
 /* ---------- ciclo de vigia ---------- */
 function hora(){return new Date().toLocaleTimeString('pt-BR')}
 async function ciclo(){
-  if(ocupado||!rodando)return;
-  ocupado=true;
+  if(!rodando)return;
+  if(ocupado){if(!avisouTravou&&Date.now()-inicioCiclo>45000){avisouTravou=true;falha('O leitor parou de responder. Pare e comece a vigiar de novo.','Leitor travado')}return}
+  ocupado=true;inicioCiclo=Date.now();avisouTravou=false;nCiclo++;
   try{
     const f=imgFonte?frame:await pegarQuadro();
     if(!f){perdas++;if(perdas===3)falha('Perdi a imagem do painel.');return}
@@ -331,20 +376,29 @@ async function ciclo(){
     for(let i=0;i<t.length;i+=4*97){soma+=t[i]+t[i+1]+t[i+2];n++}
     if(soma/n<6){perdas++;if(perdas===3)falha('A imagem do painel ficou preta.');return}
     perdas=0;
+    verificarParada(f);
     if(!document.hidden)desenhar();
     const res=await lerZonas();
     for(const p of cfg.prefixos){
       const cp=canon(p);
       for(const {z,linhas} of res){
-        const k=p+'|'+z.id,s=presenca[k]||(presenca[k]={hits:0,falta:0,avisado:false});
-        const achou=linhas.some(l=>canon(l).includes(cp));
-        if(achou){
-          s.hits++;s.falta=0;
+        const k=p+'|'+z.id,s=presenca[k]||(presenca[k]={cand:[],avisados:[]});
+        const achados=procurar(linhas,p,cp);
+        for(const a of achados){
           estadoTrem[p]={onde:z.nome,quando:hora().slice(0,5),agora:true};
-          if(s.hits>=2&&!s.avisado){s.avisado=true;avisar(p,z.nome)}
-        }else{
-          s.hits=0;s.falta++;
-          if(s.avisado&&s.falta>=3){s.avisado=false;registrar(p+' saiu de '+z.nome);if(estadoTrem[p]&&estadoTrem[p].onde===z.nome)estadoTrem[p].agora=false}
+          const av=s.avisados.find(x=>parecido(x.id,a.id));
+          if(av){av.ult=nCiclo;continue}
+          let c=s.cand.find(x=>parecido(x.id,a.id));
+          if(!c){c={id:a.id,n:0};s.cand.push(c)}
+          c.n++;c.ult=nCiclo;if(a.exato)c.id=a.id;
+          // leitura exata avisa na hora; leitura aproximada (S lido como 5 etc.) precisa aparecer 2 vezes em 3 leituras
+          if(a.exato||c.n>=2){s.cand.splice(s.cand.indexOf(c),1);s.avisados.push({id:c.id,ult:nCiclo});avisar(p,z.nome,c.id)}
+        }
+        s.cand=s.cand.filter(c=>nCiclo-c.ult<3);
+        // trem que não aparece há 2 leituras saiu da área; a área volta a avisar para ele
+        for(const a of s.avisados.filter(a=>nCiclo-a.ult>=2)){
+          s.avisados.splice(s.avisados.indexOf(a),1);registrar(a.id+' saiu de '+z.nome);
+          if(!s.avisados.length&&estadoTrem[p]&&estadoTrem[p].onde===z.nome&&!achados.length)estadoTrem[p].agora=false;
         }
       }
     }
@@ -365,9 +419,9 @@ function pararRelogio(){if(ticker){ticker.terminate();ticker=null}}
 let wake=null;
 $('#bIniciar').onclick=async()=>{
   somCtx();
-  if('Notification' in window&&Notification.permission==='default')Notification.requestPermission().catch(()=>{});
+  if('Notification' in window&&Notification.permission==='default')Notification.requestPermission().then(notifEstado).catch(()=>{});
   try{await prepararOCR()}catch(e){estado('Não carregou o leitor: '+e.message,true);return}
-  rodando=true;perdas=0;
+  rodando=true;perdas=0;assinatura=null;desdeMudou=Date.now();avisouParado=false;
   try{wake=await navigator.wakeLock.request('screen')}catch(e){}
   $('#bIniciar').hidden=true;$('#bParar').hidden=false;
   iniciarRelogio();estado();ciclo();
@@ -389,26 +443,32 @@ $('#bLer').onclick=async()=>{
 let actx=null,repete=null;
 function somCtx(){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();actx.resume()}catch(e){}}
 function bip(grave){
-  if(!actx)return;const t0=actx.currentTime;
+  if(!actx)return;try{actx.resume()}catch(e){}const t0=actx.currentTime;
   for(let i=0;i<3;i++){const o=actx.createOscillator(),g=actx.createGain();o.type='square';o.frequency.value=grave?440:880;
     g.gain.setValueAtTime(0.0001,t0+i*0.35);g.gain.exponentialRampToValueAtTime(0.25,t0+i*0.35+0.02);g.gain.exponentialRampToValueAtTime(0.0001,t0+i*0.35+0.25);
     o.connect(g).connect(actx.destination);o.start(t0+i*0.35);o.stop(t0+i*0.35+0.3)}
 }
 function falar(txt){try{const u=new SpeechSynthesisUtterance(txt);u.lang='pt-BR';speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
+let pendentes=[];
 function mostrar(tit,msg,isFalha){
+  if($('#alerta').hidden)pendentes=[];
+  pendentes.unshift({tit,msg,f:!!isFalha,h:hora().slice(0,5)});pendentes=pendentes.slice(0,6);
   $('#aTit').textContent=tit;$('#aMsg').textContent=msg;
+  const ant=$('#aAnt');ant.innerHTML='';
+  pendentes.slice(1).forEach(x=>{const li=document.createElement('li');li.textContent=x.h+' · '+x.tit+' '+x.msg;ant.appendChild(li)});
+  ant.hidden=pendentes.length<2;
   $('#alerta').classList.toggle('f',!!isFalha);$('#alerta').hidden=false;
   bip(isFalha);clearInterval(repete);let n=0;
   repete=setInterval(()=>{if(++n>6||$('#alerta').hidden){clearInterval(repete);return}bip(isFalha)},5000);
   try{navigator.vibrate&&navigator.vibrate([400,200,400])}catch(e){}
-  try{if('Notification' in window&&Notification.permission==='granted')new Notification(tit,{body:msg,icon:'../../icon-192.png',requireInteraction:true,tag:tit+msg})}catch(e){}
+  try{if('Notification' in window&&Notification.permission==='granted'){const n=new Notification(tit,{body:msg,icon:'../../icon-192.png',requireInteraction:true,tag:tit+msg+Date.now()});n.onclick=()=>{try{parent.focus();window.focus()}catch(e){}n.close()}}}catch(e){}
 }
-$('#aOk').onclick=()=>{$('#alerta').hidden=true;clearInterval(repete)};
-function avisar(p,onde){
-  const msg='Trem '+p+' em '+onde+' às '+hora().slice(0,5);
-  registrar(msg);mostrar(p,'em '+onde);falar('Atenção. Trem '+p.split('').join(' ')+' em '+onde);
+$('#aOk').onclick=()=>{$('#alerta').hidden=true;clearInterval(repete);pendentes=[]};
+function avisar(p,onde,id){
+  const msg='Trem '+(id||p)+' em '+onde+' às '+hora().slice(0,5);
+  registrar(msg);mostrar(id||p,'em '+onde);falar('Atenção. Trem '+p.split('').join(' ')+' em '+onde);
 }
-function falha(msg){registrar(msg,true);mostrar('Sem imagem',msg,true);falar(msg);estado()}
+function falha(msg,tit){registrar(msg,true);mostrar(tit||'Sem imagem',msg,true);falar(msg);estado()}
 function registrar(msg,isFalha){
   const el=$('#log');if(el.querySelector('p'))el.innerHTML='';
   const d=document.createElement('div');if(isFalha)d.className='f';
@@ -427,8 +487,23 @@ function estado(txt,erro){
 }
 $('#rInt').value=cfg.intervalo;$('#vInt').textContent=cfg.intervalo+' s';
 $('#rLim').value=cfg.limiar;$('#vLim').textContent=cfg.limiar;
+$('#rPar').value=cfg.paradoMin;$('#vPar').textContent=cfg.paradoMin+' min';
+$('#rPar').oninput=e=>{cfg.paradoMin=+e.target.value;$('#vPar').textContent=cfg.paradoMin+' min';salvar()};
 $('#rInt').oninput=e=>{cfg.intervalo=+e.target.value;$('#vInt').textContent=cfg.intervalo+' s';salvar();if(ticker)ticker.postMessage(cfg.intervalo*1000)};
 $('#rLim').oninput=e=>{cfg.limiar=+e.target.value;$('#vLim').textContent=cfg.limiar;salvar()};
+function notifEstado(){
+  const e=$('#notifEst'),b=$('#bNotif');
+  if(!('Notification' in window)){e.textContent='Este navegador não mostra notificações. Com a janela minimizada, o aviso é só o som e a voz.';b.hidden=true;return}
+  const p=Notification.permission;b.hidden=p==='granted';
+  e.textContent=p==='granted'?'Notificações ativadas.':p==='denied'?'Notificações bloqueadas. Libere no cadeado ao lado do endereço do site, em Notificações, e recarregue a página.':'Notificações ainda não ativadas.';
+}
+$('#bNotif').onclick=async()=>{somCtx();try{await Notification.requestPermission()}catch(e){}notifEstado()};
+$('#bTeste').onclick=()=>{
+  somCtx();if('Notification' in window&&Notification.permission==='default')Notification.requestPermission().then(notifEstado).catch(()=>{});
+  $('#bTeste').disabled=true;$('#bTeste').textContent='Minimize a janela agora…';
+  setTimeout(()=>{$('#bTeste').disabled=false;$('#bTeste').textContent='Testar aviso em 10 s';registrar('Teste de aviso');mostrar('TESTE','Se você ouviu o bipe e viu a notificação, o aviso funciona.');falar('Teste do alerta P C D')},10000);
+};
+notifEstado();
 listarZonas();listarTrens();
 </script>
 </body>

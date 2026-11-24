@@ -47,13 +47,13 @@ do GBD de hoje, com o botão "Ativar avisos". Ligado, o aparelho toca um som, mo
 notificação na hora de cada pausa e intervalo do GBD do dia, enquanto a página estiver aberta. A escolha fica
 guardada no aparelho; o mesmo botão desliga. A página teste-aviso.html continua para testar as notificações.
 
-Atualização 24/11 (ApoioSSO e ALERTA PCD): nova placa "ApoioSSO" na tela inicial. Só entra quem digita uma
-matrícula liberada. A lista fica em apoio-sso/acesso.js e guarda o SHA-256 de "bfu-apoio-sso:" + matrícula,
+Atualização 24/11 (ApoioSSO e ALERTA PCD): ApoioSSO no endereço /sso, sem placa na tela inicial. Só entra quem digita uma
+matrícula liberada. A lista fica em sso/acesso.js e guarda o SHA-256 de "bfu-apoio-sso:" + matrícula,
 não o número. Para liberar alguém, gere o hash e acrescente na lista:
   echo -n "bfu-apoio-sso:MATRICULA" | sha256sum
 O acesso é verificado no navegador; serve para afastar curioso, não protege dado sigiloso.
-Dentro do ApoioSSO está o ALERTA PCD (apoio-sso/alerta-pcd/). Ele captura a tela do computador que mostra o
+Dentro do ApoioSSO está o ALERTA PCD (sso/alerta-pcd/). Ele captura a tela do computador que mostra o
 sinótico (ou a câmera, ou um print para teste), lê os prefixos dos trens por OCR dentro das áreas marcadas e
 avisa com som, voz e notificação quando um prefixo da lista aparece numa área. O leitor (Tesseract.js 5.1.1,
-licença Apache 2.0) e o arquivo de inglês ficam em apoio-sso/alerta-pcd/lib/, para funcionar em rede que
+licença Apache 2.0) e o arquivo de inglês ficam em sso/alerta-pcd/lib/, para funcionar em rede que
 bloqueia CDN. Áreas, prefixos e ajustes ficam salvos no navegador.
