@@ -8,7 +8,7 @@
 <link rel="icon" href="../../icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Chivo+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
 html,body{margin:0;height:100%;background:#2D2F32;color:#ddd;font:14px/1.3 system-ui,Segoe UI,Arial,sans-serif;overflow:hidden}
 #cv{position:fixed;inset:0;width:100%;height:100%;display:block}
@@ -104,8 +104,8 @@ function estados(){
   for(const t of trens){st[t.via+':'+t.pos]='trem';st[t.via+':'+(t.pos-VIAS[t.via].dir)]='trem'}
   return st;
 }
-// sinótico usa fonte fina com cara de digital; Oxanium desenha o 0 sem risco no meio
-const mono=(px)=>"400 "+px+"px 'Oxanium','Segoe UI',Arial,sans-serif";
+// fonte parecida com a do sinótico real: monoespaçada, 1 com pé e 0 sem risco no meio
+const mono=(px,peso)=>(peso||500)+" "+px+"px 'Chivo Mono','Courier New',monospace";
 function texto(t,x,y,cor,fonte,al){cx.font=fonte;cx.fillStyle=cor;cx.textAlign=al||'left';cx.fillText(t,x,y);cx.textAlign='left'}
 
 function desenhar(){
@@ -181,7 +181,7 @@ function desenhar(){
     const via=VIAS[t.via],x=X0+t.pos*SW+SW/2,y=via.y+31;
     cx.font=mono(19);const w=cx.measureText(t.id).width;
     cx.fillStyle=COR.fundo;cx.fillRect(x-w/2-4,y-17,w+8,22);
-    texto(t.id,x,y,COR.texto,mono(19),'center');
+    texto(t.id,x,y,COR.texto,mono(19,700),'center');
   }
 }
 
@@ -205,7 +205,7 @@ addEventListener('resize',desenhar);
 // começa com alguns trens espalhados
 for(let v=0;v<VIAS.length;v++){const d=VIAS[v].dir;[3,9].forEach(k=>{const s=d>0?k:NSEC-1-k;trens.push({id:proxId(v),via:v,pos:s,espera:0})})}
 desenhar();reiniciarTimer();
-if(document.fonts)document.fonts.load(mono(19)).then(desenhar,()=>{});
+if(document.fonts)Promise.all([document.fonts.load(mono(19)),document.fonts.load(mono(19,700))]).then(desenhar,()=>{});
 </script>
 </body>
 </html>
