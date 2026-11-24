@@ -70,3 +70,6 @@ Atualização 24/11 (FALAR COM ESTAÇÃO): terceira ferramenta do ApoioSSO, em s
 Linhas 11-Coral, 12-Safira e 13-Jade na ordem da linha, como no mapa, cada linha com a sua cor. Tocar na estação abre a
 conversa no WhatsApp. O número não aparece na tela: ele fica na lista EST do próprio arquivo e só entra no link na hora do
 toque. Para trocar um telefone, edite a lista EST (DDD + número, só dígitos).
+
+Atualização 24/11 (botão do ApoioSSO): a tela inicial voltou a ter o botão ApoioSSO, que leva a /sso. Ele abre como
+página própria, fora do quadro da tela inicial, porque o Alerta trem só consegue fixar o aviso na tela fora do quadro.
