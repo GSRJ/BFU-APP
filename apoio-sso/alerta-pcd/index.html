@@ -6,8 +6,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#141414">
 <meta name="robots" content="noindex">
-<title>Vigia do Sinótico · BFU</title>
-<link rel="icon" href="../icon-192.png">
+<title>ALERTA PCD · BFU</title>
+<link rel="icon" href="../../icon-192.png">
+<script src="../acesso.js"></script>
+<script>if(!apoioLiberado())location.replace("../index.html")</script>
 <style>
 :root{--y:#FFC61A;--k:#141414;--r:#C62828;--g:#1B7F4B;--f:'Barlow',system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;--fc:'Barlow Condensed','Barlow',system-ui,sans-serif}
 *{box-sizing:border-box}
@@ -67,8 +69,8 @@ label.cfg input[type=range]{flex:1}
 </head>
 <body>
 <header class="top">
-  <a href="../index.html">Início</a>
-  <b>Vigia do Sinótico</b>
+  <a href="../index.html">ApoioSSO</a>
+  <b>ALERTA PCD</b>
   <span class="est" id="estado">Parado</span>
 </header>
 
@@ -399,7 +401,7 @@ function mostrar(tit,msg,isFalha){
   bip(isFalha);clearInterval(repete);let n=0;
   repete=setInterval(()=>{if(++n>6||$('#alerta').hidden){clearInterval(repete);return}bip(isFalha)},5000);
   try{navigator.vibrate&&navigator.vibrate([400,200,400])}catch(e){}
-  try{if('Notification' in window&&Notification.permission==='granted')new Notification(tit,{body:msg,icon:'../icon-192.png',requireInteraction:true,tag:tit+msg})}catch(e){}
+  try{if('Notification' in window&&Notification.permission==='granted')new Notification(tit,{body:msg,icon:'../../icon-192.png',requireInteraction:true,tag:tit+msg})}catch(e){}
 }
 $('#aOk').onclick=()=>{$('#alerta').hidden=true;clearInterval(repete)};
 function avisar(p,onde){
