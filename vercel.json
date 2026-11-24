@@ -1,6 +1,7 @@
 {
   "redirects": [
     { "source": "/sso", "destination": "/sso/", "permanent": false },
+    { "source": "/sso/alerta-pcd/:path*", "destination": "/sso/alerta-trem/:path*", "permanent": true },
     { "source": "/montador-dc199c01e878", "destination": "/montador/", "permanent": true },
     { "source": "/montador-dc199c01e878/:path*", "destination": "/montador/:path*", "permanent": true },
     { "source": "/criador-32daa622295e", "destination": "/criador/", "permanent": true },
