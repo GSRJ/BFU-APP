@@ -25,13 +25,14 @@ p.dica{margin:0;color:var(--mt);font-size:15px}
 p.dica a{color:var(--k);font-weight:700}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;border:2px solid var(--ln);border-radius:12px;background:#fff;color:var(--tx);font:700 16px/1.1 var(--f);cursor:pointer;padding:8px 16px;text-decoration:none}
-.btn:hover:not(:disabled){border-color:var(--k)}
+.btn:hover:not(:disabled){border-color:var(--tl)}
 .btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
-.btn.pri{background:var(--k);border-color:var(--k);color:#fff}
+.btn.pri{background:var(--tl);border-color:var(--tl);color:#fff}
+.btn.pri:hover:not(:disabled){background:#096661;border-color:#096661}
 .btn.go{background:var(--y);border-color:var(--k);color:var(--k);min-height:58px;font-size:20px;font-weight:800;width:100%}
 .btn.go svg{fill:var(--k);stroke:none}
 .btn.stop{background:var(--rd);border-color:var(--rd);color:#fff;min-height:58px;font-size:20px;font-weight:800;width:100%}
-.btn.fix{border-color:var(--k)}
+.btn.fix{border-color:var(--tl);color:var(--tl)}
 .btn.on,.btn.pri.on{background:var(--y);border-color:var(--k);color:var(--k)}
 .btn:disabled{opacity:.4;cursor:not-allowed}
 .btn.mini{min-height:36px;font-size:14px;padding:4px 12px;border-radius:9px}

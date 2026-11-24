@@ -24,13 +24,14 @@ p.dica{margin:0;color:var(--mt);font-size:15px}
 p.dica a{color:var(--k);font-weight:700}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;border:2px solid var(--ln);border-radius:12px;background:#fff;color:var(--tx);font:700 16px/1.1 var(--f);cursor:pointer;padding:8px 16px;text-decoration:none}
-.btn:hover:not(:disabled){border-color:var(--k)}
+.btn:hover:not(:disabled){border-color:var(--tl)}
 .btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
-.btn.pri{background:var(--k);border-color:var(--k);color:#fff}
+.btn.pri{background:var(--tl);border-color:var(--tl);color:#fff}
+.btn.pri:hover:not(:disabled){background:#096661;border-color:#096661}
 .btn.go{background:var(--y);border-color:var(--k);color:var(--k);min-height:58px;font-size:20px;font-weight:800;width:100%}
 .btn.go svg{fill:var(--k);stroke:none}
 .btn.stop{background:var(--rd);border-color:var(--rd);color:#fff;min-height:58px;font-size:20px;font-weight:800;width:100%}
-.btn.fix{border-color:var(--k)}
+.btn.fix{border-color:var(--tl);color:var(--tl)}
 .btn.on,.btn.pri.on{background:var(--y);border-color:var(--k);color:var(--k)}
 .btn:disabled{opacity:.4;cursor:not-allowed}
 .btn.mini{min-height:36px;font-size:14px;padding:4px 12px;border-radius:9px}
@@ -97,6 +98,12 @@ video{display:none}
 .x{border:0;background:none;font-size:14px;font-weight:700;line-height:1;cursor:pointer;padding:8px;color:var(--mt);border-radius:6px}
 .x:hover{background:#EEEEE9;color:var(--tx)}
 form.add{display:flex;flex-direction:column;gap:12px}
+.tres{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:8px}
+@media(max-width:420px){.tres{grid-template-columns:1fr 1fr}.tres .campo:first-child{grid-column:1/-1}}
+.semTrem{margin:0;font-size:15px;font-weight:700;color:#7A4A00;background:#FFF1CC;border:2px solid var(--y);border-radius:10px;padding:10px 12px}
+.est.sem{background:#B7791F}
+.t .info{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px}
+.t .info i{font-style:normal;font-size:13.5px;font-weight:800;padding:4px 10px;border-radius:999px;background:var(--tl2);color:#0A4E4A}
 .inicio{border-color:var(--k)}
 .falta{margin:0;font-size:15px;font-weight:700;color:#8E1B1B;background:#FDECEC;border-radius:10px;padding:10px 12px}
 .inicio:has(#bIniciar:not(:disabled)) .falta{display:none}
@@ -144,8 +151,13 @@ label.cfg input[type=range]{flex:1;accent-color:var(--k)}
     <h2><span class="n">3</span>Trens para avisar</h2>
     <form id="fPref" class="add">
       <label class="campo"><span>Prefixo do trem</span><input type="text" id="iPref" placeholder="S120" maxlength="12" autocomplete="off"></label>
-      <label class="campo"><span>Observações <em>(opcional)</em></span><textarea id="iObs" maxlength="300" placeholder="Tipo de PCD, porta/carro, nº do carro…"></textarea></label>
-      <button class="btn pri">Adicionar trem</button>
+      <div class="tres">
+        <label class="campo"><span>Tipo</span><select id="iTipo"><option value="">—</option><option>DV</option><option>MR</option><option>TEA</option><option>Idoso</option><option>Cadeirante</option><option>Cadeirante motorizado</option><option>Outro</option></select></label>
+        <label class="campo"><span>Porta</span><select id="iPorta"><option value="">—</option><option value="1">1ª</option><option value="2">2ª</option><option value="3">3ª</option><option value="4">4ª</option></select></label>
+        <label class="campo"><span>Carro</span><select id="iCarro"><option value="">—</option><option value="1">1º</option><option value="2">2º</option><option value="3">3º</option><option value="4">4º</option><option value="5">5º</option><option value="6">6º</option><option value="7">7º</option><option value="8">8º</option></select></label>
+      </div>
+      <label class="campo"><span>Observações <em>(opcional)</em></span><textarea id="iObs" maxlength="300" placeholder="Nº do carro ou qualquer outra informação"></textarea></label>
+      <button class="btn pri" id="bAddTrem">Adicionar trem</button>
     </form>
     <p class="dica">Basta o começo do prefixo: "S120" avisa para S120X288, S120M004 e outros. As observações aparecem no aviso e são lidas em voz alta.</p>
     <div class="trens" id="trens"></div>
@@ -153,7 +165,8 @@ label.cfg input[type=range]{flex:1;accent-color:var(--k)}
 
   <section class="card inicio">
     <h2><span class="n">4</span>Comece a vigiar</h2>
-    <p class="falta">Faça os passos 1, 2 e 3 para liberar o botão.</p>
+    <p class="falta">Faça os passos 1 e 2 para liberar o botão.</p>
+    <p class="semTrem" id="semTrem">Nenhum trem sendo acompanhado. Sem trem no passo 3, o Alerta trem lê a tela mas não avisa ninguém.</p>
     <button class="btn go" id="bIniciar" disabled><svg viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></svg>Começar a vigiar</button>
     <button class="btn stop" id="bParar" hidden>Parar</button>
     <div class="prog" id="prog" hidden><span id="progTxt">0 de 0 áreas avisadas</span><span class="barra"><i id="progBar"></i></span></div>
@@ -195,6 +208,7 @@ const CHAVE='sinotico-v1';
 let cfg={zonas:[],prefixos:[],obs:{},intervalo:2,limiar:140,paradoMin:3};
 try{Object.assign(cfg,JSON.parse(localStorage.getItem(CHAVE)||'{}'))}catch(e){}
 if(!cfg.obs||typeof cfg.obs!=='object')cfg.obs={};
+if(!cfg.info||typeof cfg.info!=='object')cfg.info={};
 const areasAvisadas=new Set(); // áreas que já tiveram aviso desde o começo da vigia
 const salvar=()=>{try{localStorage.setItem(CHAVE,JSON.stringify(cfg))}catch(e){}};
 
@@ -309,22 +323,33 @@ $('#fPref').onsubmit=e=>{
   if(v.length<2)return;
   if(!cfg.prefixos.includes(v))cfg.prefixos.push(v);
   cfg.obs[v]=$('#iObs').value.trim();
-  $('#iPref').value='';$('#iObs').value='';salvar();listarTrens();
+  cfg.info[v]={tipo:$('#iTipo').value,porta:$('#iPorta').value,carro:$('#iCarro').value};
+  ['#iPref','#iObs','#iTipo','#iPorta','#iCarro'].forEach(s=>$(s).value='');botaoAdd();
+  salvar();listarTrens();
 };
+// botão diz "Salvar" quando o prefixo digitado já está na lista
+function botaoAdd(){const v=$('#iPref').value.toUpperCase().replace(/[^A-Z0-9]/g,'');$('#bAddTrem').textContent=cfg.prefixos.includes(v)?'Salvar alterações do '+v:'Adicionar trem'}
+$('#iPref').addEventListener('input',botaoAdd);
+// tipo, porta e carro em texto: "Cadeirante · 2ª porta · 5º carro"
+function infoPartes(p){const i=cfg.info[p]||{};return [i.tipo,i.porta?i.porta+'ª porta':'',i.carro?i.carro+'º carro':''].filter(Boolean)}
+function detalhes(p){return [infoPartes(p).join(' · '),cfg.obs[p]||''].filter(Boolean).join('\n')}
 function listarTrens(){
   const el=$('#trens');el.innerHTML='';
-  if(!cfg.prefixos.length){el.innerHTML='<p class="dica">Nenhum trem na lista.</p>'}
+  if(!cfg.prefixos.length){el.innerHTML='<p class="dica">Nenhum trem na lista. Adicione o prefixo acima para receber avisos.</p>'}
   cfg.prefixos.forEach((p,i)=>{
     const s=estadoTrem[p],d=document.createElement('div');
     d.className='t'+(s&&s.agora?' visto':'');
-    d.innerHTML='<b></b><span class="ac"><button class="x" type="button">Editar</button><button class="x" type="button">Remover</button></span><div class="obs"></div><div class="st"></div>';
+    d.innerHTML='<b></b><span class="ac"><button class="x" type="button">Editar</button><button class="x" type="button">Remover</button></span><div class="info"></div><div class="obs"></div><div class="st"></div>';
     d.querySelector('b').textContent=p;
+    const inf=d.querySelector('.info'),partes=infoPartes(p);
+    partes.forEach(t=>{const x=document.createElement('i');x.textContent=t;inf.appendChild(x)});inf.hidden=!partes.length;
     const ob=d.querySelector('.obs'),txt=cfg.obs[p]||'';
-    ob.textContent=txt||'Sem observações';ob.classList.toggle('vazia',!txt);
+    ob.textContent=txt||'Sem observações';ob.classList.toggle('vazia',!txt);ob.hidden=!txt&&partes.length>0;
     d.querySelector('.st').textContent=s?(s.agora?'Agora em ':'Visto por último em ')+s.onde+' às '+s.quando:'Ainda não visto';
     const [bEd,bRm]=d.querySelectorAll('.ac button');
-    bEd.onclick=()=>{const n=prompt('Observações do trem '+p+' (tipo de PCD, porta/carro, nº do carro…):',txt);if(n!==null){cfg.obs[p]=n.trim();salvar();listarTrens()}};
-    bRm.onclick=()=>{cfg.prefixos.splice(i,1);delete cfg.obs[p];delete estadoTrem[p];salvar();listarTrens()};
+    // editar: volta o trem para o formulário; o botão vira "Salvar alterações"
+    bEd.onclick=()=>{const inf=cfg.info[p]||{};$('#iPref').value=p;$('#iTipo').value=inf.tipo||'';$('#iPorta').value=inf.porta||'';$('#iCarro').value=inf.carro||'';$('#iObs').value=txt;botaoAdd();$('#fPref').scrollIntoView({behavior:'smooth',block:'center'});$('#iTipo').focus()};
+    bRm.onclick=()=>{cfg.prefixos.splice(i,1);delete cfg.obs[p];delete cfg.info[p];delete estadoTrem[p];salvar();listarTrens()};
     el.appendChild(d);
   });
   estado();
@@ -481,6 +506,7 @@ $('#bIniciar').onclick=async()=>{
   if('Notification' in window&&Notification.permission==='default')Notification.requestPermission().then(notifEstado).catch(()=>{});
   try{await prepararOCR()}catch(e){estado('Não carregou o leitor: '+e.message,true);return}
   rodando=true;perdas=0;areasAvisadas.clear();$('#prog').hidden=false;progresso();assinatura=null;desdeMudou=Date.now();avisouParado=false;
+  if(!cfg.prefixos.length)registrar('Vigia começou sem trem na lista: nenhum aviso de trem até um prefixo ser adicionado.');
   try{wake=await navigator.wakeLock.request('screen')}catch(e){}
   $('#bIniciar').hidden=true;$('#bParar').hidden=false;
   iniciarRelogio();estado();ciclo();
@@ -528,10 +554,10 @@ function mostrar(tit,msg,isFalha,obs){
 }
 $('#aOk').onclick=()=>{$('#alerta').hidden=true;clearInterval(repete);pendentes=[];pararPiscar();pipDesenhar()};
 function avisar(p,onde,id,zid){
-  const obs=cfg.obs[p]||'';
-  const msg='Trem '+(id||p)+' em '+onde+' às '+hora().slice(0,5)+(obs?' · '+obs:'');
+  const obs=detalhes(p);
+  const msg='Trem '+(id||p)+' em '+onde+' às '+hora().slice(0,5)+(obs?' · '+obs.replace(/\n/g,' · '):'');
   if(zid){areasAvisadas.add(zid);progresso()}
-  registrar(msg);mostrar(id||p,'em '+onde,false,obs);falar('Atenção. Trem '+p.split('').join(' ')+' em '+onde+(obs?'. '+obs:''));
+  registrar(msg);mostrar(id||p,'em '+onde,false,obs);falar('Atenção. Trem '+p.split('').join(' ')+' em '+onde+(obs?'. '+obs.replace(/\n/g,'. ').replace(/ · /g,', '):''));
 }
 // quantas áreas marcadas já tiveram pelo menos um aviso
 function todasAvisadas(){return cfg.zonas.length>0&&cfg.zonas.every(z=>areasAvisadas.has(z.id))}
@@ -600,7 +626,7 @@ function pipDesenhar(){
     const a=pendentes[0];add('b',a.tit);add('p',a.msg);if(a.obs)add('div',a.obs).className='obs';add('small','às '+a.h);
     if(pendentes.length>1){const ul=add('ul','');pendentes.slice(1,4).forEach(x=>{const li=d.createElement('li');li.textContent=x.h+' · '+x.tit+' '+x.msg;ul.appendChild(li)})}
   }else{
-    add('p',rodando?'Vigiando '+cfg.prefixos.join(', '):'Parado');
+    add('p',!cfg.prefixos.length?'Nenhum trem sendo acompanhado':rodando?'Vigiando '+cfg.prefixos.join(', '):'Parado');
     add('small',cfg.zonas.map(z=>z.nome).join(' · ')||'Nenhuma área marcada');
     const vistos=cfg.prefixos.filter(p=>estadoTrem[p]).map(p=>p+': '+(estadoTrem[p].agora?'agora em ':'último em ')+estadoTrem[p].onde+' '+estadoTrem[p].quando);
     if(vistos.length)add('small',vistos.join(' · '));
@@ -618,10 +644,12 @@ function registrar(msg,isFalha){
 /* ---------- estado e ajustes ---------- */
 function estado(txt,erro){
   const e=$('#estado');
-  const pronto=!!frame&&cfg.zonas.length>0&&cfg.prefixos.length>0;
+  const pronto=!!frame&&cfg.zonas.length>0;
   $('#bIniciar').disabled=!pronto;
+  $('#semTrem').hidden=cfg.prefixos.length>0;
   if(txt){e.textContent=txt;e.className='est'+(erro?' err':'');pipDesenhar();return}
   if(rodando&&!imgFonte&&!track){e.textContent='Sem imagem';e.className='est err';pipDesenhar();return}
+  if(rodando&&!cfg.prefixos.length){e.textContent='Vigiando · sem trem';e.className='est sem';pipDesenhar();return}
   e.textContent=rodando?'Vigiando':'Parado';e.className='est'+(rodando?' on':'');
   pipDesenhar();
 }
