@@ -337,6 +337,8 @@ $('#fPref').onsubmit=e=>{
   cfg.info[v]={tipo:$('#iTipo').value,porta:$('#iPorta').value,carro:$('#iCarro').value};
   ['#iPref','#iObs','#iTipo','#iPorta','#iCarro'].forEach(s=>$(s).value='');botaoAdd();
   salvar();listarTrens();
+  // fixa o aviso na tela ao adicionar; se já estiver fixado, listarTrens já atualizou a janela
+  if(!pip&&pipPossivel())abrirPip();
 };
 // botão diz "Salvar" quando o prefixo digitado já está na lista
 function botaoAdd(){const v=$('#iPref').value.toUpperCase().replace(/[^A-Z0-9]/g,'');$('#bAddTrem').textContent=cfg.prefixos.includes(v)?'Salvar alterações do '+v:'Adicionar trem'}
