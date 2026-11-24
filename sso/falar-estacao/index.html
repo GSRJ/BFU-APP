@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="only light">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#141414">
+<meta name="robots" content="noindex">
+<title>FALAR COM ESTAÇÃO · BFU</title>
+<link rel="icon" href="../../icon-192.png">
+<script src="../acesso.js"></script>
+<script>if(!apoioLiberado())location.replace("../index.html")</script>
+<style>
+:root{--y:#FFC61A;--k:#141414;--bg:#EEEEE9;--mt:#5E5E57;--ln:#D8D8D0;
+--l11:#F04E23;--l11c:#FFE6DC;--l12:#133C8D;--l12c:#DEE6F7;--l13:#00A55A;--l13c:#D9F3E6;
+--wa:#1FAF55;--f:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;--mono:ui-monospace,Consolas,monospace}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{background:var(--bg);color:var(--k);font:500 15px/1.4 var(--f);min-height:100dvh}
+.top{position:sticky;top:0;z-index:5;background:var(--k);color:#fff;border-bottom:5px solid var(--y);padding:calc(10px + env(safe-area-inset-top)) 14px 10px;display:flex;align-items:center;gap:10px}
+.top a{flex:none;color:var(--y);font-weight:700;font-size:14px;text-decoration:none;padding:8px 10px;border:2px solid var(--y);border-radius:9px;white-space:nowrap}
+.top b{flex:1;min-width:0;font-size:19px;font-weight:800;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+main{max-width:620px;margin:0 auto;padding:16px 16px 60px;display:flex;flex-direction:column;gap:14px}
+.busca{position:relative}
+.busca input{width:100%;font:600 17px/1.2 var(--f);border:2px solid var(--k);border-radius:12px;padding:13px 14px 13px 44px;background:#fff;color:var(--k)}
+.busca input:focus{outline:3px solid var(--y)}
+.busca svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:20px;height:20px;stroke:var(--mt);fill:none;stroke-width:2.4;stroke-linecap:round}
+.filtro{display:grid;grid-template-columns:auto repeat(3,1fr);gap:6px}
+.filtro button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:42px;padding:6px 8px;white-space:nowrap;border:2px solid var(--ln);border-radius:999px;background:#fff;color:var(--k);font:700 14px/1 var(--f);cursor:pointer}
+.filtro button i{width:12px;height:12px;border-radius:50%;background:var(--c,#999)}
+.filtro button[aria-pressed=true]{background:var(--c,var(--k));border-color:var(--c,var(--k));color:#fff}
+.filtro button[aria-pressed=true] i{background:#fff}
+.dica{margin:0;color:var(--mt);font-size:13.5px}
+.linha{border-radius:16px;overflow:hidden;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.linha header{background:var(--c);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:12px}
+.linha header .num{flex:none;width:48px;height:48px;border-radius:12px;background:#fff;color:var(--c);display:grid;place-items:center;font:900 26px/1 var(--f)}
+.linha header .nm b{display:block;font-size:22px;font-weight:900;letter-spacing:.02em;line-height:1.05}
+.linha header .nm span{display:block;font-size:13px;opacity:.9;margin-top:3px}
+.linha ol{list-style:none;margin:0;padding:6px 0;position:relative}
+.linha li{position:relative}
+.linha li::before{content:"";position:absolute;left:31px;top:0;bottom:0;width:6px;background:var(--c);z-index:0}
+.linha li.ini::before{top:50%}.linha li.fim::before{bottom:50%}
+.linha li[hidden]+li::before,.linha li.so::before{display:none}
+.linha li a{position:relative;display:flex;align-items:center;gap:12px;padding:10px 14px 10px 62px;min-height:64px;text-decoration:none;color:var(--k)}
+.linha li a::before{content:"";position:absolute;z-index:1;left:24px;top:50%;transform:translateY(-50%);width:20px;height:20px;border-radius:50%;background:#fff;border:5px solid var(--c)}
+.linha li.ini a::before,.linha li.fim a::before{left:23px;width:22px;height:22px;border-radius:5px}
+.linha li a.integ::before{background:var(--k);border-color:#fff;box-shadow:0 0 0 3px var(--c)}
+.linha li+li a{border-top:1px solid #EFEFEA}
+.linha li a:active{background:var(--cc)}
+.linha li a:focus-visible{outline:3px solid var(--y);outline-offset:-3px}
+.st{flex:1;min-width:0}
+.st b{display:block;font-size:17px;font-weight:800;line-height:1.15}
+.st small{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:4px;color:var(--mt);font:600 13.5px/1 var(--mono)}
+.sg{font:800 11.5px/1 var(--f);letter-spacing:.06em;padding:4px 6px;border-radius:5px;background:var(--cc);color:var(--c)}
+.tm{font:800 10.5px/1 var(--f);letter-spacing:.06em;padding:4px 6px;border-radius:5px;background:var(--k);color:#fff}
+.sent{display:flex;align-items:center;gap:8px;padding:8px 16px;font:800 12px/1 var(--f);letter-spacing:.06em;color:var(--c);background:var(--cc);text-transform:uppercase}
+.sent::before{content:"";width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid var(--c)}
+.tb{font:800 11px/1 var(--f);padding:4px 6px;border-radius:5px;color:#fff}
+.tb.l11{background:var(--l11)}.tb.l12{background:var(--l12)}.tb.l13{background:var(--l13)}
+.wa{flex:none;width:44px;height:44px;border-radius:50%;background:var(--wa);display:grid;place-items:center}
+.wa svg{width:24px;height:24px;fill:#fff}
+.l11{--c:var(--l11);--cc:var(--l11c)}.l12{--c:var(--l12);--cc:var(--l12c)}.l13{--c:var(--l13);--cc:var(--l13c)}
+.filtro .l11,.filtro .l12,.filtro .l13{--cc:initial}
+.vazio{text-align:center;color:var(--mt);padding:20px;border:2px dashed #BDBDB5;border-radius:12px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header class="top">
+  <a href="../index.html">‹ ApoioSSO</a>
+  <b>FALAR COM ESTAÇÃO</b>
+</header>
+<main>
+  <label class="busca"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+    <input id="q" type="search" placeholder="Buscar estação ou sigla" autocomplete="off" aria-label="Buscar estação ou sigla"></label>
+  <div class="filtro" id="filtro" role="group" aria-label="Filtrar por linha">
+    <button type="button" data-l="" aria-pressed="true">Todas</button>
+    <button type="button" class="l11" data-l="11" aria-pressed="false"><i></i>Linha 11</button>
+    <button type="button" class="l12" data-l="12" aria-pressed="false"><i></i>Linha 12</button>
+    <button type="button" class="l13" data-l="13" aria-pressed="false"><i></i>Linha 13</button>
+  </div>
+  <p class="dica">Toque na estação para abrir a conversa no WhatsApp. Estações na ordem da linha, como no mapa. Quadrado: terminal. Ponto preto: integração com outra linha.</p>
+  <div id="lista"></div>
+  <p class="vazio" id="vazio" hidden>Nenhuma estação encontrada.</p>
+</main>
+<script>
+// Telefones de WhatsApp das estações. Formato: DDD + número, só dígitos.
+const EST={
+  BRA:['BRÁ','Brás','11926950365'],
+  TAT:['TAT','Tatuapé','11926009431'],
+  CIT:['ITQ','Itaquera (Corinthians-Itaquera)','11926829202'],
+  DOB:['DOB','Dom Bosco','11926951980'],
+  JBO:['JBO','José Bonifácio','11926956242'],
+  GUA:['GUA','Guaianases','11925602414'],
+  AGN:['AGN','Antônio Gianetti Neto','11925784098'],
+  FVC:['FVC','Ferraz de Vasconcelos','11925599772'],
+  POA:['POA','Poá','11924998023'],
+  CVN:['CVN','Calmon Viana','11924912734'],
+  SUZ:['SUZ','Suzano','11924858440'],
+  JPB:['JPB','Jundiapeba','11924816419'],
+  BCB:['BCB','Brás Cubas','11924808668'],
+  MDC:['MDC','Mogi das Cruzes','11924782522'],
+  EST:['EST','Estudantes','11924742257'],
+  EGO:['EGO','Engenheiro Goulart','11984709876'],
+  USP:['USP','USP Leste','11924606632'],
+  ERM:['ERM','Comendador Ermelino','11925247005'],
+  SMP:['SMP','São Miguel Paulista','11926721012'],
+  JHE:['JHE','Jardim Helena-Vila Mara','11926789466'],
+  ITI:['ITI','Itaim Paulista','11926801429'],
+  JRO:['JRO','Jardim Romano','11926827007'],
+  EMF:['EMF','Engenheiro Manoel Feio','11926659043'],
+  IQC:['ITQ','Itaquaquecetuba','11926773019'],
+  ARC:['ARC','Aracaré','11972263857'],
+  GCE:['GCE','Guarulhos-Cecap','11926666344'],
+  AGU:['AGU','Aeroporto-Guarulhos','11926477002']
+};
+// Ordem das estações em cada linha (sentido centro → ponta).
+const LINHAS=[
+  {n:'11',nome:'CORAL',rota:'Brás ↔ Estudantes',est:['BRA','TAT','CIT','DOB','JBO','GUA','AGN','FVC','POA','CVN','SUZ','JPB','BCB','MDC','EST']},
+  {n:'12',nome:'SAFIRA',rota:'Brás ↔ Calmon Viana',est:['BRA','TAT','EGO','USP','ERM','SMP','JHE','ITI','JRO','EMF','IQC','ARC','CVN']},
+  {n:'13',nome:'JADE',rota:'Engenheiro Goulart ↔ Aeroporto-Guarulhos',est:['EGO','GCE','AGU']}
+];
+const linhasDe={};
+LINHAS.forEach(l=>l.est.forEach(k=>(linhasDe[k]=linhasDe[k]||[]).push(l.n)));
+const WA='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.4.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3z"/></svg>';
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const norm=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+const lista=document.getElementById('lista');
+lista.style.cssText='display:flex;flex-direction:column;gap:14px';
+LINHAS.forEach(l=>{
+  const sec=document.createElement('section');
+  sec.className='linha l'+l.n;sec.dataset.l=l.n;
+  sec.innerHTML=`<header><span class="num">${l.n}</span><span class="nm"><b>LINHA ${l.n} · ${l.nome}</b><span>${esc(l.rota)} · ${l.est.length} estações</span></span></header><div class="sent">Sentido ${esc(EST[l.est.at(-1)][1])}</div><ol></ol>`;
+  const ol=sec.querySelector('ol');
+  l.est.forEach((k,i)=>{
+    const [sig,nome]=EST[k];
+    const outras=linhasDe[k].filter(n=>n!==l.n);
+    const li=document.createElement('li');
+    const term=i===0||i===l.est.length-1;
+    if(i===0)li.classList.add('ini');if(i===l.est.length-1)li.classList.add('fim');
+    li.dataset.busca=norm(sig+' '+k+' '+nome);
+    li.innerHTML=`<a class="${outras.length?'integ':''}" href="#" data-k="${k}" aria-label="WhatsApp ${esc(nome)}">
+      <span class="st"><b>${esc(nome)}</b><small><span class="sg">${esc(sig)}</span>${term?'<span class="tm">TERMINAL</span>':''}${outras.map(n=>`<span class="tb l${n}">L${n}</span>`).join('')}</small></span>
+      <span class="wa">${WA}</span></a>`;
+    ol.appendChild(li);
+  });
+  lista.appendChild(sec);
+});
+// O número só entra no link na hora do toque, para não aparecer na tela nem ao passar o mouse.
+lista.addEventListener('click',e=>{
+  const a=e.target.closest('a[data-k]');if(!a)return;
+  e.preventDefault();
+  window.open('https://wa.me/55'+EST[a.dataset.k][2],'_blank','noopener');
+});
+let linhaSel='';
+function filtrar(){
+  const q=norm(document.getElementById('q').value.trim());
+  let algum=false;
+  lista.querySelectorAll('.linha').forEach(sec=>{
+    let vis=0;
+    sec.querySelectorAll('li').forEach(li=>{const ok=!q||li.dataset.busca.includes(q);li.hidden=!ok;if(ok)vis++});
+    const mostra=(!linhaSel||sec.dataset.l===linhaSel)&&vis>0;
+    sec.hidden=!mostra;if(mostra)algum=true;
+  });
+  document.getElementById('vazio').hidden=algum;
+}
+document.getElementById('q').oninput=filtrar;
+document.getElementById('filtro').onclick=e=>{
+  const b=e.target.closest('button');if(!b)return;
+  linhaSel=b.dataset.l;
+  document.querySelectorAll('#filtro button').forEach(x=>x.setAttribute('aria-pressed',x===b));
+  filtrar();
+};
+</script>
+</body>
+</html>
