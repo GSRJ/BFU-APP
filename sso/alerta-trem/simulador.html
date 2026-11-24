@@ -59,12 +59,15 @@ function prefixoAleatorio(){
   const L=()=>LETRAS[Math.floor(Math.random()*LETRAS.length)],n=k=>String(Math.floor(Math.random()*10**k)).padStart(k,'0');
   return L()+n(2+Math.round(Math.random()))+L()+n(3);
 }
+// trens fixos: aparecem sempre na mesma via, alternando com um trem qualquer
+const FIXOS={0:'S120EXX4',3:'U510MD440'},ultFixo={};
+function proxId(v){if(!FIXOS[v])return prefixoAleatorio();ultFixo[v]=!ultFixo[v];return ultFixo[v]?FIXOS[v]:prefixoAleatorio()}
 function ocupado(v,s){return trens.some(t=>t.via===v&&(t.pos===s||t.pos-VIAS[v].dir===s))}
 function entrada(v){return VIAS[v].dir>0?0:NSEC-1}
 function porTrem(v,id){
   const s=entrada(v);
   if(ocupado(v,s)||ocupado(v,s+VIAS[v].dir))return false;
-  trens.push({id:id||prefixoAleatorio(),via:v,pos:s,espera:0});return true;
+  const t={id:id||proxId(v),via:v,pos:s,espera:0};trens.push(t);return true;
 }
 const estacaoEm=s=>ESTACOES.find(e=>e.sec===s);
 
@@ -200,7 +203,7 @@ document.getElementById('bOcultar').onclick=alternarBarra;
 addEventListener('keydown',e=>{if((e.key==='h'||e.key==='H')&&e.target.tagName!=='INPUT')alternarBarra()});
 addEventListener('resize',desenhar);
 // começa com alguns trens espalhados
-for(let v=0;v<VIAS.length;v++){const d=VIAS[v].dir;[3,9].forEach(k=>{const s=d>0?k:NSEC-1-k;trens.push({id:prefixoAleatorio(),via:v,pos:s,espera:0})})}
+for(let v=0;v<VIAS.length;v++){const d=VIAS[v].dir;[3,9].forEach(k=>{const s=d>0?k:NSEC-1-k;trens.push({id:proxId(v),via:v,pos:s,espera:0})})}
 desenhar();reiniciarTimer();
 if(document.fonts)document.fonts.load(mono(19)).then(desenhar,()=>{});
 </script>
