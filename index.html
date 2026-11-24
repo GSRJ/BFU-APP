@@ -59,7 +59,11 @@ main{flex:1;width:100%;max-width:540px;margin:0 auto;padding:22px 14px 20px;disp
 .card.gbd .go::before{border-color:#0C2550}
 .card.gbd .ic svg{stroke:#0C2550}
 .card.gbd .tx span{color:#C6D8F5}
-.card.apoio{--c:#E64A19;background:#3B1A10}.card.apoio .tx span{color:#F3D6CB}
+.card.apoio{--c:var(--k);background:var(--y);color:var(--k);border:3px solid var(--k);margin-top:10px;box-shadow:0 5px 0 var(--k)}
+.card.apoio .tx b{color:var(--k)}.card.apoio .tx span{color:#3A3000;font-weight:600}
+.card.apoio .ic svg{stroke:var(--y)}
+.card.apoio .go{background:var(--k)}.card.apoio .go::before{border-color:var(--y)}
+.card.apoio .tag{display:inline-block;font-style:normal;font:700 12px/1 var(--f);letter-spacing:.08em;background:var(--k);color:var(--y);padding:4px 7px;border-radius:5px;margin-bottom:6px}
 .inst{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:52px;border:2px solid var(--k);background:#fff;border-radius:10px;padding:8px 14px;font:700 21px/1.1 var(--fc);color:var(--k);cursor:pointer}
 .inst:active{background:var(--y)}
 footer{position:sticky;bottom:0;z-index:2;background:#0A0A0A;color:rgba(255,255,255,.5);font-size:11px;line-height:1.2;padding:5px 14px calc(5px + env(safe-area-inset-bottom))}
@@ -176,7 +180,7 @@ main{padding-top:14px}
   </div>
   <a class="card apoio" href="sso/index.html">
     <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10.5" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/><path d="M12 14.5v2.5"/></svg></div>
-    <div class="tx"><b>ApoioSSO</b><span>Ferramentas de apoio</span></div>
+    <div class="tx"><i class="tag">ÁREA RESTRITA</i><b>Apoio SSO</b><span>Ferramentas de apoio</span></div>
     <div class="go" aria-hidden="true"></div>
   </a>
   <p class="offnote" id="offnote" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0"/><path d="M12 19h.01"/><path d="M3 3l18 18"/></svg><span><b>Funciona sem internet depois de instalado.</b> Dá para fazer a ronda e o reporte sem sinal, e as mensagens saem pelo WhatsApp quando o celular voltar a ter conexão. O GBD também abre sem sinal, mostrando o último que foi publicado.</span></p>
