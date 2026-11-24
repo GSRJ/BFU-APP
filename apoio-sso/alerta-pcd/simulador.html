@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Simulador de Sinótico · BFU</title>
+<link rel="icon" href="../../icon-192.png">
+<style>
+html,body{margin:0;height:100%;background:#0B0B0C;color:#ddd;font:14px/1.3 system-ui,Segoe UI,Arial,sans-serif;overflow:hidden}
+#cv{position:fixed;inset:0;width:100%;height:100%;display:block}
+.bar{position:fixed;left:0;right:0;bottom:0;display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 12px;background:rgba(30,30,32,.94);border-top:2px solid #FFC61A;z-index:2}
+.bar[hidden]{display:none}
+.bar b{color:#FFC61A;margin-right:6px}
+.bar input[type=text]{width:110px;font:700 15px ui-monospace,Consolas,monospace;text-transform:uppercase;padding:6px 8px;border-radius:6px;border:1px solid #666;background:#111;color:#fff}
+.bar select,.bar button{font:600 14px system-ui,sans-serif;padding:6px 10px;border-radius:6px;border:1px solid #666;background:#222;color:#eee;cursor:pointer}
+.bar button.y{background:#FFC61A;color:#141414;border-color:#FFC61A}
+.bar label{display:flex;align-items:center;gap:6px}
+.bar .dica{color:#999;font-size:12px;margin-left:auto}
+#mostrar{position:fixed;right:10px;bottom:10px;z-index:2;opacity:.35;font:600 12px system-ui;padding:4px 8px;border-radius:6px;border:1px solid #555;background:#222;color:#ccc;cursor:pointer}
+#mostrar[hidden]{display:none}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div class="bar" id="bar">
+  <b>Simulador</b>
+  <form id="fNovo" style="display:flex;gap:6px;align-items:center">
+    <input type="text" id="iPref" placeholder="S120X288" maxlength="10">
+    <select id="sVia"></select>
+    <button class="y">Pôr trem</button>
+  </form>
+  <label>Velocidade <input type="range" id="rVel" min="1" max="10" value="4"></label>
+  <label><input type="checkbox" id="cAuto" checked> Trens automáticos</label>
+  <button id="bPausa" type="button">Pausar</button>
+  <button id="bOcultar" type="button">Ocultar barra (H)</button>
+  <span class="dica">Prefixo vazio = aleatório. Trem novo entra pela ponta da via.</span>
+</div>
+<button id="mostrar" hidden>Mostrar barra (H)</button>
+<script>
+'use strict';
+/* Sinótico fictício para testar o ALERTA PCD. Não representa nenhuma linha real. */
+const W=1600,H=900,cv=document.getElementById('cv'),cx=cv.getContext('2d');
+const NSEC=16,X0=70,X1=1530,SW=(X1-X0)/NSEC,GAP=6;
+const ESTACOES=[{nome:'LAPA',cod:'LAP',sec:2},{nome:'ÁGUA BRANCA',cod:'ABR',sec:5},{nome:'BARRA FUNDA',cod:'BFU',sec:8},{nome:'LUZ',cod:'LUZ',sec:11},{nome:'BRÁS',cod:'BAS',sec:14}];
+const VIAS=[
+  {nome:'Via 1 →',y:250,dir:1,plat:1},
+  {nome:'Via 2 ←',y:420,dir:-1,plat:2},
+  {nome:'Via 3 →',y:640,dir:1,plat:3},
+  {nome:'Via 4 ←',y:790,dir:-1,plat:4},
+];
+const LETRAS='SNKMAPTRL';
+let trens=[],pausado=false,tickN=0,velocidade=4,timer=null;
+
+function prefixoAleatorio(){
+  const L=()=>LETRAS[Math.floor(Math.random()*LETRAS.length)],n=k=>String(Math.floor(Math.random()*10**k)).padStart(k,'0');
+  return L()+n(2+Math.round(Math.random()))+L()+n(3);
+}
+function ocupado(v,s){return trens.some(t=>t.via===v&&(t.pos===s||t.pos-VIAS[v].dir===s))}
+function entrada(v){return VIAS[v].dir>0?0:NSEC-1}
+function porTrem(v,id){
+  const s=entrada(v);
+  if(ocupado(v,s)||ocupado(v,s+VIAS[v].dir))return false;
+  trens.push({id:id||prefixoAleatorio(),via:v,pos:s,espera:0});return true;
+}
+const estacaoEm=s=>ESTACOES.find(e=>e.sec===s);
+
+function tick(){
+  if(pausado)return;tickN++;
+  for(const t of [...trens]){
+    if(t.espera>0){t.espera--;continue}
+    const d=VIAS[t.via].dir,prox=t.pos+d;
+    if(prox<0||prox>=NSEC){
+      if(t.pos-d<0||t.pos-d>=NSEC||t.saindo){trens.splice(trens.indexOf(t),1);continue}
+      t.saindo=true;t.pos=prox;continue;
+    }
+    if(trens.some(o=>o!==t&&o.via===t.via&&(o.pos===prox||o.pos-VIAS[o.via].dir===prox||o.pos===prox+d)))continue;
+    t.pos=prox;
+    if(estacaoEm(prox))t.espera=3+Math.floor(Math.random()*3);
+  }
+  if(document.getElementById('cAuto').checked&&tickN%3===0){
+    const v=Math.floor(Math.random()*VIAS.length);
+    if(trens.filter(t=>t.via===v).length<3&&Math.random()<.45)porTrem(v);
+  }
+  desenhar();
+}
+
+function desenhar(){
+  const r=Math.min(innerWidth/W,innerHeight/H),dpr=devicePixelRatio||1;
+  cv.width=innerWidth*dpr;cv.height=innerHeight*dpr;
+  cx.setTransform(r*dpr,0,0,r*dpr,(innerWidth-W*r)/2*dpr,(innerHeight-H*r)/2*dpr);
+  cx.fillStyle='#0B0B0C';cx.fillRect(-2000,-2000,W+4000,H+4000);
+  // cabeçalho
+  cx.font='700 26px ui-monospace,Consolas,monospace';cx.fillStyle='#9AA3AD';cx.textBaseline='alphabetic';
+  cx.fillText('SINÓTICO DE TESTE · LINHA FICTÍCIA',X0,60);
+  cx.font='600 18px ui-monospace,Consolas,monospace';cx.fillStyle='#6E7680';
+  cx.fillText(new Date().toLocaleTimeString('pt-BR'),X1-110,60);
+  // estações (caixas como no painel)
+  for(const e of ESTACOES){
+    const x=X0+e.sec*SW+SW/2;
+    cx.fillStyle='#1E3A6B';cx.strokeStyle='#4C8DFF';cx.lineWidth=2;
+    cx.fillRect(x-38,520,76,36);cx.strokeRect(x-38,520,76,36);
+    cx.font='700 22px ui-monospace,Consolas,monospace';cx.fillStyle='#CFE0FF';cx.textAlign='center';cx.fillText(e.cod,x,546);
+    cx.font='600 14px system-ui,sans-serif';cx.fillStyle='#7F8A96';cx.fillText(e.nome,x,578);
+    cx.textAlign='left';
+  }
+  // rotas à frente de cada trem
+  const rota={};
+  for(const t of trens){const d=VIAS[t.via].dir;for(let k=1;k<=2;k++)rota[t.via+':'+(t.pos+d*k)]=1}
+  for(let v=0;v<VIAS.length;v++){
+    const via=VIAS[v],y=via.y;
+    cx.font='600 15px system-ui,sans-serif';cx.fillStyle='#6E7680';cx.fillText(via.nome,X0-60,y-22);
+    for(let s=0;s<NSEC;s++){
+      const x=X0+s*SW,oc=ocupado(v,s);
+      cx.fillStyle=oc?'#E0182D':rota[v+':'+s]?'#22D14A':'#C9D3BF';
+      cx.fillRect(x+GAP/2,y-5,SW-GAP,10);
+      // número do circuito e sinal, para parecer o painel real
+      cx.font='600 12px ui-monospace,Consolas,monospace';cx.fillStyle='#5E6670';
+      cx.fillText(String(v+1)+String(s).padStart(2,'0'),x+6,y+24);
+      if(s%2===0){
+        const sx=via.dir>0?x+SW-10:x+10;
+        cx.fillStyle=oc?'#E0182D':'#7BE07B';cx.beginPath();cx.arc(sx,y-18,5,0,7);cx.fill();
+        cx.fillStyle='#5E6670';cx.fillRect(sx-1,y-13,2,8);
+      }
+      const e=estacaoEm(s);
+      if(e){cx.fillStyle='#3A4048';cx.fillRect(x+10,y+(via.dir>0?-40:28),SW-20,10);
+        cx.font='600 11px system-ui,sans-serif';cx.fillStyle='#6E7680';cx.fillText('PLAT '+via.plat,x+12,y+(via.dir>0?-46:52))}
+    }
+    // pontas da via
+    cx.fillStyle='#C9D3BF';cx.fillRect(X0-30,y-5,30-GAP/2,10);cx.fillRect(X1+GAP/2,y-5,30,10);
+  }
+  // prefixos (texto branco embaixo da seção da frente)
+  cx.font='700 20px ui-monospace,Consolas,monospace';
+  for(const t of trens){
+    if(t.pos<0||t.pos>=NSEC)continue;
+    const via=VIAS[t.via],x=X0+t.pos*SW+SW/2,y=via.y+46;
+    const w=cx.measureText(t.id).width;
+    cx.fillStyle='#0B0B0C';cx.fillRect(x-w/2-4,y-18,w+8,24);
+    cx.fillStyle='#E8E8E8';cx.textAlign='center';cx.fillText(t.id,x,y);cx.textAlign='left';
+  }
+}
+
+function reiniciarTimer(){clearInterval(timer);timer=setInterval(tick,Math.round(4200/velocidade))}
+const sVia=document.getElementById('sVia');
+VIAS.forEach((v,i)=>sVia.add(new Option(v.nome,i)));
+document.getElementById('fNovo').onsubmit=e=>{
+  e.preventDefault();
+  const id=document.getElementById('iPref').value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+  if(!porTrem(+sVia.value,id))alert('A entrada dessa via está ocupada. Tente de novo em alguns segundos.');
+  else document.getElementById('iPref').value='';
+  desenhar();
+};
+document.getElementById('rVel').oninput=e=>{velocidade=+e.target.value;reiniciarTimer()};
+document.getElementById('bPausa').onclick=e=>{pausado=!pausado;e.target.textContent=pausado?'Continuar':'Pausar'};
+function alternarBarra(){const b=document.getElementById('bar');b.hidden=!b.hidden;document.getElementById('mostrar').hidden=!b.hidden}
+document.getElementById('bOcultar').onclick=alternarBarra;document.getElementById('mostrar').onclick=alternarBarra;
+addEventListener('keydown',e=>{if((e.key==='h'||e.key==='H')&&e.target.tagName!=='INPUT')alternarBarra()});
+addEventListener('resize',desenhar);
+// começa com alguns trens espalhados
+for(let v=0;v<VIAS.length;v++){const d=VIAS[v].dir;[3,9].forEach(k=>{const s=d>0?k:NSEC-1-k;trens.push({id:prefixoAleatorio(),via:v,pos:s,espera:0})})}
+desenhar();reiniciarTimer();
+</script>
+</body>
+</html>
