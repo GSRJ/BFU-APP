@@ -393,15 +393,22 @@ function preparar(z){
 const PARES={O:'0',D:'0',Q:'0',I:'1',L:'1',J:'1',Z:'2',S:'5',B:'8',G:'6'};
 const canon=s=>s.toUpperCase().replace(/[^A-Z0-9]/g,'').replace(/[ODQILJZSBG]/g,c=>PARES[c]);
 const limpo=s=>s.toUpperCase().replace(/[^A-Z0-9]/g,'');
+// o leitor costuma trocar U por V, Y, 0/O ou por duas letras (LI, IJ): depois do canon
+// essas formas viram U, V, Y, 0 ou 11, e todas valem como U na hora de procurar
+const ALT={U:'U|V|Y|0|11'};
+const escRe=c=>c.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+const padrao=cp=>new RegExp([...cp].map(c=>ALT[c]?'(?:'+ALT[c]+')':escRe(c)).join(''));
 function procurar(linhas,p,cp){
-  const achados=[];
-  const add=(r,i)=>{
+  const achados=[],re=padrao(cp);
+  const add=(r,i,n)=>{
     // mostra o prefixo como foi digitado e o resto como foi lido (5120X288 vira S120X288)
-    const id=p+r.slice(i+p.length),exato=r.includes(p),o=achados.find(x=>parecido(x.id,id));
+    const id=p+r.slice(i+n),exato=r.includes(p),o=achados.find(x=>parecido(x.id,id));
     if(o){if(exato&&!o.exato){o.id=id;o.exato=true}}else achados.push({id,exato});
   };
-  for(const l of linhas)for(const r of l.split(/\s+/).map(limpo)){const i=canon(r).indexOf(cp);if(i>=0)add(r,i)}
-  if(!achados.length)for(const l of linhas){const r=limpo(l),i=canon(r).indexOf(cp);if(i>=0)add(r,i)}
+  const tenta=r=>{const m=canon(r).match(re);if(m){add(r,m.index,m[0].length);return true}return false};
+  let algum=false;
+  for(const l of linhas)for(const r of l.split(/\s+/).map(limpo))if(tenta(r))algum=true;
+  if(!algum)for(const l of linhas)tenta(limpo(l));
   return achados;
 }
 // dois prefixos lidos são o mesmo trem se um começa pelo outro ou se diferem em um caractere
