@@ -4,84 +4,127 @@
 <meta charset="utf-8">
 <meta name="color-scheme" content="only light">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#141414">
+<meta name="theme-color" content="#0E1A2B">
 <meta name="robots" content="noindex">
-<title>ALERTA PCD · BFU</title>
+<title>ALERTA TREM · BFU</title>
 <link rel="icon" href="../../icon-192.png">
 <script src="../acesso.js"></script>
 <script>if(!apoioLiberado())location.replace("../index.html")</script>
 <style>
-:root{--y:#FFC61A;--k:#141414;--r:#C62828;--g:#1B7F4B;--f:'Barlow',system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;--fc:'Barlow Condensed','Barlow',system-ui,sans-serif}
+:root{--nv:#0E1A2B;--nv2:#1B2A40;--or:#FF5A1F;--or2:#FFE3D6;--tl:#0B7A75;--tl2:#DDF2F0;--rd:#C62828;--bg:#F2F4F7;--ln:#DFE3E9;--tx:#162030;--mt:#5B6576;--f:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
 *{box-sizing:border-box}
 html,body{margin:0}
-body{background:#EEEEE9;color:var(--k);font:500 16px/1.4 var(--f);min-height:100dvh}
-.top{display:flex;align-items:center;gap:10px;background:var(--k);color:#fff;border-bottom:5px solid var(--y);padding:calc(10px + env(safe-area-inset-top)) 14px 10px;position:sticky;top:0;z-index:5}
-.top b{font:700 25px/1 var(--fc);flex:1;min-width:0}
-.top a{color:var(--y);font:700 18px/1 var(--fc);text-decoration:none;border:2px solid var(--y);border-radius:9px;padding:9px 12px}
-.est{font:700 16px/1 var(--fc);padding:7px 10px;border-radius:8px;background:#444;color:#fff;white-space:nowrap}
-.est.on{background:var(--g)}
-.est.err{background:var(--r)}
-main{max-width:1100px;margin:0 auto;padding:16px 16px 80px;display:grid;gap:14px}
-@media(min-width:900px){main{grid-template-columns:minmax(0,1fr) 360px;align-items:start}.lado{position:sticky;top:80px}}
-.card{background:#fff;border:2px solid var(--k);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px}
-h2{margin:0;font:700 24px/1.05 var(--fc)}
-.passo{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--k);color:var(--y);font:700 17px/1 var(--fc);margin-right:6px;vertical-align:2px}
-p.dica{margin:0;color:#55554F;font-size:14px}
+body{background:var(--bg);color:var(--tx);font:500 15px/1.45 var(--f);min-height:100dvh}
+.top{display:flex;align-items:center;gap:12px;background:var(--nv);color:#fff;padding:calc(10px + env(safe-area-inset-top)) 16px 10px;position:sticky;top:0;z-index:6}
+.top a{color:#B9C4D4;font-weight:600;font-size:14px;text-decoration:none;padding:7px 10px;border-radius:8px;border:1px solid #33445E}
+.top a:hover{background:var(--nv2)}
+.marca{display:flex;align-items:center;gap:9px;flex:1;min-width:0}
+.marca svg{flex:none;width:30px;height:30px;padding:5px;border-radius:8px;background:var(--or);stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.marca b{font-size:20px;font-weight:800;letter-spacing:.04em;white-space:nowrap}
+.est{font-weight:700;font-size:13px;padding:6px 11px;border-radius:999px;background:#33445E;color:#fff;white-space:nowrap}
+.est.on{background:var(--tl)}
+.est.err{background:var(--rd)}
+.cmd{position:sticky;top:56px;z-index:5;background:#fff;border-bottom:1px solid var(--ln);box-shadow:0 2px 8px rgba(14,26,43,.06)}
+.cmd .in{max-width:1180px;margin:0 auto;padding:10px 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.prog{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:14px;color:var(--mt)}
+.prog .barra{width:120px;height:8px;border-radius:9px;background:var(--ln);overflow:hidden}
+.prog .barra i{display:block;height:100%;width:0;background:var(--or);transition:width .3s}
+main{max-width:1180px;margin:0 auto;padding:18px 16px 80px;display:grid;gap:16px}
+@media(min-width:960px){main{grid-template-columns:minmax(0,1fr) 380px;align-items:start}}
+.col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.card{background:#fff;border:1px solid var(--ln);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 2px rgba(14,26,43,.05)}
+h2{margin:0;font-size:17px;font-weight:800;display:flex;align-items:center;gap:9px}
+.n{flex:none;display:inline-grid;place-items:center;width:24px;height:24px;border-radius:7px;background:var(--nv);color:#fff;font-size:13px;font-weight:800}
+p.dica{margin:0;color:var(--mt);font-size:13.5px}
+p.dica a{color:var(--tl);font-weight:700}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:46px;border:2px solid var(--k);border-radius:10px;background:#fff;color:var(--k);font:700 19px/1.05 var(--fc);cursor:pointer;padding:6px 14px}
-.btn.pri{background:var(--y)}
-.btn.go{background:var(--g);border-color:var(--g);color:#fff}
-.btn.stop{background:var(--r);border-color:var(--r);color:#fff}
-.btn.on{background:var(--k);color:var(--y)}
-.btn:disabled{opacity:.4;cursor:not-allowed}
-.btn.mini{min-height:34px;font-size:16px;padding:4px 10px}
-input[type=text]{font:700 22px/1 var(--fc);letter-spacing:.04em;text-transform:uppercase;border:2px solid var(--k);border-radius:10px;padding:10px 12px;min-width:0;flex:1}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:42px;border:1px solid #C9D0DA;border-radius:10px;background:#fff;color:var(--tx);font:700 14.5px/1.1 var(--f);cursor:pointer;padding:8px 14px}
+.btn:hover:not(:disabled){background:#F6F8FA}
+.btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.btn.pri{background:var(--tl);border-color:var(--tl);color:#fff}
+.btn.pri:hover:not(:disabled){background:#096661}
+.btn.go{background:var(--or);border-color:var(--or);color:#fff;min-height:46px;font-size:16px;padding:8px 20px}
+.btn.go:hover:not(:disabled){background:#E84A12}
+.btn.stop{background:var(--rd);border-color:var(--rd);color:#fff;min-height:46px;font-size:16px}
+.btn.fix{border-color:var(--nv);color:var(--nv)}
+.btn.on{background:var(--nv);border-color:var(--nv);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.mini{min-height:32px;font-size:13px;padding:4px 10px}
+.btn[hidden]{display:none}
+.campo{display:flex;flex-direction:column;gap:4px}
+.campo span{font-size:12.5px;font-weight:700;color:var(--mt);text-transform:uppercase;letter-spacing:.05em}
+input[type=text],textarea{font:600 16px/1.3 var(--f);color:var(--tx);border:1px solid #C9D0DA;border-radius:10px;padding:10px 12px;width:100%;background:#fff}
+input[type=text]:focus,textarea:focus{outline:2px solid var(--tl);border-color:var(--tl)}
+#iPref{font:800 22px/1 ui-monospace,Consolas,monospace;letter-spacing:.06em;text-transform:uppercase}
+textarea{resize:vertical;min-height:64px}
 input[type=file]{display:none}
-.tela{position:relative;background:#111;border-radius:8px;overflow:hidden;line-height:0;min-height:120px;touch-action:auto}
-.tela.marcando{cursor:crosshair;touch-action:none;outline:4px solid var(--y)}
+.tela{position:relative;background:#0B0F16;border-radius:10px;overflow:hidden;line-height:0;min-height:160px}
+.tela.marcando{cursor:crosshair;touch-action:none;outline:3px solid var(--or)}
 .tela canvas{width:100%;height:auto;display:block}
 .tela .vazio[hidden]{display:none}
-.tela .vazio{position:absolute;inset:0;display:grid;place-items:center;color:#aaa;font:500 15px/1.4 var(--f);padding:20px;text-align:center}
+.tela .vazio{position:absolute;inset:0;display:grid;place-items:center;color:#8A96A8;font:500 14px/1.4 var(--f);padding:20px;text-align:center}
 video{display:none}
 .zonas,.trens,.log{display:flex;flex-direction:column;gap:8px}
-.z{border:2px solid #D5D5CE;border-radius:10px;padding:8px;display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center}
-.z b{font:700 19px/1.1 var(--fc)}
-.z .lido{grid-column:1/-1;font:500 13px/1.3 ui-monospace,Consolas,monospace;color:#55554F;word-break:break-all}
-.z img{grid-column:1/-1;max-width:100%;max-height:70px;border:1px solid #ddd;border-radius:4px;image-rendering:pixelated;background:#fff}
-.t{display:flex;align-items:center;gap:8px;border:2px solid var(--k);border-radius:10px;padding:8px 10px}
-.t b{font:700 24px/1 var(--fc);letter-spacing:.04em}
-.t span{flex:1;font-size:14px;color:#55554F}
-.t.visto{background:#FFF4CC}
-.x{border:0;background:none;font-size:22px;line-height:1;cursor:pointer;padding:4px 6px;color:#777}
-.log div{font-size:14px;border-left:4px solid var(--y);padding:2px 8px}
-.log div.f{border-color:var(--r)}
-.log time{font-weight:700;margin-right:6px}
-label.cfg{display:flex;align-items:center;gap:8px;font-size:14px}
-label.cfg input[type=range]{flex:1}
-#alerta{position:fixed;inset:0;z-index:50;background:rgba(20,20,20,.85);display:grid;place-items:center;padding:16px}
+.z{border:1px solid var(--ln);border-left:4px solid var(--or);border-radius:10px;padding:8px 10px;display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center}
+.z b{font-size:15px}
+.z b small{font-weight:600;color:var(--tl);margin-left:6px}
+.z .lido{grid-column:1/-1;font:500 12.5px/1.3 ui-monospace,Consolas,monospace;color:var(--mt);word-break:break-all}
+.z img{grid-column:1/-1;max-width:100%;max-height:64px;border:1px solid var(--ln);border-radius:4px;image-rendering:pixelated;background:#fff}
+.t{display:grid;grid-template-columns:1fr auto;gap:2px 8px;border:1px solid var(--ln);border-radius:12px;padding:10px 12px;background:#fff}
+.t b{font:800 21px/1 ui-monospace,Consolas,monospace;letter-spacing:.04em}
+.t .obs{grid-column:1/-1;font-size:14px;color:var(--tx);background:var(--bg);border-radius:8px;padding:6px 8px;white-space:pre-wrap}
+.t .obs.vazia{color:var(--mt);font-style:italic}
+.t .st{grid-column:1/-1;font-size:13px;color:var(--mt)}
+.t .ac{display:flex;gap:4px}
+.t.visto{border-color:var(--or);background:var(--or2)}
+.x{border:0;background:none;font-size:13px;font-weight:700;line-height:1;cursor:pointer;padding:6px 8px;color:var(--mt);border-radius:6px}
+.x:hover{background:var(--bg);color:var(--tx)}
+details.card{gap:0}
+details.card summary{cursor:pointer;font-size:17px;font-weight:800;list-style:none;display:flex;align-items:center;gap:9px}
+details.card summary::after{content:"+";margin-left:auto;font-size:20px;color:var(--mt)}
+details.card[open] summary::after{content:"–"}
+details.card[open] summary{margin-bottom:12px}
+details .corpo{display:flex;flex-direction:column;gap:12px}
+.log div{font-size:13.5px;border-left:3px solid var(--or);padding:2px 8px}
+.log div.f{border-color:var(--rd)}
+.log time{font-weight:700;margin-right:6px;color:var(--mt)}
+label.cfg{display:flex;align-items:center;gap:8px;font-size:13.5px}
+label.cfg input[type=range]{flex:1;accent-color:var(--tl)}
+#alerta{position:fixed;inset:0;z-index:50;background:rgba(14,26,43,.82);display:grid;place-items:center;padding:16px}
 #alerta[hidden]{display:none}
-#alerta .box{background:var(--y);border:4px solid var(--k);border-radius:16px;padding:22px;max-width:520px;width:100%;text-align:center;display:flex;flex-direction:column;gap:12px}
-#alerta.f .box{background:#FFCDD2}
-#alerta h3{margin:0;font:700 46px/1 var(--fc)}
-#alerta p{margin:0;font:700 24px/1.2 var(--fc)}
-#alerta ul{margin:0;padding:8px 10px;list-style:none;text-align:left;border-top:2px solid rgba(0,0,0,.25);font:700 18px/1.4 var(--fc)}
-.aviso{background:#FFF4CC;border:2px solid var(--y);border-radius:10px;padding:10px;font-size:14px}
+#alerta .box{background:var(--or);color:#fff;border-radius:20px;padding:24px;max-width:540px;width:100%;text-align:center;display:flex;flex-direction:column;gap:12px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+#alerta.f .box{background:var(--rd)}
+#alerta .rot{font-size:13px;font-weight:800;letter-spacing:.14em;opacity:.85}
+#alerta h3{margin:0;font:900 48px/1 ui-monospace,Consolas,monospace;letter-spacing:.03em}
+#alerta p{margin:0;font-size:22px;font-weight:800}
+#alerta .aobs{background:rgba(255,255,255,.95);color:var(--tx);border-radius:12px;padding:10px 12px;font-size:17px;font-weight:700;text-align:left;white-space:pre-wrap}
+#alerta .aobs[hidden]{display:none}
+#alerta ul{margin:0;padding:8px 10px;list-style:none;text-align:left;border-top:1px solid rgba(255,255,255,.4);font-size:14px;font-weight:600}
+#alerta .btn{background:#fff;color:var(--tx);border:0;min-height:48px;font-size:17px}
+.aviso{background:var(--tl2);border-radius:10px;padding:10px 12px;font-size:13px;color:#0A4E4A}
 </style>
 </head>
 <body>
 <header class="top">
-  <a href="../index.html">ApoioSSO</a>
-  <b>ALERTA PCD</b>
+  <a href="../index.html">‹ ApoioSSO</a>
+  <div class="marca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16V6a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3v10"/><path d="M6 11h12M6 16h12v1.5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 17.5z"/><path d="M8 19l-2 2.5M16 19l2 2.5"/></svg><b>ALERTA TREM</b></div>
   <span class="est" id="estado">Parado</span>
 </header>
+
+<div class="cmd"><div class="in">
+  <button class="btn go" id="bIniciar" disabled><svg viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></svg>Começar a vigiar</button>
+  <button class="btn stop" id="bParar" hidden>Parar</button>
+  <button class="btn fix" id="bPip" type="button"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="14" rx="2"/><rect x="12" y="11" width="7" height="5" rx="1"/></svg>Fixar aviso na tela</button>
+  <div class="prog" id="prog" hidden><span id="progTxt">0 de 0 áreas avisadas</span><span class="barra"><i id="progBar"></i></span></div>
+</div></div>
 
 <main>
 <div class="col">
   <section class="card">
-    <h2><span class="passo">1</span>De onde vem a imagem do painel</h2>
-    <p class="dica">No computador que mostra o sinótico, escolha "Compartilhar a tela" e selecione a janela ou a tela do painel. A câmera serve para um celular apontado para o monitor. A imagem de teste serve para treinar com um print. Para testar sem o painel, abra o <a href="simulador.html" target="_blank" rel="noopener">simulador de sinótico</a> em outra janela e compartilhe essa janela.</p>
+    <h2><span class="n">1</span>Imagem do sinótico</h2>
+    <p class="dica">No computador do sinótico, toque em "Compartilhar a tela" e escolha a janela do painel. A câmera serve para um celular apontado para o monitor. Para treinar sem o painel, abra o <a href="simulador.html" target="_blank" rel="noopener">simulador de sinótico</a> em outra janela e compartilhe essa janela.</p>
     <div class="row">
-      <button class="btn pri" id="bTela">Compartilhar a tela</button>
+      <button class="btn pri" id="bTela"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>Compartilhar a tela</button>
       <button class="btn" id="bCam">Câmera</button>
       <label class="btn" for="fImg">Imagem de teste</label>
       <input type="file" id="fImg" accept="image/*">
@@ -89,57 +132,56 @@ label.cfg input[type=range]{flex:1}
   </section>
 
   <section class="card">
-    <h2><span class="passo">2</span>Marque as estações</h2>
-    <p class="dica">Toque em "Marcar área" e arraste um retângulo sobre o trecho da estação, incluindo o lugar onde o prefixo do trem aparece. Dê um nome à área. Pode marcar várias.</p>
+    <h2><span class="n">2</span>Áreas das estações</h2>
+    <p class="dica">Toque em "Marcar área" e arraste um retângulo sobre o trecho da estação, pegando o lugar onde o prefixo aparece. Dê um nome à área. Pode marcar várias.</p>
     <div class="row">
       <button class="btn" id="bMarcar" disabled>Marcar área</button>
       <button class="btn" id="bFoto" disabled>Atualizar imagem</button>
       <button class="btn" id="bLer" disabled>Ler agora</button>
     </div>
-    <div class="tela" id="tela"><canvas id="cv" width="800" height="450"></canvas><div class="vazio" id="telaVazia">Escolha a fonte da imagem no passo 1.</div></div>
+    <div class="tela" id="tela"><canvas id="cv" width="800" height="450"></canvas><div class="vazio" id="telaVazia">Escolha a imagem do sinótico no passo 1.</div></div>
     <video id="video" playsinline muted></video>
     <div class="zonas" id="zonas"></div>
   </section>
 </div>
 
-<div class="lado">
+<div class="col">
   <section class="card">
-    <h2><span class="passo">3</span>Trens para avisar</h2>
-    <form class="row" id="fPref">
-      <input type="text" id="iPref" placeholder="Ex.: S120" maxlength="12" autocomplete="off">
-      <button class="btn pri">Adicionar</button>
+    <h2><span class="n">3</span>Trens</h2>
+    <form id="fPref" style="display:flex;flex-direction:column;gap:10px">
+      <label class="campo"><span>Trem (prefixo)</span><input type="text" id="iPref" placeholder="S120" maxlength="12" autocomplete="off"></label>
+      <label class="campo"><span>Observações</span><textarea id="iObs" maxlength="300" placeholder="Ex.: Tipo de PCD, porta/carro, nº do carro ou qualquer outra informação"></textarea></label>
+      <button class="btn pri">Adicionar trem</button>
     </form>
-    <p class="dica">Basta o começo do prefixo. "S120" avisa para S120X288, S120M004 e assim por diante.</p>
+    <p class="dica">Basta o começo do prefixo: "S120" avisa para S120X288, S120M004 e assim por diante. As observações aparecem no aviso e são lidas em voz alta.</p>
     <div class="trens" id="trens"></div>
   </section>
 
-  <section class="card">
-    <h2><span class="passo">4</span>Vigiar</h2>
-    <div class="row">
-      <button class="btn go" id="bIniciar" disabled>Começar a vigiar</button>
-      <button class="btn stop" id="bParar" hidden>Parar</button>
-      <button class="btn" id="bPip" type="button" hidden>Abrir janela flutuante</button>
+  <details class="card">
+    <summary>Ajustes e teste</summary>
+    <div class="corpo">
+      <label class="cfg">Ler a cada <input type="range" id="rInt" min="1" max="10" step="1" value="2"> <b id="vInt">2 s</b></label>
+      <label class="cfg">Avisar imagem parada após <input type="range" id="rPar" min="1" max="15" step="1" value="3"> <b id="vPar">3 min</b></label>
+      <label class="cfg">Limiar do texto <input type="range" id="rLim" min="80" max="230" step="5" value="140"> <b id="vLim">140</b></label>
+      <p class="dica">Se o texto lido sair vazio ou com sujeira, mexa no limiar e toque em "Ler agora". Esta janela pode ser minimizada. A do sinótico não: minimizada, a imagem congela e o app avisa "imagem parada".</p>
+      <div class="row">
+        <button class="btn" id="bNotif" type="button">Ativar notificações</button>
+        <button class="btn" id="bTeste" type="button">Testar aviso em 10 s</button>
+      </div>
+      <p class="dica" id="notifEst"></p>
     </div>
-    <label class="cfg">Ler a cada <input type="range" id="rInt" min="1" max="10" step="1" value="2"> <b id="vInt">2 s</b></label>
-    <label class="cfg">Avisar imagem parada após <input type="range" id="rPar" min="1" max="15" step="1" value="3"> <b id="vPar">3 min</b></label>
-    <label class="cfg">Limiar do texto <input type="range" id="rLim" min="80" max="230" step="5" value="140"> <b id="vLim">140</b></label>
-    <p class="dica">Se o texto lido sair vazio ou com sujeira, mexa no limiar e toque em "Ler agora". Ao começar, abre uma janelinha flutuante que fica por cima de tudo e fica amarela no aviso (Chrome e Edge). Esta janela pode ser minimizada. A janela do sinótico não: pode ficar atrás de outras, mas minimizada a imagem congela, e o app avisa "imagem parada".</p>
-    <div class="row">
-      <button class="btn" id="bNotif" type="button">Ativar notificações</button>
-      <button class="btn" id="bTeste" type="button">Testar aviso em 10 s</button>
-    </div>
-    <p class="dica" id="notifEst"></p>
-    <div class="aviso">É um aviso de apoio. Ele não substitui a comunicação com o CCO nem a proteção de quem está na via.</div>
-  </section>
+  </details>
 
   <section class="card">
     <h2>Registro</h2>
     <div class="log" id="log"><p class="dica">Nenhum aviso ainda.</p></div>
   </section>
+
+  <div class="aviso">É um aviso de apoio. Ele não substitui a comunicação com o CCO nem a proteção de quem está na via.</div>
 </div>
 </main>
 
-<div id="alerta" hidden><div class="box"><h3 id="aTit">S120</h3><p id="aMsg"></p><ul id="aAnt" hidden></ul><button class="btn" id="aOk">Ciente</button></div></div>
+<div id="alerta" hidden><div class="box"><span class="rot" id="aRot">TREM CHEGANDO</span><h3 id="aTit">S120</h3><p id="aMsg"></p><div class="aobs" id="aObs" hidden></div><ul id="aAnt" hidden></ul><button class="btn" id="aOk">Ciente</button></div></div>
 
 <script src="lib/tesseract.min.js"></script>
 <script>
@@ -147,8 +189,10 @@ label.cfg input[type=range]{flex:1}
 const $=s=>document.querySelector(s);
 const LIB=new URL('lib/',location.href).href;
 const CHAVE='sinotico-v1';
-let cfg={zonas:[],prefixos:[],intervalo:2,limiar:140,paradoMin:3};
+let cfg={zonas:[],prefixos:[],obs:{},intervalo:2,limiar:140,paradoMin:3};
 try{Object.assign(cfg,JSON.parse(localStorage.getItem(CHAVE)||'{}'))}catch(e){}
+if(!cfg.obs||typeof cfg.obs!=='object')cfg.obs={};
+const areasAvisadas=new Set(); // áreas que já tiveram aviso desde o começo da vigia
 const salvar=()=>{try{localStorage.setItem(CHAVE,JSON.stringify(cfg))}catch(e){}};
 
 const cv=$('#cv'),cx=cv.getContext('2d',{willReadFrequently:true}),video=$('#video');
@@ -217,8 +261,8 @@ function desenhar(){
   cx.drawImage(frame,0,0);
   const lw=Math.max(2,frame.width/400),fs=Math.max(14,frame.width/60);
   cx.font=`700 ${fs}px system-ui,sans-serif`;
-  const caixas=cfg.zonas.map(z=>[z,'#FFC61A']);
-  if(arrasto)caixas.push([arrasto,'#00E5FF']);
+  const caixas=cfg.zonas.map(z=>[z,'#FF5A1F']);
+  if(arrasto)caixas.push([arrasto,'#22D3EE']);
   for(const [z,cor] of caixas){
     const x=z.x*cv.width,y=z.y*cv.height,w=z.w*cv.width,h=z.h*cv.height;
     cx.lineWidth=lw;cx.strokeStyle=cor;cx.strokeRect(x,y,w,h);
@@ -242,8 +286,9 @@ function listarZonas(){
   const el=$('#zonas');el.innerHTML='';
   cfg.zonas.forEach((z,i)=>{
     const d=document.createElement('div');d.className='z';d.id='z-'+z.id;
-    d.innerHTML='<b></b><button class="btn mini">Apagar</button><div class="lido">Ainda não lido.</div>';
-    d.querySelector('b').textContent=z.nome;
+    d.innerHTML='<b><span></span><small></small></b><button class="btn mini">Apagar</button><div class="lido">Ainda não lido.</div>';
+    d.querySelector('b span').textContent=z.nome;
+    if(areasAvisadas.has(z.id))d.querySelector('b small').textContent='✓ avisada';
     d.querySelector('button').onclick=()=>{if(confirm('Apagar a área "'+z.nome+'"?')){cfg.zonas.splice(i,1);salvar();listarZonas();desenhar()}};
     el.appendChild(d);
   });
@@ -256,7 +301,8 @@ $('#fPref').onsubmit=e=>{
   const v=$('#iPref').value.toUpperCase().replace(/[^A-Z0-9]/g,'');
   if(v.length<2)return;
   if(!cfg.prefixos.includes(v))cfg.prefixos.push(v);
-  $('#iPref').value='';salvar();listarTrens();
+  cfg.obs[v]=$('#iObs').value.trim();
+  $('#iPref').value='';$('#iObs').value='';salvar();listarTrens();
 };
 function listarTrens(){
   const el=$('#trens');el.innerHTML='';
@@ -264,10 +310,14 @@ function listarTrens(){
   cfg.prefixos.forEach((p,i)=>{
     const s=estadoTrem[p],d=document.createElement('div');
     d.className='t'+(s&&s.agora?' visto':'');
-    d.innerHTML='<b></b><span></span><button class="x" title="Remover">×</button>';
+    d.innerHTML='<b></b><span class="ac"><button class="x" type="button">Editar</button><button class="x" type="button">Remover</button></span><div class="obs"></div><div class="st"></div>';
     d.querySelector('b').textContent=p;
-    d.querySelector('span').textContent=s?(s.agora?'Agora em ':'Visto por último em ')+s.onde+' às '+s.quando:'Ainda não visto';
-    d.querySelector('button').onclick=()=>{cfg.prefixos.splice(i,1);delete estadoTrem[p];salvar();listarTrens()};
+    const ob=d.querySelector('.obs'),txt=cfg.obs[p]||'';
+    ob.textContent=txt||'Sem observações';ob.classList.toggle('vazia',!txt);
+    d.querySelector('.st').textContent=s?(s.agora?'Agora em ':'Visto por último em ')+s.onde+' às '+s.quando:'Ainda não visto';
+    const [bEd,bRm]=d.querySelectorAll('.ac button');
+    bEd.onclick=()=>{const n=prompt('Observações do trem '+p+' (tipo de PCD, porta/carro, nº do carro…):',txt);if(n!==null){cfg.obs[p]=n.trim();salvar();listarTrens()}};
+    bRm.onclick=()=>{cfg.prefixos.splice(i,1);delete cfg.obs[p];delete estadoTrem[p];salvar();listarTrens()};
     el.appendChild(d);
   });
   estado();
@@ -393,7 +443,7 @@ async function ciclo(){
           if(!c){c={id:a.id,n:0};s.cand.push(c)}
           c.n++;c.ult=nCiclo;if(a.exato)c.id=a.id;
           // leitura exata avisa na hora; leitura aproximada (S lido como 5 etc.) precisa aparecer 2 vezes em 3 leituras
-          if(a.exato||c.n>=2){s.cand.splice(s.cand.indexOf(c),1);s.avisados.push({id:c.id,ult:nCiclo});avisar(p,z.nome,c.id)}
+          if(a.exato||c.n>=2){s.cand.splice(s.cand.indexOf(c),1);s.avisados.push({id:c.id,ult:nCiclo});avisar(p,z.nome,c.id,z.id)}
         }
         s.cand=s.cand.filter(c=>nCiclo-c.ult<3);
         // trem que não aparece há 2 leituras saiu da área; a área volta a avisar para ele
@@ -423,15 +473,14 @@ $('#bIniciar').onclick=async()=>{
   somCtx();
   if('Notification' in window&&Notification.permission==='default')Notification.requestPermission().then(notifEstado).catch(()=>{});
   try{await prepararOCR()}catch(e){estado('Não carregou o leitor: '+e.message,true);return}
-  rodando=true;perdas=0;assinatura=null;desdeMudou=Date.now();avisouParado=false;
+  rodando=true;perdas=0;areasAvisadas.clear();$('#prog').hidden=false;progresso();assinatura=null;desdeMudou=Date.now();avisouParado=false;
   try{wake=await navigator.wakeLock.request('screen')}catch(e){}
   $('#bIniciar').hidden=true;$('#bParar').hidden=false;
   iniciarRelogio();estado();ciclo();
-  $('#bPip').hidden=!pipPossivel()||!!pip;
 };
 $('#bParar').onclick=()=>{
   rodando=false;pararRelogio();if(wake){wake.release().catch(()=>{});wake=null}
-  $('#bIniciar').hidden=false;$('#bParar').hidden=true;estado();
+  $('#bIniciar').hidden=false;$('#bParar').hidden=true;$('#prog').hidden=true;estado();
   if(pip)pip.close();
 };
 document.addEventListener('visibilitychange',async()=>{if(rodando&&!document.hidden&&!wake){try{wake=await navigator.wakeLock.request('screen')}catch(e){}}});
@@ -454,10 +503,12 @@ function bip(grave){
 }
 function falar(txt){try{const u=new SpeechSynthesisUtterance(txt);u.lang='pt-BR';speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
 let pendentes=[];
-function mostrar(tit,msg,isFalha){
+function mostrar(tit,msg,isFalha,obs){
   if($('#alerta').hidden)pendentes=[];
-  pendentes.unshift({tit,msg,f:!!isFalha,h:hora().slice(0,5)});pendentes=pendentes.slice(0,6);
+  pendentes.unshift({tit,msg,obs:obs||'',f:!!isFalha,h:hora().slice(0,5)});pendentes=pendentes.slice(0,6);
   $('#aTit').textContent=tit;$('#aMsg').textContent=msg;
+  $('#aRot').textContent=isFalha?'ATENÇÃO':'TREM CHEGANDO';
+  $('#aObs').textContent=obs||'';$('#aObs').hidden=!obs;
   const ant=$('#aAnt');ant.innerHTML='';
   pendentes.slice(1).forEach(x=>{const li=document.createElement('li');li.textContent=x.h+' · '+x.tit+' '+x.msg;ant.appendChild(li)});
   ant.hidden=pendentes.length<2;
@@ -466,12 +517,22 @@ function mostrar(tit,msg,isFalha){
   bip(isFalha);clearInterval(repete);let n=0;
   repete=setInterval(()=>{if(++n>6||$('#alerta').hidden){clearInterval(repete);return}bip(isFalha)},5000);
   try{navigator.vibrate&&navigator.vibrate([400,200,400])}catch(e){}
-  try{if('Notification' in window&&Notification.permission==='granted'){const n=new Notification(tit,{body:msg,icon:'../../icon-192.png',requireInteraction:true,tag:tit+msg+Date.now()});n.onclick=()=>{try{parent.focus();window.focus()}catch(e){}n.close()}}}catch(e){}
+  try{if('Notification' in window&&Notification.permission==='granted'){const n=new Notification(tit,{body:msg+(obs?'\n'+obs:''),icon:'../../icon-192.png',requireInteraction:true,tag:tit+msg+Date.now()});n.onclick=()=>{try{parent.focus();window.focus()}catch(e){}n.close()}}}catch(e){}
 }
 $('#aOk').onclick=()=>{$('#alerta').hidden=true;clearInterval(repete);pendentes=[];pararPiscar();pipDesenhar()};
-function avisar(p,onde,id){
-  const msg='Trem '+(id||p)+' em '+onde+' às '+hora().slice(0,5);
-  registrar(msg);mostrar(id||p,'em '+onde);falar('Atenção. Trem '+p.split('').join(' ')+' em '+onde);
+function avisar(p,onde,id,zid){
+  const obs=cfg.obs[p]||'';
+  const msg='Trem '+(id||p)+' em '+onde+' às '+hora().slice(0,5)+(obs?' · '+obs:'');
+  if(zid){areasAvisadas.add(zid);progresso()}
+  registrar(msg);mostrar(id||p,'em '+onde,false,obs);falar('Atenção. Trem '+p.split('').join(' ')+' em '+onde+(obs?'. '+obs:''));
+}
+// quantas áreas marcadas já tiveram pelo menos um aviso
+function todasAvisadas(){return cfg.zonas.length>0&&cfg.zonas.every(z=>areasAvisadas.has(z.id))}
+function progresso(){
+  const tot=cfg.zonas.length,ok=cfg.zonas.filter(z=>areasAvisadas.has(z.id)).length;
+  $('#progTxt').textContent=ok+' de '+tot+' áreas avisadas';$('#progBar').style.width=(tot?ok/tot*100:0)+'%';
+  cfg.zonas.forEach(z=>{const el=$('#z-'+z.id);if(el){const b=el.querySelector('b small');if(b)b.textContent=areasAvisadas.has(z.id)?'✓ avisada':''}});
+  pipDesenhar();
 }
 function falha(msg,tit){registrar(msg,true);mostrar(tit||'Sem imagem',msg,true);falar(msg);estado()}
 /* ---------- título da aba piscando ---------- */
@@ -481,7 +542,7 @@ function piscar(tit,msg){
   const txt='🔴 '+(tit+' '+msg).toUpperCase();
   // relógio num worker para continuar piscando com a aba em segundo plano
   pisca=new Worker(URL.createObjectURL(new Blob(['setInterval(()=>postMessage(1),900)'],{type:'text/javascript'})));
-  pisca.onmessage=()=>{piscaOn=!piscaOn;document.title=piscaOn?txt:'ALERTA PCD'};
+  pisca.onmessage=()=>{piscaOn=!piscaOn;document.title=piscaOn?txt:'ALERTA TREM'};
   document.title=txt;piscaOn=true;
 }
 function pararPiscar(){if(pisca){pisca.terminate();pisca=null}document.title=TITULO}
@@ -493,27 +554,28 @@ async function abrirPip(){
   if(!pipPossivel()||pip)return;
   try{pip=await documentPictureInPicture.requestWindow({width:340,height:220})}catch(e){pip=null;return}
   const d=pip.document;
-  d.title='ALERTA PCD';
+  d.title='ALERTA TREM';
   d.head.innerHTML='<meta charset="utf-8"><style>'+
    'html,body{margin:0;height:100%;font:600 15px/1.25 system-ui,"Segoe UI",Arial,sans-serif}'+
-   'body{display:flex;flex-direction:column;background:#141414;color:#fff}'+
-   '.cab{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:4px solid #FFC61A;font-weight:800;letter-spacing:.02em}'+
+   'body{display:flex;flex-direction:column;background:#0E1A2B;color:#fff}'+
+   '.cab{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:3px solid #FF5A1F;font-weight:800;letter-spacing:.06em;font-size:13px}'+
    '.cab i{margin-left:auto;font-style:normal;font-size:12px;padding:3px 8px;border-radius:6px;background:#444}'+
-   '.cab i.on{background:#1B7F4B}.cab i.err{background:#C62828}'+
+   '.cab i.on{background:#0B7A75}.cab i.err{background:#C62828}'+'.obs{margin-top:4px;background:rgba(255,255,255,.95);color:#162030;border-radius:8px;padding:6px 8px;font-size:15px;font-weight:700;white-space:pre-wrap}'+'.prog{font-size:12px;color:#9FB0C6}body.alerta .prog,body.falha .prog{color:#fff}'+'button.fechar{background:#0B7A75;color:#fff;border-color:#0B7A75}'+
    '.corpo{flex:1;display:flex;flex-direction:column;justify-content:center;gap:4px;padding:10px 12px;min-height:0;overflow:hidden}'+
-   '.corpo b{font-size:40px;line-height:1;font-weight:900;letter-spacing:.02em}'+
+   '.corpo b{font:900 36px/1 ui-monospace,Consolas,monospace;letter-spacing:.02em}'+
    '.corpo p{margin:0;font-size:20px;font-weight:800}'+
    '.corpo small{color:#aaa;font-size:13px;font-weight:500}'+
    'ul{margin:4px 0 0;padding:0;list-style:none;font-size:13px}'+
-   'button{margin:0 12px 12px;min-height:40px;border:2px solid #141414;border-radius:8px;background:#fff;color:#141414;font:800 17px system-ui,sans-serif;cursor:pointer}'+
-   'body.alerta{background:#FFC61A;color:#141414;animation:p 1s steps(2) infinite}body.falha{background:#FFCDD2;color:#141414}'+
-   'body.alerta .corpo small,body.falha .corpo small{color:#333}'+
-   '@keyframes p{50%{background:#FFE07A}}'+
+   '.bt{display:flex;gap:8px;margin:0 12px 12px}button{flex:1;min-height:38px;border:2px solid #fff;border-radius:8px;background:#fff;color:#162030;font:800 15px system-ui,sans-serif;cursor:pointer}button[hidden]{display:none}'+
+   'body.alerta{background:#FF5A1F;color:#fff;animation:p 1s steps(2) infinite}body.falha{background:#C62828;color:#fff}'+
+   'body.alerta .corpo small,body.falha .corpo small{color:#FFE3D6}'+
+   '@keyframes p{50%{background:#C2410C}}'+
    '</style>';
-  d.body.innerHTML='<div class="cab">ALERTA PCD<i id="est"></i></div><div class="corpo" id="corpo"></div><button id="ok" hidden>Ciente</button>';
+  d.body.innerHTML='<div class="cab">ALERTA TREM<i id="est"></i></div><div class="corpo" id="corpo"></div><div class="bt"><button id="ok" hidden>Ciente</button><button id="fechar" class="fechar" hidden>Fechar</button></div>';
   d.getElementById('ok').onclick=()=>$('#aOk').click();
-  pip.addEventListener('pagehide',()=>{pip=null;$('#bPip').hidden=!pipPossivel()||!rodando});
-  $('#bPip').hidden=true;
+  d.getElementById('fechar').onclick=()=>pip&&pip.close();
+  pip.addEventListener('pagehide',()=>{pip=null;botaoPip()});
+  botaoPip();
   pipDesenhar();
 }
 function pipDesenhar(){
@@ -524,9 +586,11 @@ function pipDesenhar(){
   const alertaAberto=!$('#alerta').hidden&&pendentes.length;
   d.body.className=alertaAberto?(pendentes[0].f?'falha':'alerta'):'';
   ok.hidden=!alertaAberto;
+  // o Fechar só aparece depois que todas as áreas marcadas tiveram pelo menos um aviso
+  d.getElementById('fechar').hidden=!todasAvisadas();
   const add=(tag,txt)=>{const el=d.createElement(tag);el.textContent=txt;c.appendChild(el);return el};
   if(alertaAberto){
-    const a=pendentes[0];add('b',a.tit);add('p',a.msg);add('small','às '+a.h);
+    const a=pendentes[0];add('b',a.tit);add('p',a.msg);if(a.obs)add('div',a.obs).className='obs';add('small','às '+a.h);
     if(pendentes.length>1){const ul=add('ul','');pendentes.slice(1,4).forEach(x=>{const li=d.createElement('li');li.textContent=x.h+' · '+x.tit+' '+x.msg;ul.appendChild(li)})}
   }else{
     add('p',rodando?'Vigiando '+cfg.prefixos.join(', '):'Parado');
@@ -534,6 +598,7 @@ function pipDesenhar(){
     const vistos=cfg.prefixos.filter(p=>estadoTrem[p]).map(p=>p+': '+(estadoTrem[p].agora?'agora em ':'último em ')+estadoTrem[p].onde+' '+estadoTrem[p].quando);
     if(vistos.length)add('small',vistos.join(' · '));
   }
+  if(rodando&&cfg.zonas.length){const ok=cfg.zonas.filter(z=>areasAvisadas.has(z.id)).length;add('small',ok+' de '+cfg.zonas.length+' áreas avisadas'+(todasAvisadas()?' · pode fechar':'')).className='prog'}
 }
 
 function registrar(msg,isFalha){
@@ -569,9 +634,10 @@ $('#bNotif').onclick=async()=>{somCtx();try{await Notification.requestPermission
 $('#bTeste').onclick=()=>{
   somCtx();if('Notification' in window&&Notification.permission==='default')Notification.requestPermission().then(notifEstado).catch(()=>{});
   $('#bTeste').disabled=true;$('#bTeste').textContent='Minimize a janela agora…';
-  setTimeout(()=>{$('#bTeste').disabled=false;$('#bTeste').textContent='Testar aviso em 10 s';registrar('Teste de aviso');mostrar('TESTE','Se você ouviu o bipe e viu a notificação, o aviso funciona.');falar('Teste do alerta P C D')},10000);
+  setTimeout(()=>{$('#bTeste').disabled=false;$('#bTeste').textContent='Testar aviso em 10 s';registrar('Teste de aviso');mostrar('TESTE','Se você ouviu o bipe e viu a notificação, o aviso funciona.',false,'Aqui aparecem as observações do trem.');falar('Teste do alerta trem')},10000);
 };
-$('#bPip').onclick=abrirPip;
+function botaoPip(){const b=$('#bPip');b.disabled=!!pip;b.lastChild.textContent=pip?'Aviso fixado na tela':'Fixar aviso na tela'}
+$('#bPip').onclick=()=>{if(!pipPossivel()){alert('Este navegador não fixa janelas na tela. Use o Chrome ou o Edge do computador.');return}abrirPip()};
 notifEstado();
 listarZonas();listarTrens();
 </script>
