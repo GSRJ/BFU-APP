@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="only light">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#141414">
+<meta name="robots" content="noindex">
+<title>ApoioSSO · BFU</title>
+<link rel="icon" href="../icon-192.png">
+<style>
+:root{--y:#FFC61A;--k:#141414;--c:#E64A19;--f:'Barlow',system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;--fc:'Barlow Condensed','Barlow',system-ui,sans-serif}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{background:#EEEEE9;color:var(--k);font:500 16px/1.4 var(--f);min-height:100dvh;display:flex;flex-direction:column}
+.top{display:flex;align-items:center;gap:10px;background:var(--k);color:#fff;border-bottom:5px solid var(--y);padding:calc(10px + env(safe-area-inset-top)) 14px 10px}
+.top b{font:700 25px/1 var(--fc);flex:1;min-width:0}
+.back{flex:none;height:40px;padding:0 12px;border:2px solid var(--y);border-radius:9px;background:transparent;color:var(--y);font:700 18px/1 var(--fc);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center}
+.sair{flex:none;height:36px;padding:0 10px;border:2px solid #777;border-radius:9px;background:transparent;color:#ddd;font:700 16px/1 var(--fc);cursor:pointer}
+.sair[hidden]{display:none}
+main{flex:1;width:100%;max-width:540px;margin:0 auto;padding:22px 16px 40px;display:flex;flex-direction:column;gap:12px}
+h1{margin:0;font:700 34px/1 var(--fc)}
+p.sub{margin:0;color:#55554F;font-size:15px}
+form{display:flex;flex-direction:column;gap:10px;background:#fff;border:2px solid var(--k);border-radius:12px;padding:16px}
+label{font:700 20px/1 var(--fc)}
+input{font:700 28px/1 var(--fc);letter-spacing:.08em;border:2px solid var(--k);border-radius:10px;padding:12px;width:100%}
+button.ent{min-height:54px;border:2px solid var(--k);border-radius:10px;background:var(--y);color:var(--k);font:700 24px/1 var(--fc);cursor:pointer}
+.erro{margin:0;color:#B71C1C;font-weight:700;font-size:15px}
+.erro[hidden],[hidden]{display:none!important}
+.card{display:flex;align-items:center;gap:14px;text-decoration:none;color:#fff;background:#3B1A10;border-radius:14px;padding:16px;min-height:100px}
+.card .ic{flex:none;width:56px;height:56px;border-radius:50%;display:grid;place-items:center;background:var(--c)}
+.card .ic svg{width:30px;height:30px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.card .tx{flex:1;min-width:0}
+.card .tx b{display:block;font:700 30px/1 var(--fc)}
+.card .tx span{display:block;font-size:14px;color:#F3D6CB;margin-top:5px;line-height:1.25}
+.card .go{flex:none;width:40px;height:40px;border-radius:50%;background:var(--y);display:grid;place-items:center}
+.card .go::before{content:"";width:10px;height:10px;border-top:3px solid var(--k);border-right:3px solid var(--k);transform:rotate(45deg);margin-left:-4px}
+.card:active{filter:brightness(1.2)}
+.breve{border:2px dashed #8E8E86;border-radius:12px;padding:14px;color:#55554F;font-size:14px;text-align:center}
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="back" id="inicio" href="../index.html">Início</a>
+  <b>ApoioSSO</b>
+  <button class="sair" id="sair" type="button" hidden>Sair</button>
+</header>
+<main>
+  <section id="login" hidden>
+    <h1>Acesso restrito</h1>
+    <p class="sub" style="margin:6px 0 14px">Digite sua matrícula para entrar.</p>
+    <form id="f">
+      <label for="mat">Matrícula</label>
+      <input id="mat" inputmode="numeric" autocomplete="off" maxlength="12" required>
+      <p class="erro" id="erro" hidden>Matrícula sem acesso ao ApoioSSO.</p>
+      <button class="ent">Entrar</button>
+    </form>
+  </section>
+
+  <section id="menu" hidden style="display:flex;flex-direction:column;gap:12px">
+    <h1>Ferramentas</h1>
+    <a class="card" href="alerta-pcd/index.html">
+      <div class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 17V7a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v10"/><path d="M5 12h14M8 20l-2 2M16 20l2 2M5 17h14v1a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z"/><path d="M9 15h.01M15 15h.01"/></svg></div>
+      <div class="tx"><b>ALERTA PCD</b><span>Avisa quando um trem passa pela estação escolhida no sinótico</span></div>
+      <div class="go" aria-hidden="true"></div>
+    </a>
+    <div class="breve">Outras ferramentas entram aqui.</div>
+  </section>
+</main>
+<script src="acesso.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+const dentro=window.parent!==window;
+$('#inicio').onclick=e=>{if(dentro){e.preventDefault();parent.postMessage({bfu:'home'},location.origin)}};
+function mostrar(){
+  const ok=apoioLiberado();
+  $('#login').hidden=ok;$('#menu').hidden=!ok;$('#sair').hidden=!ok;
+  if(!ok)setTimeout(()=>$('#mat').focus(),50);
+}
+$('#f').onsubmit=async e=>{
+  e.preventDefault();
+  const ok=await apoioEntrar($('#mat').value);
+  $('#erro').hidden=ok;
+  if(ok){$('#mat').value='';mostrar()}else $('#mat').select();
+};
+$('#sair').onclick=()=>{apoioSair();mostrar()};
+mostrar();
+</script>
+</body>
+</html>

@@ -59,6 +59,7 @@ main{flex:1;width:100%;max-width:540px;margin:0 auto;padding:22px 14px 20px;disp
 .card.gbd .go::before{border-color:#0C2550}
 .card.gbd .ic svg{stroke:#0C2550}
 .card.gbd .tx span{color:#C6D8F5}
+.card.apoio{--c:#E64A19;background:#3B1A10}.card.apoio .tx span{color:#F3D6CB}
 .inst{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:52px;border:2px solid var(--k);background:#fff;border-radius:10px;padding:8px 14px;font:700 21px/1.1 var(--fc);color:var(--k);cursor:pointer}
 .inst:active{background:var(--y)}
 footer{position:sticky;bottom:0;z-index:2;background:#0A0A0A;color:rgba(255,255,255,.5);font-size:11px;line-height:1.2;padding:5px 14px calc(5px + env(safe-area-inset-bottom))}
@@ -112,8 +113,12 @@ main{display:grid!important;grid-template-columns:1fr 1fr;gap:10px!important;ali
 .card.gbd .ic{margin:0 14px 0 0!important;align-self:center!important}
 .card.gbd .tx{align-self:center}
 .card.gbd .go{position:static;align-self:center;width:44px!important;height:44px}
+.card.apoio{grid-column:1/-1;flex-direction:row;align-items:center;min-height:92px!important}
+.card.apoio .ic{margin:0 14px 0 0!important;align-self:center!important}
+.card.apoio .tx{align-self:center}
+.card.apoio .go{position:static;align-self:center;width:44px!important;height:44px}
 .turnos,.inst,.offnote{grid-column:1/-1}
-@media (max-height:720px) and (max-width:759px){.card{min-height:132px!important}.card .ic{width:44px!important;height:44px!important;margin-bottom:8px!important}.card .tx b{font-size:23px!important}.card.gbd{min-height:76px!important}}
+@media (max-height:720px) and (max-width:759px){.card{min-height:132px!important}.card .ic{width:44px!important;height:44px!important;margin-bottom:8px!important}.card .tx b{font-size:23px!important}.card.gbd,.card.apoio{min-height:76px!important}}
 @media (min-width:760px){main{grid-template-columns:repeat(4,1fr);max-width:1000px}.card{min-height:190px!important}.card.gbd{min-height:110px!important}}
 
 /* instalar no alto, sempre à vista sem rolar, em verde */
@@ -169,6 +174,11 @@ main{padding-top:14px}
     <button class="tn tarde" type="button" data-t="tarde"><span class="p"></span><b>Tarde</b><i>14h às 22h</i></button>
     <button class="tn noite" type="button" data-t="noite"><span class="p"></span><b>Noite</b><i>22h às 06h</i><em data-st="noite">verificando…</em></button>
   </div>
+  <a class="card apoio" href="apoio-sso/index.html">
+    <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10.5" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/><path d="M12 14.5v2.5"/></svg></div>
+    <div class="tx"><b>ApoioSSO</b><span>Ferramentas de apoio · entra com a matrícula</span></div>
+    <div class="go" aria-hidden="true"></div>
+  </a>
   <p class="offnote" id="offnote" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0"/><path d="M12 19h.01"/><path d="M3 3l18 18"/></svg><span><b>Funciona sem internet depois de instalado.</b> Dá para fazer a ronda e o reporte sem sinal, e as mensagens saem pelo WhatsApp quando o celular voltar a ter conexão. O GBD também abre sem sinal, mostrando o último que foi publicado.</span></p>
 </main>
 <footer>Desenvolvido por AAS Gerson</footer>
@@ -198,12 +208,12 @@ document.getElementById('dlgOk').onclick=()=>document.getElementById('dlg').clos
 if('serviceWorker' in navigator&&/^https?:/.test(location.protocol)){navigator.serviceWorker.register('sw.js').catch(()=>{});}
 /* abre a Ronda ou o Reporte SSO dentro do BFU; cada um fica carregado para voltar de onde parou */
 const view=document.getElementById('appView'),frames={};
-const APPS={ronda:['ronda/index.html','Ronda'],sso:['reporte-sso/index.html','Reporte SSO'],planta:['reporte-sso/index.html?planta=1','Planta da estação'],pdf:['foto-pdf/index.html','Foto para PDF'],gbd:['gbd/index.html','GBD do dia']};
+const APPS={ronda:['ronda/index.html','Ronda'],sso:['reporte-sso/index.html','Reporte SSO'],planta:['reporte-sso/index.html?planta=1','Planta da estação'],pdf:['foto-pdf/index.html','Foto para PDF'],gbd:['gbd/index.html','GBD do dia'],apoio:['apoio-sso/index.html','ApoioSSO']};
 function openApp(k,push,turno){
   const app=APPS[k];if(!app)return;
   const src=app[0]+(turno?(app[0].includes('?')?'&':'?')+'turno='+turno:'');
   if(frames[k]&&turno&&frames[k].dataset.turno!==turno){frames[k].src=src;frames[k].dataset.turno=turno;}
-  if(!frames[k]){const f=document.createElement('iframe');f.src=src;f.dataset.turno=turno||'';f.title=app[1];f.setAttribute('allow','web-share; clipboard-write; camera; fullscreen');view.appendChild(f);frames[k]=f;}
+  if(!frames[k]){const f=document.createElement('iframe');f.src=src;f.dataset.turno=turno||'';f.title=app[1];f.setAttribute('allow','web-share; clipboard-write; camera; fullscreen; display-capture; screen-wake-lock; autoplay');view.appendChild(f);frames[k]=f;}
   /* a Planta sempre volta a ser a Planta, mesmo se a página dela tiver mudado */
   if(k==='planta'&&frames.planta){let ok=false;try{ok=/[?&]planta=1/.test(frames.planta.contentWindow.location.search)}catch(_){}
     if(!ok)frames.planta.src=src;else try{frames.planta.contentWindow.postMessage({bfu:'show'},location.origin)}catch(_){}}
@@ -221,7 +231,7 @@ document.querySelectorAll('a.card').forEach(a=>a.addEventListener('click',e=>{
     if(abrir)box.querySelector('.tn.tarde').focus();
     return;
   }
-  openApp(a.classList.contains('ronda')?'ronda':a.classList.contains('planta')?'planta':a.classList.contains('pdf')?'pdf':'sso');
+  openApp(a.classList.contains('apoio')?'apoio':a.classList.contains('ronda')?'ronda':a.classList.contains('planta')?'planta':a.classList.contains('pdf')?'pdf':'sso');
 }));
 document.querySelectorAll('#turnos .tn').forEach(b=>b.addEventListener('click',()=>openApp('gbd',true,b.dataset.t)));
 /* manhã e noite: mostra se o GBD já foi publicado (o arquivo do turno existe) */
