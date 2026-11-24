@@ -185,6 +185,9 @@ details .corpo{display:flex;flex-direction:column;gap:12px}
 const $=s=>document.querySelector(s);
 const CHAVE='estimativa-v1';
 const PADRAO=(window.TEMPOS_PADRAO||'').trim();
+const NOMES=window.NOMES_ESTACOES||{};
+const nomeLongo=c=>NOMES[c]?NOMES[c]+' ('+c+')':c; // aviso: "Palmeiras-Barra Funda (BFU)"
+const nomeFalado=c=>NOMES[c]||c;
 let cfg={tabela:null,viagens:[]};
 try{Object.assign(cfg,JSON.parse(localStorage.getItem(CHAVE)||'{}'))}catch(e){}
 if(!Array.isArray(cfg.viagens))cfg.viagens=[];
@@ -236,7 +239,7 @@ function aplicarTabela(){
   else{e.textContent=estacoes.length+' estações'+(cfg.tabela!=null?' · tabela editada neste computador':' · tabela do site')+(erros.length?' · linhas ignoradas: '+erros.join(', '):'');e.className='est'+(erros.length?' ruim':'')}
   $('#bPadrao').hidden=cfg.tabela==null;
   const o=$('#iOrig').value,d=$('#iDest').value;
-  for(const s of ['#iOrig','#iDest']){const el=$(s);el.innerHTML='<option value="">Escolha…</option>';estacoes.forEach(x=>el.add(new Option(x,x)))}
+  for(const s of ['#iOrig','#iDest']){const el=$(s);el.innerHTML='<option value="">Escolha…</option>';estacoes.forEach(x=>el.add(new Option(NOMES[x]?x+' · '+NOMES[x]:x,x)))}
   if(estacoes.includes(o))$('#iOrig').value=o;if(estacoes.includes(d))$('#iDest').value=d;
   previa();
 }
@@ -353,11 +356,11 @@ function bip(){
 }
 function falar(txt){try{const u=new SpeechSynthesisUtterance(txt);u.lang='pt-BR';speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
 function avisar(v,min){
-  const msg=min?'chega em '+v.dest+' em '+min+' min':'chegada prevista em '+v.dest+' agora';
+  const msg=min?'chega em '+nomeLongo(v.dest)+' em '+min+' min':'chegada prevista em '+nomeLongo(v.dest)+' agora';
   registrar('Trem '+v.id+' '+msg+' ('+hm(v.chegada)+')'+(v.obs?' · '+v.obs:''));
   mostrar(v.id,msg,v.obs,min?'FALTAM '+min+' MINUTOS':'CHEGADA PREVISTA');
   const nome=v.id==='TREM'?'o trem':'o trem '+v.id.split('').join(' ');
-  falar('Atenção. '+(min?'Faltam '+min+' minutos para '+nome+' chegar em '+v.dest:'Chegada prevista de '+nome+' em '+v.dest+' agora')+(v.obs?'. '+v.obs:''));
+  falar('Atenção. '+(min?'Faltam '+min+' minutos para '+nome+' chegar em '+nomeFalado(v.dest):'Chegada prevista de '+nome+' em '+nomeFalado(v.dest)+' agora')+(v.obs?'. '+v.obs:''));
 }
 function mostrar(tit,msg,obs,rot){
   if($('#alerta').hidden)pendentes=[];
