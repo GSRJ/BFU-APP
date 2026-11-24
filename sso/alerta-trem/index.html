@@ -77,6 +77,7 @@ main{max-width:1180px;margin:0 auto;padding:16px 16px 60px;display:grid;gap:14px
 .lnk{border:0;background:none;padding:4px 0;font:700 14px var(--f);color:var(--k);text-decoration:underline;cursor:pointer}
 input[type=file]{display:none}
 #iPref{font:800 22px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase}
+#iPref::placeholder{font:500 16px/1 var(--f);letter-spacing:0;text-transform:none}
 .tela{position:relative;background:#1E1E1B;border-radius:12px;overflow:hidden;line-height:0;min-height:180px}
 .tela.marcando{cursor:crosshair;touch-action:none;outline:4px solid var(--y)}
 .tela canvas{width:100%;height:auto;display:block}
@@ -88,13 +89,26 @@ video{display:none}
 .z b small{font-weight:700;color:var(--tl);margin-left:6px}
 .z .lido{grid-column:1/-1;font:500 12.5px/1.3 var(--mono);color:var(--mt);word-break:break-all}
 .z img{grid-column:1/-1;max-width:100%;max-height:64px;border:1px solid var(--ln);border-radius:4px;image-rendering:pixelated;background:#fff}
-.t{display:grid;grid-template-columns:1fr auto;gap:4px 8px;border:2px solid var(--ln);border-radius:12px;padding:10px 12px;background:#fff}
-.t b{font:800 22px/1 var(--mono);letter-spacing:.04em}
-.t .obs{grid-column:1/-1;font-size:15px;background:#F4F4F0;border-radius:8px;padding:6px 8px;white-space:pre-wrap}
-.t .obs.vazia{color:var(--mt);font-style:italic}
-.t .st{grid-column:1/-1;font-size:13px;color:var(--mt)}
-.t .ac{display:flex;gap:4px}
-.t.visto{border-color:var(--or);background:var(--or2)}
+.t{position:relative;display:flex;flex-direction:column;gap:10px;border:2px solid var(--ln);border-left:6px solid var(--tl);border-radius:14px;padding:12px 12px 12px 14px;background:#fff}
+.t .cab{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.t .placa{font:800 21px/1 var(--mono);letter-spacing:.08em;color:#F2F2F2;background:#2D2F32;border-radius:8px;padding:8px 12px}
+.t .info{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0}
+.t .info div{background:var(--tl2);border-radius:9px;padding:6px 9px;min-width:0}
+.t .info dt{font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#3C6E6B}
+.t .info dd{margin:0;font-size:15.5px;font-weight:800;color:#0A4E4A;overflow-wrap:anywhere}
+.t .info dd.vz{color:#8AA9A6;font-weight:700}
+.t .obs{font-size:15px;background:#F4F4F0;border-radius:9px;padding:8px 10px;white-space:pre-wrap}
+.t .st{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:700;color:var(--mt);border-top:1px dashed var(--ln);padding-top:9px}
+.t .st .pt{flex:none;width:10px;height:10px;border-radius:50%;background:#B9B9B1}
+.t.jaVisto .st .pt{background:var(--tl)}
+.t .ac{display:flex;gap:6px}
+.t .ac .x{border:2px solid var(--ln);background:#fff;padding:8px 10px;border-radius:9px;color:var(--tx)}
+.t .ac .x.rm:hover{border-color:var(--rd);color:var(--rd);background:#FDECEC}
+.t.visto{border-color:var(--or);border-left-color:var(--or);background:var(--or2)}
+.t.visto .st{color:#8A2A0B;border-top-color:#F3B9A3}
+.t.visto .st .pt{background:var(--or);box-shadow:0 0 0 0 rgba(230,74,25,.6);animation:pulso 1.4s infinite}
+@keyframes pulso{70%{box-shadow:0 0 0 8px rgba(230,74,25,0)}100%{box-shadow:0 0 0 0 rgba(230,74,25,0)}}
+@media(prefers-reduced-motion:reduce){.t.visto .st .pt{animation:none}}
 .x{border:0;background:none;font-size:14px;font-weight:700;line-height:1;cursor:pointer;padding:8px;color:var(--mt);border-radius:6px}
 .x:hover{background:#EEEEE9;color:var(--tx)}
 form.add{display:flex;flex-direction:column;gap:12px}
@@ -102,8 +116,6 @@ form.add{display:flex;flex-direction:column;gap:12px}
 @media(max-width:420px){.tres{grid-template-columns:1fr 1fr}.tres .campo:first-child{grid-column:1/-1}}
 .semTrem{margin:0;font-size:15px;font-weight:700;color:#7A4A00;background:#FFF1CC;border:2px solid var(--y);border-radius:10px;padding:10px 12px}
 .est.sem{background:#B7791F}
-.t .info{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px}
-.t .info i{font-style:normal;font-size:13.5px;font-weight:800;padding:4px 10px;border-radius:999px;background:var(--tl2);color:#0A4E4A}
 .inicio{border-color:var(--k)}
 .falta{margin:0;font-size:15px;font-weight:700;color:#8E1B1B;background:#FDECEC;border-radius:10px;padding:10px 12px}
 .inicio:has(#bIniciar:not(:disabled)) .falta{display:none}
@@ -150,7 +162,7 @@ label.cfg input[type=range]{flex:1;accent-color:var(--k)}
   <section class="card">
     <h2><span class="n">3</span>Trens para avisar</h2>
     <form id="fPref" class="add">
-      <label class="campo"><span>Prefixo do trem</span><input type="text" id="iPref" placeholder="S120" maxlength="12" autocomplete="off"></label>
+      <label class="campo"><span>Prefixo do trem</span><input type="text" id="iPref" placeholder="Digite o prefixo (ex: U510)" maxlength="12" autocomplete="off"></label>
       <div class="tres">
         <label class="campo"><span>Tipo</span><select id="iTipo"><option value="">—</option><option>DV</option><option>MR</option><option>TEA</option><option>Idoso</option><option>Cadeirante</option><option>Cadeirante motorizado</option><option>Outro</option></select></label>
         <label class="campo"><span>Carro</span><select id="iCarro"><option value="">—</option><option value="1">1º</option><option value="2">2º</option><option value="3">3º</option><option value="4">4º</option><option value="5">5º</option><option value="6">6º</option><option value="7">7º</option><option value="8">8º</option></select></label>
@@ -159,7 +171,6 @@ label.cfg input[type=range]{flex:1;accent-color:var(--k)}
       <label class="campo"><span>Observações <em>(opcional)</em></span><textarea id="iObs" maxlength="300" placeholder="Nº do carro ou qualquer outra informação"></textarea></label>
       <button class="btn pri" id="bAddTrem">Adicionar trem</button>
     </form>
-    <p class="dica">Basta o começo do prefixo: "S120" avisa para S120X288, S120M004 e outros. As observações aparecem no aviso e são lidas em voz alta.</p>
     <div class="trens" id="trens"></div>
   </section>
 
@@ -338,14 +349,17 @@ function listarTrens(){
   if(!cfg.prefixos.length){el.innerHTML='<p class="dica">Nenhum trem na lista. Adicione o prefixo acima para receber avisos.</p>'}
   cfg.prefixos.forEach((p,i)=>{
     const s=estadoTrem[p],d=document.createElement('div');
-    d.className='t'+(s&&s.agora?' visto':'');
-    d.innerHTML='<b></b><span class="ac"><button class="x" type="button">Editar</button><button class="x" type="button">Remover</button></span><div class="info"></div><div class="obs"></div><div class="st"></div>';
-    d.querySelector('b').textContent=p;
-    const inf=d.querySelector('.info'),partes=infoPartes(p);
-    partes.forEach(t=>{const x=document.createElement('i');x.textContent=t;inf.appendChild(x)});inf.hidden=!partes.length;
+    d.className='t'+(s&&s.agora?' visto':s?' jaVisto':'');
+    d.innerHTML='<div class="cab"><b class="placa"></b><span class="ac"><button class="x" type="button">Editar</button><button class="x rm" type="button">Remover</button></span></div><dl class="info"></dl><div class="obs"></div><div class="st"><span class="pt"></span><span class="tx"></span></div>';
+    d.querySelector('.placa').textContent=p;
+    const i0=cfg.info[p]||{},inf=d.querySelector('.info');
+    [['Tipo',i0.tipo],['Carro',i0.carro&&i0.carro+'º'],['Porta',i0.porta&&i0.porta+'ª']].forEach(([r,v])=>{
+      const c=document.createElement('div'),dt=document.createElement('dt'),dd=document.createElement('dd');
+      dt.textContent=r;dd.textContent=v||'—';if(!v)dd.className='vz';c.append(dt,dd);inf.appendChild(c)});
+    inf.hidden=!(i0.tipo||i0.carro||i0.porta);
     const ob=d.querySelector('.obs'),txt=cfg.obs[p]||'';
-    ob.textContent=txt||'Sem observações';ob.classList.toggle('vazia',!txt);ob.hidden=!txt&&partes.length>0;
-    d.querySelector('.st').textContent=s?(s.agora?'Agora em ':'Visto por último em ')+s.onde+' às '+s.quando:'Ainda não visto';
+    ob.textContent=txt;ob.hidden=!txt;
+    d.querySelector('.st .tx').textContent=s?(s.agora?'Agora em ':'Visto por último em ')+s.onde+' às '+s.quando:'Ainda não visto';
     const [bEd,bRm]=d.querySelectorAll('.ac button');
     // editar: volta o trem para o formulário; o botão vira "Salvar alterações"
     bEd.onclick=()=>{const inf=cfg.info[p]||{};$('#iPref').value=p;$('#iTipo').value=inf.tipo||'';$('#iPorta').value=inf.porta||'';$('#iCarro').value=inf.carro||'';$('#iObs').value=txt;botaoAdd();$('#fPref').scrollIntoView({behavior:'smooth',block:'center'});$('#iTipo').focus()};
