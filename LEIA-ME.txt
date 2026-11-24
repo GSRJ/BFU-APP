@@ -62,6 +62,6 @@ Atualização 24/11 (ESTIMATIVA DE TREM): segunda ferramenta do ApoioSSO, em sso
 não há sinótico. Escolhe-se o trem, a estação de partida, a de chegada, a hora de saída e os prazos (15, 10,
 5 min); a página calcula a chegada pela tabela de tempos e avisa nos prazos e na hora prevista, nos mesmos
 moldes do ALERTA TREM (aviso na tela, bipe, voz, notificação, janela fixada, título piscando), com
-observações por viagem. A tabela do site fica em sso/estimativa-trem/tempos.js, um trecho por linha
+observações por viagem. A tabela do site (Linha 11, BFU a EST) fica em sso/estimativa-trem/tempos.js, um trecho por linha
 ("estação; estação; minutos", vale nos dois sentidos); viagens longas somam os trechos do caminho. Quem editar
 a tabela na página guarda a versão só naquele computador.
