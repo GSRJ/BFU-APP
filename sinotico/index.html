@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="only light">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#141414">
+<meta name="robots" content="noindex">
+<title>Vigia do Sinótico · BFU</title>
+<link rel="icon" href="../icon-192.png">
+<style>
+:root{--y:#FFC61A;--k:#141414;--r:#C62828;--g:#1B7F4B;--f:'Barlow',system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;--fc:'Barlow Condensed','Barlow',system-ui,sans-serif}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:#EEEEE9;color:var(--k);font:500 16px/1.4 var(--f);min-height:100dvh}
+.top{display:flex;align-items:center;gap:10px;background:var(--k);color:#fff;border-bottom:5px solid var(--y);padding:calc(10px + env(safe-area-inset-top)) 14px 10px;position:sticky;top:0;z-index:5}
+.top b{font:700 25px/1 var(--fc);flex:1;min-width:0}
+.top a{color:var(--y);font:700 18px/1 var(--fc);text-decoration:none;border:2px solid var(--y);border-radius:9px;padding:9px 12px}
+.est{font:700 16px/1 var(--fc);padding:7px 10px;border-radius:8px;background:#444;color:#fff;white-space:nowrap}
+.est.on{background:var(--g)}
+.est.err{background:var(--r)}
+main{max-width:1100px;margin:0 auto;padding:16px 16px 80px;display:grid;gap:14px}
+@media(min-width:900px){main{grid-template-columns:minmax(0,1fr) 360px;align-items:start}.lado{position:sticky;top:80px}}
+.card{background:#fff;border:2px solid var(--k);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px}
+h2{margin:0;font:700 24px/1.05 var(--fc)}
+.passo{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--k);color:var(--y);font:700 17px/1 var(--fc);margin-right:6px;vertical-align:2px}
+p.dica{margin:0;color:#55554F;font-size:14px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:46px;border:2px solid var(--k);border-radius:10px;background:#fff;color:var(--k);font:700 19px/1.05 var(--fc);cursor:pointer;padding:6px 14px}
+.btn.pri{background:var(--y)}
+.btn.go{background:var(--g);border-color:var(--g);color:#fff}
+.btn.stop{background:var(--r);border-color:var(--r);color:#fff}
+.btn.on{background:var(--k);color:var(--y)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.mini{min-height:34px;font-size:16px;padding:4px 10px}
+input[type=text]{font:700 22px/1 var(--fc);letter-spacing:.04em;text-transform:uppercase;border:2px solid var(--k);border-radius:10px;padding:10px 12px;min-width:0;flex:1}
+input[type=file]{display:none}
+.tela{position:relative;background:#111;border-radius:8px;overflow:hidden;line-height:0;min-height:120px;touch-action:auto}
+.tela.marcando{cursor:crosshair;touch-action:none;outline:4px solid var(--y)}
+.tela canvas{width:100%;height:auto;display:block}
+.tela .vazio[hidden]{display:none}
+.tela .vazio{position:absolute;inset:0;display:grid;place-items:center;color:#aaa;font:500 15px/1.4 var(--f);padding:20px;text-align:center}
+video{display:none}
+.zonas,.trens,.log{display:flex;flex-direction:column;gap:8px}
+.z{border:2px solid #D5D5CE;border-radius:10px;padding:8px;display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center}
+.z b{font:700 19px/1.1 var(--fc)}
+.z .lido{grid-column:1/-1;font:500 13px/1.3 ui-monospace,Consolas,monospace;color:#55554F;word-break:break-all}
+.z img{grid-column:1/-1;max-width:100%;max-height:70px;border:1px solid #ddd;border-radius:4px;image-rendering:pixelated;background:#fff}
+.t{display:flex;align-items:center;gap:8px;border:2px solid var(--k);border-radius:10px;padding:8px 10px}
+.t b{font:700 24px/1 var(--fc);letter-spacing:.04em}
+.t span{flex:1;font-size:14px;color:#55554F}
+.t.visto{background:#FFF4CC}
+.x{border:0;background:none;font-size:22px;line-height:1;cursor:pointer;padding:4px 6px;color:#777}
+.log div{font-size:14px;border-left:4px solid var(--y);padding:2px 8px}
+.log div.f{border-color:var(--r)}
+.log time{font-weight:700;margin-right:6px}
+label.cfg{display:flex;align-items:center;gap:8px;font-size:14px}
+label.cfg input[type=range]{flex:1}
+#alerta{position:fixed;inset:0;z-index:50;background:rgba(20,20,20,.85);display:grid;place-items:center;padding:16px}
+#alerta[hidden]{display:none}
+#alerta .box{background:var(--y);border:4px solid var(--k);border-radius:16px;padding:22px;max-width:520px;width:100%;text-align:center;display:flex;flex-direction:column;gap:12px}
+#alerta.f .box{background:#FFCDD2}
+#alerta h3{margin:0;font:700 46px/1 var(--fc)}
+#alerta p{margin:0;font:700 24px/1.2 var(--fc)}
+.aviso{background:#FFF4CC;border:2px solid var(--y);border-radius:10px;padding:10px;font-size:14px}
+</style>
+</head>
+<body>
+<header class="top">
+  <a href="../index.html">Início</a>
+  <b>Vigia do Sinótico</b>
+  <span class="est" id="estado">Parado</span>
+</header>
+
+<main>
+<div class="col">
+  <section class="card">
+    <h2><span class="passo">1</span>De onde vem a imagem do painel</h2>
+    <p class="dica">No computador que mostra o sinótico, escolha "Compartilhar a tela" e selecione a janela ou a tela do painel. A câmera serve para um celular apontado para o monitor. A imagem de teste serve para treinar com um print.</p>
+    <div class="row">
+      <button class="btn pri" id="bTela">Compartilhar a tela</button>
+      <button class="btn" id="bCam">Câmera</button>
+      <label class="btn" for="fImg">Imagem de teste</label>
+      <input type="file" id="fImg" accept="image/*">
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="passo">2</span>Marque as estações</h2>
+    <p class="dica">Toque em "Marcar área" e arraste um retângulo sobre o trecho da estação, incluindo o lugar onde o prefixo do trem aparece. Dê um nome à área. Pode marcar várias.</p>
+    <div class="row">
+      <button class="btn" id="bMarcar" disabled>Marcar área</button>
+      <button class="btn" id="bFoto" disabled>Atualizar imagem</button>
+      <button class="btn" id="bLer" disabled>Ler agora</button>
+    </div>
+    <div class="tela" id="tela"><canvas id="cv" width="800" height="450"></canvas><div class="vazio" id="telaVazia">Escolha a fonte da imagem no passo 1.</div></div>
+    <video id="video" playsinline muted></video>
+    <div class="zonas" id="zonas"></div>
+  </section>
+</div>
+
+<div class="lado">
+  <section class="card">
+    <h2><span class="passo">3</span>Trens para avisar</h2>
+    <form class="row" id="fPref">
+      <input type="text" id="iPref" placeholder="Ex.: S120" maxlength="12" autocomplete="off">
+      <button class="btn pri">Adicionar</button>
+    </form>
+    <p class="dica">Basta o começo do prefixo. "S120" avisa para S120X288, S120M004 e assim por diante.</p>
+    <div class="trens" id="trens"></div>
+  </section>
+
+  <section class="card">
+    <h2><span class="passo">4</span>Vigiar</h2>
+    <div class="row">
+      <button class="btn go" id="bIniciar" disabled>Começar a vigiar</button>
+      <button class="btn stop" id="bParar" hidden>Parar</button>
+    </div>
+    <label class="cfg">Ler a cada <input type="range" id="rInt" min="1" max="10" step="1" value="2"> <b id="vInt">2 s</b></label>
+    <label class="cfg">Limiar do texto <input type="range" id="rLim" min="80" max="230" step="5" value="140"> <b id="vLim">140</b></label>
+    <p class="dica">Se o texto lido sair vazio ou com sujeira, mexa no limiar e toque em "Ler agora". Deixe esta janela aberta; ela pode ficar atrás do painel.</p>
+    <div class="aviso">É um aviso de apoio. Ele não substitui a comunicação com o CCO nem a proteção de quem está na via.</div>
+  </section>
+
+  <section class="card">
+    <h2>Registro</h2>
+    <div class="log" id="log"><p class="dica">Nenhum aviso ainda.</p></div>
+  </section>
+</div>
+</main>
+
+<div id="alerta" hidden><div class="box"><h3 id="aTit">S120</h3><p id="aMsg"></p><button class="btn" id="aOk">Ciente</button></div></div>
+
+<script src="lib/tesseract.min.js"></script>
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const LIB=new URL('lib/',location.href).href;
+const CHAVE='sinotico-v1';
+let cfg={zonas:[],prefixos:[],intervalo:2,limiar:140};
+try{Object.assign(cfg,JSON.parse(localStorage.getItem(CHAVE)||'{}'))}catch(e){}
+const salvar=()=>{try{localStorage.setItem(CHAVE,JSON.stringify(cfg))}catch(e){}};
+
+const cv=$('#cv'),cx=cv.getContext('2d',{willReadFrequently:true}),video=$('#video');
+let track=null,cap=null,imgFonte=null,frame=null,ocr=null,rodando=false,ocupado=false,ticker=null,marcando=false,perdas=0;
+const estadoTrem={}; // prefixo -> {onde,quando}
+const presenca={};   // prefixo|zona -> {hits,falta,avisado}
+
+/* ---------- fonte da imagem ---------- */
+async function ligarStream(stream){
+  pararStream();
+  track=stream.getVideoTracks()[0];
+  video.srcObject=stream;
+  await video.play().catch(()=>{});
+  cap=('ImageCapture' in window)?new ImageCapture(track):null;
+  track.addEventListener('ended',()=>{track=null;if(rodando)falha('A captura do painel foi encerrada.');estado()});
+  imgFonte=null;
+  await new Promise(r=>setTimeout(r,400));
+  await capturar();
+}
+function pararStream(){if(track){track.onended=null;track.stop();track=null}cap=null}
+$('#bTela').onclick=async()=>{
+  try{await ligarStream(await navigator.mediaDevices.getDisplayMedia({video:{frameRate:5,cursor:'never'},audio:false}))}
+  catch(e){if(e.name!=='NotAllowedError')alert('Não consegui capturar a tela: '+e.message)}
+};
+$('#bCam').onclick=async()=>{
+  try{await ligarStream(await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1920},height:{ideal:1080}},audio:false}))}
+  catch(e){alert('Não consegui abrir a câmera: '+e.message)}
+};
+$('#fImg').onchange=async e=>{
+  const f=e.target.files[0];if(!f)return;
+  pararStream();imgFonte=await createImageBitmap(f);e.target.value='';
+  await capturar();
+};
+
+async function pegarQuadro(){
+  let src=null,w=0,h=0,bm=null;
+  if(imgFonte){src=imgFonte;w=src.width;h=src.height}
+  else if(track&&track.readyState==='live'){
+    if(cap){try{bm=await cap.grabFrame();src=bm;w=bm.width;h=bm.height}catch(e){bm=null}}
+    if(!src&&video.videoWidth){src=video;w=video.videoWidth;h=video.videoHeight}
+  }
+  if(!src)return null;
+  const c=frame&&frame.width===w&&frame.height===h?frame:Object.assign(document.createElement('canvas'),{width:w,height:h});
+  c.getContext('2d',{willReadFrequently:true}).drawImage(src,0,0,w,h);
+  if(bm)bm.close();
+  frame=c;return c;
+}
+async function capturar(){
+  const f=await pegarQuadro();
+  if(!f)return null;
+  desenhar();
+  $('#telaVazia').hidden=true;
+  ['#bMarcar','#bFoto','#bLer'].forEach(s=>$(s).disabled=false);
+  estado();
+  return f;
+}
+
+/* ---------- desenho e marcação ---------- */
+let arrasto=null;
+function desenhar(){
+  if(!frame)return;
+  if(cv.width!==frame.width||cv.height!==frame.height){cv.width=frame.width;cv.height=frame.height}
+  cx.drawImage(frame,0,0);
+  const lw=Math.max(2,frame.width/400),fs=Math.max(14,frame.width/60);
+  cx.font=`700 ${fs}px system-ui,sans-serif`;
+  const caixas=cfg.zonas.map(z=>[z,'#FFC61A']);
+  if(arrasto)caixas.push([arrasto,'#00E5FF']);
+  for(const [z,cor] of caixas){
+    const x=z.x*cv.width,y=z.y*cv.height,w=z.w*cv.width,h=z.h*cv.height;
+    cx.lineWidth=lw;cx.strokeStyle=cor;cx.strokeRect(x,y,w,h);
+    if(z.nome){const tw=cx.measureText(z.nome).width+10;cx.fillStyle=cor;cx.fillRect(x,y-fs-6,tw,fs+6);cx.fillStyle='#141414';cx.fillText(z.nome,x+5,y-5)}
+  }
+}
+function pos(e){const r=cv.getBoundingClientRect();return{x:Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)),y:Math.min(1,Math.max(0,(e.clientY-r.top)/r.height))}}
+$('#bMarcar').onclick=()=>{marcando=!marcando;$('#bMarcar').classList.toggle('on',marcando);$('#bMarcar').textContent=marcando?'Arraste sobre a imagem…':'Marcar área';$('#tela').classList.toggle('marcando',marcando)};
+cv.addEventListener('pointerdown',e=>{if(!marcando||!frame)return;e.preventDefault();cv.setPointerCapture(e.pointerId);const p=pos(e);arrasto={x0:p.x,y0:p.y,x:p.x,y:p.y,w:0,h:0}});
+cv.addEventListener('pointermove',e=>{if(!arrasto)return;const p=pos(e);Object.assign(arrasto,{x:Math.min(p.x,arrasto.x0),y:Math.min(p.y,arrasto.y0),w:Math.abs(p.x-arrasto.x0),h:Math.abs(p.y-arrasto.y0)});desenhar()});
+cv.addEventListener('pointerup',()=>{
+  if(!arrasto)return;const a=arrasto;arrasto=null;
+  if(a.w>0.01&&a.h>0.01){
+    const nome=(prompt('Nome desta área (ex.: Barra Funda plat. 4):','Área '+(cfg.zonas.length+1))||'').trim();
+    if(nome){cfg.zonas.push({id:Date.now().toString(36),nome,x:a.x,y:a.y,w:a.w,h:a.h});salvar();listarZonas()}
+  }
+  $('#bMarcar').click();desenhar();
+});
+
+function listarZonas(){
+  const el=$('#zonas');el.innerHTML='';
+  cfg.zonas.forEach((z,i)=>{
+    const d=document.createElement('div');d.className='z';d.id='z-'+z.id;
+    d.innerHTML='<b></b><button class="btn mini">Apagar</button><div class="lido">Ainda não lido.</div>';
+    d.querySelector('b').textContent=z.nome;
+    d.querySelector('button').onclick=()=>{if(confirm('Apagar a área "'+z.nome+'"?')){cfg.zonas.splice(i,1);salvar();listarZonas();desenhar()}};
+    el.appendChild(d);
+  });
+  estado();
+}
+
+/* ---------- prefixos ---------- */
+$('#fPref').onsubmit=e=>{
+  e.preventDefault();
+  const v=$('#iPref').value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+  if(v.length<2)return;
+  if(!cfg.prefixos.includes(v))cfg.prefixos.push(v);
+  $('#iPref').value='';salvar();listarTrens();
+};
+function listarTrens(){
+  const el=$('#trens');el.innerHTML='';
+  if(!cfg.prefixos.length){el.innerHTML='<p class="dica">Nenhum trem na lista.</p>'}
+  cfg.prefixos.forEach((p,i)=>{
+    const s=estadoTrem[p],d=document.createElement('div');
+    d.className='t'+(s&&s.agora?' visto':'');
+    d.innerHTML='<b></b><span></span><button class="x" title="Remover">×</button>';
+    d.querySelector('b').textContent=p;
+    d.querySelector('span').textContent=s?(s.agora?'Agora em ':'Visto por último em ')+s.onde+' às '+s.quando:'Ainda não visto';
+    d.querySelector('button').onclick=()=>{cfg.prefixos.splice(i,1);delete estadoTrem[p];salvar();listarTrens()};
+    el.appendChild(d);
+  });
+  estado();
+}
+
+/* ---------- OCR ---------- */
+async function prepararOCR(){
+  if(ocr)return ocr;
+  estado('Carregando leitor…');
+  ocr=await Tesseract.createWorker('eng',1,{workerPath:LIB+'worker.min.js',corePath:LIB,langPath:LIB.replace(/\/$/,''),gzip:true});
+  await ocr.setParameters({tessedit_char_whitelist:'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',tessedit_pageseg_mode:'11'});
+  return ocr;
+}
+// recorta a área, amplia e deixa só o texto claro (prefixos são brancos ou cinza-claros)
+function preparar(z){
+  const W=frame.width,H=frame.height;
+  const sx=Math.round(z.x*W),sy=Math.round(z.y*H),sw=Math.max(4,Math.round(z.w*W)),sh=Math.max(4,Math.round(z.h*H));
+  const esc=Math.min(Math.max(3,Math.min(7,260/sh)),Math.max(1,3600/sw));
+  const w=Math.round(sw*esc),h=Math.round(sh*esc),pad=24;
+  const c=document.createElement('canvas');c.width=w;c.height=h;
+  const g=c.getContext('2d',{willReadFrequently:true});g.imageSmoothingQuality='high';
+  g.drawImage(frame,sx,sy,sw,sh,0,0,w,h);
+  const im=g.getImageData(0,0,w,h),d=im.data,m=new Uint8Array(w*h),L=cfg.limiar;
+  for(let i=0,p=0;p<w*h;i+=4,p++){
+    const r=d[i],gg=d[i+1],b=d[i+2],mn=Math.min(r,gg,b),mx=Math.max(r,gg,b);
+    m[p]=(mn>=L&&mx-mn<70)?1:0;
+  }
+  // apaga traços longos (trilhos e bordas), que não são letras
+  const lim=Math.round(16*esc);
+  for(let y=0;y<h;y++){let ini=-1;for(let x=0;x<=w;x++){const v=x<w&&m[y*w+x];if(v&&ini<0)ini=x;else if(!v&&ini>=0){if(x-ini>lim)for(let k=ini;k<x;k++)m[y*w+k]=2;ini=-1}}}
+  const limV=Math.round(24*esc);
+  for(let x=0;x<w;x++){let ini=-1;for(let y=0;y<=h;y++){const v=y<h&&m[y*w+x];if(v&&ini<0)ini=y;else if(!v&&ini>=0){if(y-ini>limV)for(let k=ini;k<y;k++)m[k*w+x]=2;ini=-1}}}
+  const o=document.createElement('canvas');o.width=w+pad*2;o.height=h+pad*2;
+  const og=o.getContext('2d');og.fillStyle='#fff';og.fillRect(0,0,o.width,o.height);
+  const oi=og.getImageData(pad,pad,w,h),od=oi.data;
+  for(let p=0;p<w*h;p++){const v=m[p]===1?0:255;od[p*4]=od[p*4+1]=od[p*4+2]=v;od[p*4+3]=255}
+  og.putImageData(oi,pad,pad);
+  return o;
+}
+// letras que o leitor confunde com números viram a mesma coisa dos dois lados
+const PARES={O:'0',D:'0',Q:'0',I:'1',L:'1',J:'1',Z:'2',S:'5',B:'8',G:'6'};
+const canon=s=>s.toUpperCase().replace(/[^A-Z0-9]/g,'').replace(/[ODQILJZSBG]/g,c=>PARES[c]);
+
+async function lerZonas(){
+  if(!frame||!cfg.zonas.length)return [];
+  const w=await prepararOCR(),res=[];
+  for(const z of cfg.zonas){
+    const img=preparar(z);
+    const {data}=await w.recognize(img);
+    const linhas=(data.text||'').split('\n').map(s=>s.trim()).filter(Boolean);
+    res.push({z,linhas,img});
+    const el=$('#z-'+z.id);
+    if(el){
+      el.querySelector('.lido').textContent='Lido: '+(linhas.join(' · ')||'(nada)');
+      let pv=el.querySelector('img');if(!pv){pv=document.createElement('img');pv.alt='O que o leitor vê';el.appendChild(pv)}
+      pv.src=img.toDataURL();
+    }
+  }
+  return res;
+}
+
+/* ---------- ciclo de vigia ---------- */
+function hora(){return new Date().toLocaleTimeString('pt-BR')}
+async function ciclo(){
+  if(ocupado||!rodando)return;
+  ocupado=true;
+  try{
+    const f=imgFonte?frame:await pegarQuadro();
+    if(!f){perdas++;if(perdas===3)falha('Perdi a imagem do painel.');return}
+    // tela preta = captura perdida
+    const t=f.getContext('2d').getImageData(0,0,f.width,f.height).data;let soma=0,n=0;
+    for(let i=0;i<t.length;i+=4*97){soma+=t[i]+t[i+1]+t[i+2];n++}
+    if(soma/n<6){perdas++;if(perdas===3)falha('A imagem do painel ficou preta.');return}
+    perdas=0;
+    if(!document.hidden)desenhar();
+    const res=await lerZonas();
+    for(const p of cfg.prefixos){
+      const cp=canon(p);
+      for(const {z,linhas} of res){
+        const k=p+'|'+z.id,s=presenca[k]||(presenca[k]={hits:0,falta:0,avisado:false});
+        const achou=linhas.some(l=>canon(l).includes(cp));
+        if(achou){
+          s.hits++;s.falta=0;
+          estadoTrem[p]={onde:z.nome,quando:hora().slice(0,5),agora:true};
+          if(s.hits>=2&&!s.avisado){s.avisado=true;avisar(p,z.nome)}
+        }else{
+          s.hits=0;s.falta++;
+          if(s.avisado&&s.falta>=3){s.avisado=false;registrar(p+' saiu de '+z.nome);if(estadoTrem[p]&&estadoTrem[p].onde===z.nome)estadoTrem[p].agora=false}
+        }
+      }
+    }
+    listarTrens();
+  }catch(e){console.error(e);estado('Erro: '+e.message,true)}
+  finally{ocupado=false}
+}
+
+// relógio num worker: aba em segundo plano não fica lenta
+function iniciarRelogio(){
+  pararRelogio();
+  const src=`let t;onmessage=e=>{clearInterval(t);if(e.data>0)t=setInterval(()=>postMessage(1),e.data)}`;
+  ticker=new Worker(URL.createObjectURL(new Blob([src],{type:'text/javascript'})));
+  ticker.onmessage=ciclo;ticker.postMessage(cfg.intervalo*1000);
+}
+function pararRelogio(){if(ticker){ticker.terminate();ticker=null}}
+
+let wake=null;
+$('#bIniciar').onclick=async()=>{
+  somCtx();
+  if('Notification' in window&&Notification.permission==='default')Notification.requestPermission().catch(()=>{});
+  try{await prepararOCR()}catch(e){estado('Não carregou o leitor: '+e.message,true);return}
+  rodando=true;perdas=0;
+  try{wake=await navigator.wakeLock.request('screen')}catch(e){}
+  $('#bIniciar').hidden=true;$('#bParar').hidden=false;
+  iniciarRelogio();estado();ciclo();
+};
+$('#bParar').onclick=()=>{
+  rodando=false;pararRelogio();if(wake){wake.release().catch(()=>{});wake=null}
+  $('#bIniciar').hidden=false;$('#bParar').hidden=true;estado();
+};
+document.addEventListener('visibilitychange',async()=>{if(rodando&&!document.hidden&&!wake){try{wake=await navigator.wakeLock.request('screen')}catch(e){}}});
+$('#bFoto').onclick=capturar;
+$('#bLer').onclick=async()=>{
+  if(!imgFonte)await pegarQuadro();
+  desenhar();$('#bLer').disabled=true;
+  try{await lerZonas();estado()}catch(e){estado('Erro: '+e.message,true)}
+  $('#bLer').disabled=false;
+};
+
+/* ---------- avisos ---------- */
+let actx=null,repete=null;
+function somCtx(){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();actx.resume()}catch(e){}}
+function bip(grave){
+  if(!actx)return;const t0=actx.currentTime;
+  for(let i=0;i<3;i++){const o=actx.createOscillator(),g=actx.createGain();o.type='square';o.frequency.value=grave?440:880;
+    g.gain.setValueAtTime(0.0001,t0+i*0.35);g.gain.exponentialRampToValueAtTime(0.25,t0+i*0.35+0.02);g.gain.exponentialRampToValueAtTime(0.0001,t0+i*0.35+0.25);
+    o.connect(g).connect(actx.destination);o.start(t0+i*0.35);o.stop(t0+i*0.35+0.3)}
+}
+function falar(txt){try{const u=new SpeechSynthesisUtterance(txt);u.lang='pt-BR';speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
+function mostrar(tit,msg,isFalha){
+  $('#aTit').textContent=tit;$('#aMsg').textContent=msg;
+  $('#alerta').classList.toggle('f',!!isFalha);$('#alerta').hidden=false;
+  bip(isFalha);clearInterval(repete);let n=0;
+  repete=setInterval(()=>{if(++n>6||$('#alerta').hidden){clearInterval(repete);return}bip(isFalha)},5000);
+  try{navigator.vibrate&&navigator.vibrate([400,200,400])}catch(e){}
+  try{if('Notification' in window&&Notification.permission==='granted')new Notification(tit,{body:msg,icon:'../icon-192.png',requireInteraction:true,tag:tit+msg})}catch(e){}
+}
+$('#aOk').onclick=()=>{$('#alerta').hidden=true;clearInterval(repete)};
+function avisar(p,onde){
+  const msg='Trem '+p+' em '+onde+' às '+hora().slice(0,5);
+  registrar(msg);mostrar(p,'em '+onde);falar('Atenção. Trem '+p.split('').join(' ')+' em '+onde);
+}
+function falha(msg){registrar(msg,true);mostrar('Sem imagem',msg,true);falar(msg);estado()}
+function registrar(msg,isFalha){
+  const el=$('#log');if(el.querySelector('p'))el.innerHTML='';
+  const d=document.createElement('div');if(isFalha)d.className='f';
+  d.innerHTML='<time></time><span></span>';d.querySelector('time').textContent=hora();d.querySelector('span').textContent=msg;
+  el.prepend(d);while(el.children.length>60)el.lastChild.remove();
+}
+
+/* ---------- estado e ajustes ---------- */
+function estado(txt,erro){
+  const e=$('#estado');
+  const pronto=!!frame&&cfg.zonas.length>0&&cfg.prefixos.length>0;
+  $('#bIniciar').disabled=!pronto;
+  if(txt){e.textContent=txt;e.className='est'+(erro?' err':'');return}
+  if(rodando&&!imgFonte&&!track){e.textContent='Sem imagem';e.className='est err';return}
+  e.textContent=rodando?'Vigiando':'Parado';e.className='est'+(rodando?' on':'');
+}
+$('#rInt').value=cfg.intervalo;$('#vInt').textContent=cfg.intervalo+' s';
+$('#rLim').value=cfg.limiar;$('#vLim').textContent=cfg.limiar;
+$('#rInt').oninput=e=>{cfg.intervalo=+e.target.value;$('#vInt').textContent=cfg.intervalo+' s';salvar();if(ticker)ticker.postMessage(cfg.intervalo*1000)};
+$('#rLim').oninput=e=>{cfg.limiar=+e.target.value;$('#vLim').textContent=cfg.limiar;salvar()};
+listarZonas();listarTrens();
+</script>
+</body>
+</html>
