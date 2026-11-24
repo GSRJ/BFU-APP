@@ -65,3 +65,8 @@ moldes do ALERTA TREM (aviso na tela, bipe, voz, notificação, janela fixada, t
 observações por viagem. A tabela do site (Linha 11, BFU a EST) fica em sso/estimativa-trem/tempos.js, um trecho por linha
 ("estação; estação; minutos", vale nos dois sentidos); viagens longas somam os trechos do caminho. Quem editar
 Ela é sempre a tabela usada; a página não aceita outra. A imagem da matriz, fonte dos tempos, está em sso/estimativa-trem/fonte-linha11.jpg e aparece na página.
+
+Atualização 24/11 (FALAR COM ESTAÇÃO): terceira ferramenta do ApoioSSO, em sso/falar-estacao/. Lista as estações das
+Linhas 11-Coral, 12-Safira e 13-Jade na ordem da linha, como no mapa, cada linha com a sua cor. Tocar na estação abre a
+conversa no WhatsApp. O número não aparece na tela: ele fica na lista EST do próprio arquivo e só entra no link na hora do
+toque. Para trocar um telefone, edite a lista EST (DDD + número, só dígitos).
