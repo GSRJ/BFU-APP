@@ -73,3 +73,6 @@ toque. Para trocar um telefone, edite a lista EST (DDD + número, só dígitos).
 
 Atualização 24/11 (botão do ApoioSSO): a tela inicial voltou a ter o botão ApoioSSO, que leva a /sso. Ele abre como
 página própria, fora do quadro da tela inicial, porque o Alerta trem só consegue fixar o aviso na tela fora do quadro.
+
+Atualização 24/11 (Apoio SSO aberto): o Apoio SSO não pede mais matrícula. O botão da tela inicial e o endereço /sso
+abrem direto o menu de ferramentas, e o arquivo sso/acesso.js saiu. As páginas continuam com noindex, fora dos buscadores.
