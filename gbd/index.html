@@ -510,10 +510,16 @@ function montarMapa(box,dd,k){
   const salvar=()=>arqs.forEach((f,i)=>setTimeout(()=>{const u=URL.createObjectURL(f),a=document.createElement('a');a.href=u;a.download=f.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000)},i*400));
   bb.disabled=false;bb.onclick=salvar;
   bw.disabled=false;bw.onclick=async()=>{
-   if(navigator.canShare&&navigator.canShare({files:arqs})){
-    try{await navigator.share({files:arqs});return}catch(e){if(e&&e.name==='AbortError')return}
+   /* a foto vai com o texto do GBD como legenda */
+   const copia=async()=>{try{await navigator.clipboard.writeText(dd.txt);return true}catch(_){return false}};
+   if(navigator.canShare&&navigator.canShare({files:arqs,text:dd.txt})){
+    try{await navigator.share({files:arqs,text:dd.txt});return}catch(e){if(e&&e.name==='AbortError')return}
    }
-   salvar();toast('Imagem salva. Anexe no WhatsApp.');
+   if(navigator.canShare&&navigator.canShare({files:arqs})){
+    const ok=await copia();
+    try{await navigator.share({files:arqs});if(ok)toast('Texto do GBD copiado: cole como legenda.');return}catch(e){if(e&&e.name==='AbortError')return}
+   }
+   salvar();toast((await copia())?'Imagem salva e texto copiado. Anexe e cole como legenda.':'Imagem salva. Anexe no WhatsApp.');
   };
  }).catch(()=>{if(vez===MAPA_VEZ)cb.innerHTML='<div class="esp">Não foi possível montar a imagem.</div>'});
 }
