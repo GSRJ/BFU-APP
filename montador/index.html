@@ -193,13 +193,12 @@ code.k{font:12.5px var(--mono);background:var(--bg3);padding:1px 5px;border-radi
     <div class="tblwrap"><table id="tPostos"></table></div>
     <div class="card" style="margin-top:16px">
       <h3>Prioridade dos postos</h3>
-      <p class="hint">Quando falta gente, caem os postos de baixo. A SSO é sempre a primeira. Desmarque um posto para não escalar ninguém nele. A Linha de Bloqueio (ou os Cartões) continua garantida com duas pessoas ou mais.</p>
+      <p class="hint">Quando falta gente, caem os postos de baixo. A SSO é sempre a primeira. Desmarque um posto para não escalar ninguém nele. Cada mudança já refaz o ciclo a partir da data escolhida. A Linha de Bloqueio (ou os Cartões) continua garantida com duas pessoas ou mais.</p>
       <div class="form">
         <div class="f"><label>A partir de</label><input type="date" id="prioDe"></div>
       </div>
       <div class="grid2" id="prioBox"></div>
       <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
-        <button class="btn pri" id="prioSalvar">Salvar prioridade</button>
         <button class="btn" id="prioPadrao">Voltar ao padrão</button>
       </div>
       <div class="list" id="prioList"></div>
@@ -1688,14 +1687,14 @@ function desenharPrio(){
    const it=el('div','item');
    const o=el('div');o.style.cssText='display:flex;gap:4px';
    if(ativo){
-    const up=el('button','btn sm','↑');up.onclick=()=>{if(pos>0){[lista[pos-1],lista[pos]]=[lista[pos],lista[pos-1]];desenharPrio()}};
-    const dn=el('button','btn sm','↓');dn.onclick=()=>{if(pos<lista.length-1){[lista[pos+1],lista[pos]]=[lista[pos],lista[pos+1]];desenharPrio()}};
+    const up=el('button','btn sm','↑');up.onclick=()=>{if(pos>0){[lista[pos-1],lista[pos]]=[lista[pos],lista[pos-1]];salvarPrio()}};
+    const dn=el('button','btn sm','↓');dn.onclick=()=>{if(pos<lista.length-1){[lista[pos+1],lista[pos]]=[lista[pos],lista[pos+1]];salvarPrio()}};
     o.append(up,dn);
    }
    it.appendChild(o);
    it.appendChild(el('strong',null,ativo?`${pos+2}º ${POSTOS[p].ico} ${POSTOS[p].rot}`:`${POSTOS[p].ico} ${POSTOS[p].rot}`));
    const cb=el('input');cb.type='checkbox';cb.checked=ativo;cb.style.width='auto';cb.title=ativo?'Tirar do GBD':'Colocar no GBD';
-   cb.onchange=()=>{if(ativo)lista.splice(pos,1);else lista.push(p);desenharPrio()};
+   cb.onchange=()=>{if(ativo){if(lista.length<2){cb.checked=true;return toast('Deixe pelo menos um posto além da SSO')}lista.splice(pos,1)}else lista.push(p);salvarPrio()};
    it.appendChild(cb);
    if(!ativo)it.style.opacity='.55';
    L.appendChild(it);
@@ -1736,19 +1735,20 @@ function desenharNomes(){
   it.appendChild(pane);B.appendChild(it);
  });
 }
-$('#prioSalvar').onclick=()=>{
- const k=$('#prioDe').value;if(!k)return toast('Informe a data');
- if(confirmado(k))return toast('Esse dia já está confirmado. Escolha um dia ainda previsto.');
- if(!PRIO_ED.util.length||!PRIO_ED.fer.length)return toast('Deixe pelo menos um posto além da SSO');
+/* cada mudança grava na hora e refaz o ciclo a partir do domingo da data escolhida */
+function salvarPrio(){
+ const k=$('#prioDe').value;
+ if(!k){carregarPrioEd();return toast('Informe a data')}
+ if(confirmado(k)){carregarPrioEd();return toast('Esse dia já está confirmado. Escolha um dia ainda previsto.')}
  S.prios=(S.prios||[]).filter(p=>p.de!==k);S.prios.push({de:k,util:PRIO_ED.util.slice(),fer:PRIO_ED.fer.slice()});
- salvar();limparCache(k);renderTudo();desenharPrio();toast('Prioridade salva a partir de '+br(k));
-};
+ salvar();limparCache(domingoDe(k));renderTudo();desenharPrio();toast('Ciclo refeito com a nova prioridade a partir de '+br(k));
+}
 $('#prioPadrao').onclick=()=>{
  const k=$('#prioDe').value;if(!k)return toast('Informe a data');
  if(confirmado(k))return toast('Esse dia já está confirmado. Escolha um dia ainda previsto.');
  const antes=(S.prios||[]).filter(p=>p.de<k);
  S.prios=antes.length?[...antes,{de:k,util:prioPadrao(refPrio(k,false)).filter(p=>p!=='SSO'),fer:prioPadrao(refPrio(k,true)).filter(p=>p!=='SSO')}]:[];
- salvar();limparCache(k);renderTudo();carregarPrioEd();toast('Prioridade padrão a partir de '+br(k));
+ salvar();limparCache(domingoDe(k));renderTudo();carregarPrioEd();toast('Prioridade padrão a partir de '+br(k));
 };
 $('#ferAdd').onclick=()=>{
  const k=$('#ferDia').value,n=$('#ferNome').value.trim()||'Feriado';
