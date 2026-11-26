@@ -184,6 +184,19 @@ code.k{font:12.5px var(--mono);background:var(--bg3);padding:1px 5px;border-radi
     </div>
     <div class="tblwrap"><table id="tPostos"></table></div>
     <div class="card" style="margin-top:16px">
+      <h3>Prioridade dos postos</h3>
+      <p class="hint">Quando falta gente, caem os postos de baixo. A SSO é sempre a primeira. Desmarque um posto para não escalar ninguém nele. A Linha de Bloqueio (ou os Cartões) continua garantida com duas pessoas ou mais.</p>
+      <div class="form">
+        <div class="f"><label>A partir de</label><input type="date" id="prioDe"></div>
+      </div>
+      <div class="grid2" id="prioBox"></div>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+        <button class="btn pri" id="prioSalvar">Salvar prioridade</button>
+        <button class="btn" id="prioPadrao">Voltar ao padrão</button>
+      </div>
+      <div class="list" id="prioList"></div>
+    </div>
+    <div class="card" style="margin-top:16px">
       <h3>Resumo do ciclo</h3>
       <p class="hint">Quantas vezes cada agente passou por cada posto.</p>
       <div class="tblwrap"><table id="tResumo"></table></div>
@@ -563,7 +576,15 @@ function ultimoSSO(id,k){
 }
 
 /* ----- prioridade dos postos no dia ----- */
+/* prioridade definida no app: S.prios=[{de,util:[...],fer:[...]}], vale a última com data até o dia.
+   Sem nenhuma: a ordem padrão abaixo. A SSO é sempre a primeira. */
+function prioDefinida(k){let r=null;for(const p of (S.prios||[]).slice().sort((a,b)=>a.de<b.de?-1:1))if(p.de<=k)r=p;return r}
 function prioridade(k){
+ const def=prioDefinida(k);
+ if(def){const l=(domOuFer(k)?def.fer:def.util).filter(p=>POSTOS[p]&&p!=='SSO');return ['SSO',...l]}
+ return prioPadrao(k);
+}
+function prioPadrao(k){
  const cart=k>=CARTOES_DESDE;
  /* a Linha de Bloqueio vem antes das Plataformas */
  if(domOuFer(k)) return cart?['SSO','CARTOES','RONDA','LB','PLAT','APOIO']:['SSO','RONDA','LB','PLAT','APOIO'];
@@ -1041,7 +1062,7 @@ function textoGBD(k){
  L.push('━━━━━━━━━━━━━━');
  L.push('📍 *POSTOS*');
  L.push('━━━━━━━━━━━━━━');
- for(const p of ORDEM){
+ for(const p of [...prioridade(k),...ORDEM].filter((v,i,a)=>a.indexOf(v)===i)){
   const ids=d.postos[p];if(!ids||!ids.length)continue;
   if(p==='SSO'&&emExame(ids[0],k)){
    const c=d.ssoCobre,m=motivoParcial(ids[0],k);
@@ -1627,6 +1648,66 @@ function renderPausa(){
  });
 }
 $('#pausaDe').onchange=renderPausa;
+/* ---- prioridade dos postos ---- */
+let PRIO_ED=null;
+function prioDoDia(k,fer){
+ const def=prioDefinida(k);
+ if(def)return (fer?def.fer:def.util).slice();
+ return prioPadrao(refPrio(k,fer)).filter(p=>p!=='SSO');
+}
+/* dia de referência para a ordem padrão: o primeiro dia útil (ou o primeiro domingo) a partir da data */
+function refPrio(k,fer){let q=k;for(let i=0;i<14;i++){if(fer?dow(q)===0:!domOuFer(q))return q;q=addD(q,1)}return k}
+function carregarPrioEd(){const k=$('#prioDe').value||hojeK();PRIO_ED={util:prioDoDia(k,false).filter(p=>p!=='SSO'),fer:prioDoDia(k,true).filter(p=>p!=='SSO')};desenharPrio()}
+function desenharPrio(){
+ const B=$('#prioBox');B.innerHTML='';
+ [['util','Dias úteis e sábados'],['fer','Domingos e feriados']].forEach(([ch,tit])=>{
+  const c=el('div');c.appendChild(el('h4',null,tit));
+  const L=el('div','list');
+  const lista=PRIO_ED[ch],fora=ORDEM.filter(p=>p!=='SSO'&&!lista.includes(p));
+  const linha=(p,pos,ativo)=>{
+   const it=el('div','item');
+   const o=el('div');o.style.cssText='display:flex;gap:4px';
+   if(ativo){
+    const up=el('button','btn sm','↑');up.onclick=()=>{if(pos>0){[lista[pos-1],lista[pos]]=[lista[pos],lista[pos-1]];desenharPrio()}};
+    const dn=el('button','btn sm','↓');dn.onclick=()=>{if(pos<lista.length-1){[lista[pos+1],lista[pos]]=[lista[pos],lista[pos+1]];desenharPrio()}};
+    o.append(up,dn);
+   }
+   it.appendChild(o);
+   it.appendChild(el('strong',null,ativo?`${pos+2}º ${POSTOS[p].ico} ${POSTOS[p].rot}`:`${POSTOS[p].ico} ${POSTOS[p].rot}`));
+   const cb=el('input');cb.type='checkbox';cb.checked=ativo;cb.style.width='auto';cb.title=ativo?'Tirar do GBD':'Colocar no GBD';
+   cb.onchange=()=>{if(ativo)lista.splice(pos,1);else lista.push(p);desenharPrio()};
+   it.appendChild(cb);
+   if(!ativo)it.style.opacity='.55';
+   L.appendChild(it);
+  };
+  const s0=el('div','item');s0.appendChild(el('strong',null,`1º ${POSTOS.SSO.ico} SSO`));L.appendChild(s0);
+  lista.forEach((p,i)=>linha(p,i,true));
+  fora.forEach(p=>linha(p,-1,false));
+  c.appendChild(L);B.appendChild(c);
+ });
+ const LL=$('#prioList');LL.innerHTML='';
+ (S.prios||[]).slice().sort((a,b)=>a.de<b.de?-1:1).forEach(p=>{
+  const it=el('div','item');it.appendChild(el('strong',null,br(p.de)));
+  it.appendChild(el('span',null,`úteis: ${['SSO',...p.util].map(x=>POSTOS[x].ab).join(' › ')} · dom/fer: ${['SSO',...p.fer].map(x=>POSTOS[x].ab).join(' › ')}`));
+  if(!confirmado(p.de)){const x=el('button','btn sm danger x','Remover');x.onclick=()=>{S.prios=S.prios.filter(q=>q!==p);salvar();limparCache(p.de);renderTudo();carregarPrioEd()};it.appendChild(x)}
+  LL.appendChild(it);
+ });
+}
+$('#prioDe').onchange=carregarPrioEd;
+$('#prioSalvar').onclick=()=>{
+ const k=$('#prioDe').value;if(!k)return toast('Informe a data');
+ if(confirmado(k))return toast('Esse dia já está confirmado. Escolha um dia ainda previsto.');
+ if(!PRIO_ED.util.length||!PRIO_ED.fer.length)return toast('Deixe pelo menos um posto além da SSO');
+ S.prios=(S.prios||[]).filter(p=>p.de!==k);S.prios.push({de:k,util:PRIO_ED.util.slice(),fer:PRIO_ED.fer.slice()});
+ salvar();limparCache(k);renderTudo();desenharPrio();toast('Prioridade salva a partir de '+br(k));
+};
+$('#prioPadrao').onclick=()=>{
+ const k=$('#prioDe').value;if(!k)return toast('Informe a data');
+ if(confirmado(k))return toast('Esse dia já está confirmado. Escolha um dia ainda previsto.');
+ const antes=(S.prios||[]).filter(p=>p.de<k);
+ S.prios=antes.length?[...antes,{de:k,util:prioPadrao(refPrio(k,false)).filter(p=>p!=='SSO'),fer:prioPadrao(refPrio(k,true)).filter(p=>p!=='SSO')}]:[];
+ salvar();limparCache(k);renderTudo();carregarPrioEd();toast('Prioridade padrão a partir de '+br(k));
+};
 $('#ferAdd').onclick=()=>{
  const k=$('#ferDia').value,n=$('#ferNome').value.trim()||'Feriado';
  if(!k)return toast('Informe a data');
@@ -1791,7 +1872,7 @@ function renderTudo(){renderFoco();renderCiclo();renderPostos();renderAus();rend
 Object.entries(FORMATOS).forEach(([k,v])=>$('#regFmt').appendChild(new Option(v.rot,k)));
 $('#calDe').value='2026-11';$('#calAte').value='2028-12';
 $('#calDe').onchange=renderCal;$('#calAte').onchange=renderCal;
-$('#ausDe').value=hojeK();$('#exDia').value=hojeK();$('#regDe').value=hojeK();$('#ferDia').value=hojeK();$('#pausaDe').value=confirmado(hojeK())?addD(hojeK(),1):hojeK();renderPausa();
+$('#ausDe').value=hojeK();$('#exDia').value=hojeK();$('#regDe').value=hojeK();$('#ferDia').value=hojeK();$('#pausaDe').value=confirmado(hojeK())?addD(hojeK(),1):hojeK();renderPausa();$('#prioDe').value=$('#pausaDe').value;carregarPrioEd();
 renderTudo();
 sincronizarAoAbrir();
 </script>
