@@ -24,7 +24,7 @@ body{background:var(--bg);color:var(--k);font:500 16px/1.4 var(--f);min-height:1
 .hero p{margin:8px 0 0;color:var(--mt);font-size:16px}
 main{flex:1;padding-bottom:40px}
 .grade{display:grid;gap:14px;margin-top:18px}
-@media(min-width:720px){.grade{grid-template-columns:repeat(3,1fr);gap:18px}.hero{padding-top:44px}.hero h1{font-size:44px}}
+@media(min-width:720px){.grade{grid-template-columns:repeat(2,1fr);gap:18px}.hero{padding-top:44px}.hero h1{font-size:44px}}
 .card{position:relative;display:flex;flex-direction:column;gap:12px;text-decoration:none;color:var(--k);background:#fff;border:2px solid var(--ln);border-radius:18px;padding:22px 20px 20px;overflow:hidden;transition:transform .15s,box-shadow .15s,border-color .15s}
 .card::before{content:"";position:absolute;left:0;right:0;top:0;height:6px;background:var(--c)}
 .card:hover{transform:translateY(-3px);border-color:var(--c);box-shadow:0 12px 28px rgba(20,20,20,.12)}
@@ -69,6 +69,11 @@ main{flex:1;padding-bottom:40px}
     <a class="card" href="estimativa-trem/index.html" style="--c:#0B7A75">
       <div class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9.5 2.5h5"/></svg></div>
       <div class="tx"><h2>Estimativa de trem</h2><p>Avisa 5, 10 ou 15 minutos antes de o trem chegar, pela tabela de tempos.</p></div>
+      <div class="pe"><span class="tag">Celular e PC</span><span class="abrir">Abrir</span></div>
+    </a>
+    <a class="card" href="embarque/index.html" style="--c:#7B3FBF">
+      <div class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2"/><path d="M12 8v6M9 21l3-7 3 7M8 11h8"/></svg></div>
+      <div class="tx"><h2>Aviso de embarque</h2><p>Monta a mensagem do embarque e envia no WhatsApp da estação de desembarque. Fica registrado.</p></div>
       <div class="pe"><span class="tag">Celular e PC</span><span class="abrir">Abrir</span></div>
     </a>
     <a class="card" href="alerta-trem/index.html" style="--c:#E64A19">
