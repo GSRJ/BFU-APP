@@ -401,8 +401,12 @@ function slotsPausa(dur,n,cab){
  return Array.from({length:q},(_,i)=>hm(900+i*dur));
 }
 const JANTA_3=['18h–19h','19h–20h','20h–21h'];
-const JANTA_4=['17h–18h','18h–19h','19h–20h','20h–21h'];
-const JICO={'17h–18h':'🕔','18h–19h':'🕕','19h–20h':'🕖','20h–21h':'🕗'};
+const JANTA_4=['17h–18h','18h–19h','19h–20h','20h–21h','21h–22h'];
+const JICO={'17h–18h':'🕔','18h–19h':'🕕','19h–20h':'🕖','20h–21h':'🕗','21h–22h':'🕘'};
+/* a partir de 26/11: intervalo de 18h às 22h, com mais gente às 20h, depois às 21h, depois 19h e 18h */
+const JANTA_TARDE_DESDE='2026-11-26';
+const JANTA_5=['18h–19h','19h–20h','20h–21h','21h–22h'];
+const ultimoTurno=k=>k>=JANTA_TARDE_DESDE?'21h–22h':'20h–21h';
 
 /* ---- histórico realizado (nov/2026, do historico_GBD.md) ---- */
 const REALIZADO={
@@ -837,7 +841,7 @@ function manualValido(k,man){
  for(const id of disp.filter(id=>emExame(id,k))){
   for(const p of ORDEM)if(p!=='SSO'&&p!=='LB'&&(man.p[p]||[]).includes(id))return false;
   if(man.c&&man.c[id])return false;
-  if(man.j&&man.j[id]&&man.j[id]!=='20h–21h')return false;
+  if(man.j&&man.j[id]&&man.j[id]!==ultimoTurno(k))return false;
  }
  return true;
 }
@@ -1002,7 +1006,7 @@ function montarCafe(k,disp,postos,ctx){
 /* ----- pausa e intervalo com ausência parcial -----
    os demais AAS são distribuídos como se quem tem ausência parcial não estivesse:
    a cobertura mínima conta só com eles. Quem tem ausência parcial não entra na pausa
-   (não vai estar) e faz o intervalo junto com os outros ausentes no último turno (20h–21h). */
+   (não vai estar) e faz o intervalo junto com os outros ausentes no último turno. */
 function intervalos(k,disp,postos,aslOk,ctx,cobre){
  const parc=disp.filter(id=>emExame(id,k)),pres=disp.filter(id=>!emExame(id,k));
  if(!parc.length){const c=montarCafe(k,disp,postos,ctx);return {cafe:c,janta:montarJanta(k,disp,postos,aslOk,ctx,c)}}
@@ -1018,7 +1022,7 @@ function intervalos(k,disp,postos,aslOk,ctx,cobre){
   return mapa;
  };
  const cs=[...new Set(Object.values(cafe))].sort();
- for(const id of parc)janta[id]='20h–21h';   /* quem tem ausência parcial: sem pausa, intervalo juntos no último turno */
+ for(const id of parc)janta[id]=ultimoTurno(k);   /* quem tem ausência parcial: sem pausa, intervalo juntos no último turno */
  return {cafe,janta};
 }
 /* ----- janta ----- */
@@ -1039,6 +1043,14 @@ function montarJanta(k,disp,postos,comAsl,ctx,cafe){
   if(g18.length&&g18.every(id=>ontem18.has(id)))s+=30;
   return s;
  };
+ if(k>=JANTA_TARDE_DESDE){
+  /* enche 20h até o limite (sempre 3 AAS trabalhando), depois 21h, depois 19h e 18h */
+  const cab=Math.max(1,n-3),caps=[0,0,0,0];let r=n;
+  for(const i of [2,3,1,0]){const q=Math.min(cab,r);caps[i]=q;r-=q;}
+  for(let i=2;r>0;i=(i+1)%4){caps[i]++;r--}
+  const exp=[];JANTA_5.forEach((t,i)=>{for(let j=0;j<caps[i];j++)exp.push(t)});
+  return ordenarJanta(disp,exp,cafe,penal);
+ }
  /* quantos saem em cada turno: mais gente trabalhando às 18h e 19h */
  let caps;
  if(n<=3)caps=Array.from({length:3},(_,i)=>i<n?1:0);
@@ -1048,6 +1060,9 @@ function montarJanta(k,disp,postos,comAsl,ctx,cafe){
  let falta=n-caps.reduce((a,b)=>a+b,0);
  for(let i=caps.length-1;falta>0;i=(i+caps.length-1)%caps.length){caps[i]++;falta--}
  const exp=[];JANTA_3.forEach((t,i)=>{for(let j=0;j<caps[i];j++)exp.push(t)});
+ return ordenarJanta(disp,exp,cafe,penal);
+}
+function ordenarJanta(disp,exp,cafe,penal){
  /* ordem da pausa; quem pausou no mesmo horário pode trocar entre si */
  const hc=id=>(cafe&&cafe[id])||'99h99';
  const grupos=[];disp.slice().sort((a,b)=>hc(a)<hc(b)?-1:hc(a)>hc(b)?1:0).forEach(id=>{
