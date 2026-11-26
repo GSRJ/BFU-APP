@@ -89,6 +89,7 @@ h2{margin:0;font-size:19px;font-weight:800}
 const $=s=>document.querySelector(s);
 /* telefones e ordem das estações: os mesmos de "Falar com estação" */
 const EST={
+  BFU:['BFU','Palmeiras-Barra Funda','11926885833'],
   LUZ:['LUZ','Luz','11926824593'],
   BRA:['BRÁ','Brás','11926950365'],
   TAT:['TAT','Tatuapé','11926809431'],
@@ -120,9 +121,9 @@ const EST={
 };
 // Ordem das estações em cada linha (sentido centro → ponta).
 const LINHAS=[
-  {n:'11',nome:'CORAL',rota:'Luz ↔ Estudantes',est:['LUZ','BRA','TAT','CIT','DOB','JBO','GUA','AGN','FVC','POA','CVN','SUZ','JPB','BCB','MDC','EST']},
+  {n:'11',nome:'CORAL',rota:'Palmeiras-Barra Funda ↔ Estudantes',est:['BFU','LUZ','BRA','TAT','CIT','DOB','JBO','GUA','AGN','FVC','POA','CVN','SUZ','JPB','BCB','MDC','EST']},
   {n:'12',nome:'SAFIRA',rota:'Brás ↔ Calmon Viana',est:['BRA','TAT','EGO','USP','ERM','SMP','JHE','ITI','JRO','EMF','IQC','ARC','CVN']},
-  {n:'13',nome:'JADE',rota:'Luz (Expresso Aeroporto) e Engenheiro Goulart ↔ Aeroporto-Guarulhos',est:['LUZ','EGO','GCE','AGU']}
+  {n:'13',nome:'JADE',rota:'Palmeiras-Barra Funda (Expresso Aeroporto) e Engenheiro Goulart ↔ Aeroporto-Guarulhos',est:['BFU','LUZ','EGO','GCE','AGU']}
 ];
 const CHAVE='embarques-v1';
 let REG=[];try{REG=JSON.parse(localStorage.getItem(CHAVE)||'[]')}catch(e){}if(!Array.isArray(REG))REG=[];
