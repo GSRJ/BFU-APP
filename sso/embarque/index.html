@@ -23,8 +23,9 @@ h2{margin:0;font-size:19px;font-weight:800}
 .campo{display:flex;flex-direction:column;gap:5px}
 .campo span{font-size:13px;font-weight:800;color:var(--mt)}
 .campo em{font-style:normal;font-weight:600}
-.campo input,.campo select{width:100%;min-width:0;font:700 17px/1.2 var(--f);border:2px solid var(--ln);border-radius:11px;padding:11px 12px;background:#fff;color:var(--k)}
-.campo input:focus,.campo select:focus{outline:3px solid var(--y);border-color:var(--k)}
+.campo input,.campo select,.campo textarea{width:100%;min-width:0;font:700 17px/1.2 var(--f);border:2px solid var(--ln);border-radius:11px;padding:11px 12px;background:#fff;color:var(--k)}
+.campo textarea{resize:vertical;font-weight:600}
+.campo input:focus,.campo select:focus,.campo textarea:focus{outline:3px solid var(--y);border-color:var(--k)}
 #iPref,#iNum{font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase}
 .tres{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .tres .campo:first-child{grid-column:1/-1}
@@ -66,6 +67,7 @@ h2{margin:0;font-size:19px;font-weight:800}
       <label class="campo"><span>Prefixo do trem</span><input type="text" id="iPref" maxlength="12" autocomplete="off" placeholder="Ex: U510"></label>
     </div>
     <label class="campo"><span>Estação de desembarque</span><select id="iDest"><option value="">Escolha a estação</option></select></label>
+    <label class="campo"><span>Observação <em>(opcional)</em></span><textarea id="iObs" maxlength="300" rows="2" placeholder="Ex: acompanhante no mesmo carro"></textarea></label>
   </section>
 
   <section class="card">
@@ -129,7 +131,7 @@ const salvar=()=>{try{localStorage.setItem(CHAVE,JSON.stringify(REG))}catch(e){}
 {const vis=new Set(),sel=$('#iDest');LINHAS.forEach(l=>{const g=document.createElement('optgroup');g.label='Linha '+l.n+' – '+l.nome;l.est.forEach(k=>{if(vis.has(k))return;vis.add(k);const o=document.createElement('option');o.value=k;o.textContent=EST[k][1];g.appendChild(o)});if(g.children.length)sel.appendChild(g)})}
 const TIPO={'Idoso':'idoso','Cadeirante':'cadeirante','Cadeirante motorizado':'cadeirante motorizado','Outro':'passageiro'};
 const limpa=v=>v.toUpperCase().replace(/[^A-Z0-9]/g,'');
-function dados(){return{tipo:$('#iTipo').value,carro:$('#iCarro').value,porta:$('#iPorta').value,num:limpa($('#iNum').value),pref:limpa($('#iPref').value),dest:$('#iDest').value}}
+function dados(){return{tipo:$('#iTipo').value,carro:$('#iCarro').value,porta:$('#iPorta').value,num:limpa($('#iNum').value),pref:limpa($('#iPref').value),dest:$('#iDest').value,obs:$('#iObs').value.trim()}}
 function montar(d){
   const t=d.tipo?(TIPO[d.tipo]||d.tipo):'passageiro';
   let m='Foi embarcado um '+t;
@@ -138,7 +140,7 @@ function montar(d){
   if(d.num)m+=', Nº '+d.num;
   if(d.pref)m+=', trem '+d.pref;
   if(d.dest)m+=', para '+EST[d.dest][1];
-  return m+'.\n\nAtt. SSO BF';
+  return m+'.'+(d.obs?'\nObs.: '+d.obs:'')+'\n\nAtt. SSO BF';
 }
 const link=(m,k)=>'https://wa.me/55'+EST[k][2]+'?text='+encodeURIComponent(m);
 function atualizar(){
@@ -147,13 +149,13 @@ function atualizar(){
   if(d.dest){b.href=link(m,d.dest);b.setAttribute('aria-disabled','false');$('#bWaTx').textContent='Enviar para '+EST[d.dest][1]+' no WhatsApp'}
   else{b.removeAttribute('href');b.setAttribute('aria-disabled','true');$('#bWaTx').textContent='Escolha a estação de desembarque'}
 }
-['#iTipo','#iCarro','#iPorta','#iNum','#iPref','#iDest'].forEach(s=>{$(s).addEventListener('input',atualizar);$(s).addEventListener('change',atualizar)});
+['#iTipo','#iCarro','#iPorta','#iNum','#iPref','#iDest','#iObs'].forEach(s=>{$(s).addEventListener('input',atualizar);$(s).addEventListener('change',atualizar)});
 $('#bWa').addEventListener('click',()=>{
   const d=dados();if(!d.dest)return;
   REG.unshift(Object.assign({em:new Date().toISOString(),destNome:EST[d.dest][1],msg:montar(d)},d));salvar();listar();
 });
 $('#bCopiar').onclick=async()=>{const t=$('#msg').textContent;try{await navigator.clipboard.writeText(t)}catch(e){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(_){}a.remove()}const b=$('#bCopiar');b.textContent='Copiada';setTimeout(()=>b.textContent='Copiar mensagem',1500)};
-$('#bLimpar').onclick=()=>{['#iTipo','#iCarro','#iPorta','#iNum','#iPref','#iDest'].forEach(s=>$(s).value='');atualizar();$('#iTipo').focus()};
+$('#bLimpar').onclick=()=>{['#iTipo','#iCarro','#iPorta','#iNum','#iPref','#iDest','#iObs'].forEach(s=>$(s).value='');atualizar();$('#iTipo').focus()};
 const z=n=>String(n).padStart(2,'0');
 const dh=iso=>{const d=new Date(iso);return z(d.getDate())+'/'+z(d.getMonth()+1)+'/'+d.getFullYear()+' '+z(d.getHours())+'h'+z(d.getMinutes())};
 function listar(){
@@ -165,7 +167,7 @@ function listar(){
     const pf=d.querySelector('.pf');pf.textContent=r.pref||'—';
     d.querySelector('.para').textContent='→ '+(r.destNome||'');
     d.querySelector('time').textContent=dh(r.em);
-    d.querySelector('p').textContent=r.msg.split('\n')[0];
+    d.querySelector('p').textContent=r.msg.split('\n\nAtt.')[0];d.querySelector('p').style.whiteSpace='pre-line';
     const a=d.querySelector('a');if(EST[r.dest])a.href=link(r.msg,r.dest);else a.hidden=true;
     el.appendChild(d);
   });
@@ -173,8 +175,8 @@ function listar(){
 $('#bExp').onclick=()=>{
   if(!REG.length)return;
   const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
-  const L=[['Data e hora','Tipo','Carro','Porta','Nº do carro','Trem','Estação de desembarque','Mensagem'].map(q).join(';')];
-  REG.forEach(r=>L.push([dh(r.em),r.tipo,r.carro?r.carro+'º':'',r.porta?r.porta+'ª':'',r.num,r.pref,r.destNome,r.msg.replace(/\n+/g,' ')].map(q).join(';')));
+  const L=[['Data e hora','Tipo','Carro','Porta','Nº do carro','Trem','Estação de desembarque','Observação','Mensagem'].map(q).join(';')];
+  REG.forEach(r=>L.push([dh(r.em),r.tipo,r.carro?r.carro+'º':'',r.porta?r.porta+'ª':'',r.num,r.pref,r.destNome,r.obs||'',r.msg.replace(/\n+/g,' ')].map(q).join(';')));
   const d=new Date(),nome='embarques-'+d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate())+'.csv';
   const blob=new Blob(['﻿'+L.join('\r\n')],{type:'text/csv;charset=utf-8'}),f=new File([blob],nome,{type:'text/csv'});
   if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f],title:'Registro de embarques'}).catch(()=>{});return}
