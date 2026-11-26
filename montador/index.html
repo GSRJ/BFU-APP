@@ -140,6 +140,14 @@ td.c,th.c{text-align:center}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px}
 code.k{font:12.5px var(--mono);background:var(--bg3);padding:1px 5px;border-radius:5px}
+.icons{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.icons button{background:var(--bg);border:1px solid var(--line);border-radius:8px;width:38px;height:38px;font-size:19px;line-height:1;padding:0;display:flex;align-items:center;justify-content:center}
+.icons button:hover{border-color:var(--ac)}
+.icons button[aria-pressed=true]{background:color-mix(in srgb,var(--ac) 22%,var(--bg));border-color:var(--ac);box-shadow:0 0 0 1px var(--ac) inset}
+.icobtn{background:var(--bg);border:1px solid var(--line);border-radius:8px;width:34px;height:30px;font-size:17px;line-height:1;padding:0}
+.icobtn:hover{border-color:var(--ac)}
+.icopane{flex-basis:100%;display:none;padding-top:4px}
+.icopane.on{display:block}
 </style>
 </head>
 <body>
@@ -195,6 +203,11 @@ code.k{font:12.5px var(--mono);background:var(--bg3);padding:1px 5px;border-radi
         <button class="btn" id="prioPadrao">Voltar ao padrão</button>
       </div>
       <div class="list" id="prioList"></div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <h3>Nome e ícone dos postos</h3>
+      <p class="hint">Toque no ícone para trocar. O nome e o ícone mudam no GBD de todos os dias ainda não publicados.</p>
+      <div class="list" id="nomesBox"></div>
     </div>
     <div class="card" style="margin-top:16px">
       <h3>Resumo do ciclo</h3>
@@ -344,6 +357,12 @@ const POSTOS={
  PLAT:   {rot:'Plataformas',                 ico:'🚉', ab:'Plat'},
 };
 const ORDEM=['SSO','CARTOES','APOIO','LB','RONDA','PLAT'];
+/* nome e ícone de cada posto podem ser trocados no app: S.postosNome={id:{rot,ico}} */
+const POSTOS_PADRAO=JSON.parse(JSON.stringify(POSTOS));
+const ICONES=['🎙️','💳','🤝','🚧','🚶','🚉','🚆','🚇','🎫','🪪','🛗','♿','🚪','🚦','🛤️','📣','📻','🖥️','📞','📋','🧭','👀','🔑','🧰','🧯','🚑','⛑️','🚨','🧹','🏢','🅿️','🧾','🛠️','🕵️','🚻','🧑‍✈️'];
+function aplicarNomesPostos(){
+ for(const id of ORDEM){const o=(S.postosNome||{})[id]||{};POSTOS[id].rot=o.rot||POSTOS_PADRAO[id].rot;POSTOS[id].ico=o.ico||POSTOS_PADRAO[id].ico;}
+}
 /* postos principais: quem tem ausência parcial no dia não fica neles (a SSO só quando o ciclo exigir) */
 const PRINCIPAIS=['SSO','CARTOES','APOIO','LB'];
 /* SSO com ausência parcial: um disponível fica até o retorno (o Apoio SSO, ou quem estiver na Ronda/Plataformas) */
@@ -450,6 +469,7 @@ const PADRAO={
 
 let APARELHO_NOVO=false;try{APARELHO_NOVO=!localStorage.getItem('gbd-bfu-v1')}catch(e){}
 let S=carregar();
+aplicarNomesPostos();
 function carregar(){
  let base=JSON.parse(JSON.stringify(PADRAO));
  try{const r=localStorage.getItem('gbd-bfu-v1');if(r){const o=JSON.parse(r);base={...base,...o}}}catch(e){}
@@ -1694,6 +1714,28 @@ function desenharPrio(){
  });
 }
 $('#prioDe').onchange=carregarPrioEd;
+function desenharNomes(){
+ const B=$('#nomesBox');B.innerHTML='';
+ const grava=(id,campo,v)=>{
+  S.postosNome=S.postosNome||{};const o=S.postosNome[id]=S.postosNome[id]||{};
+  if(v&&v!==POSTOS_PADRAO[id][campo])o[campo]=v;else delete o[campo];
+  if(!Object.keys(o).length)delete S.postosNome[id];
+  aplicarNomesPostos();salvar();limparCache();renderTudo();desenharPrio();desenharNomes();
+ };
+ ORDEM.forEach(id=>{
+  const it=el('div','item');it.style.flexWrap='wrap';
+  const pane=el('div','icopane');
+  const bI=el('button','icobtn',POSTOS[id].ico);bI.title='Trocar o ícone';
+  bI.onclick=()=>{const on=!pane.classList.contains('on');pane.classList.toggle('on',on);pane.innerHTML='';
+   if(on){const box=el('div','icons');ICONES.forEach(ic=>{const b=el('button',null,ic);b.type='button';b.setAttribute('aria-pressed',String(ic===POSTOS[id].ico));
+    b.onclick=()=>{grava(id,'ico',ic)};box.appendChild(b)});pane.appendChild(box)}};
+  const inp=el('input');inp.type='text';inp.value=POSTOS[id].rot;inp.maxLength=40;inp.style.cssText='flex:1;min-width:140px';
+  inp.onchange=()=>{const v=inp.value.trim();if(!v){inp.value=POSTOS[id].rot;return toast('O nome não pode ficar vazio')}grava(id,'rot',v);toast('Nome salvo')};
+  it.append(bI,inp);
+  if((S.postosNome||{})[id]){const r=el('button','btn sm','Padrão');r.title=`${POSTOS_PADRAO[id].ico} ${POSTOS_PADRAO[id].rot}`;r.onclick=()=>{delete S.postosNome[id];aplicarNomesPostos();salvar();limparCache();renderTudo();desenharPrio();desenharNomes()};it.appendChild(r)}
+  it.appendChild(pane);B.appendChild(it);
+ });
+}
 $('#prioSalvar').onclick=()=>{
  const k=$('#prioDe').value;if(!k)return toast('Informe a data');
  if(confirmado(k))return toast('Esse dia já está confirmado. Escolha um dia ainda previsto.');
@@ -1867,12 +1909,12 @@ async function sincronizarAoAbrir(){
 }
 
 /* ---- init ---- */
-function renderTudo(){renderFoco();renderCiclo();renderPostos();renderAus();renderEsc();renderCal()}
+function renderTudo(){aplicarNomesPostos();renderFoco();renderCiclo();renderPostos();renderAus();renderEsc();renderCal()}
 ['#ausWho','#exWho','#regWho'].forEach(s=>opAgentes($(s)));
 Object.entries(FORMATOS).forEach(([k,v])=>$('#regFmt').appendChild(new Option(v.rot,k)));
 $('#calDe').value='2026-11';$('#calAte').value='2028-12';
 $('#calDe').onchange=renderCal;$('#calAte').onchange=renderCal;
-$('#ausDe').value=hojeK();$('#exDia').value=hojeK();$('#regDe').value=hojeK();$('#ferDia').value=hojeK();$('#pausaDe').value=confirmado(hojeK())?addD(hojeK(),1):hojeK();renderPausa();$('#prioDe').value=$('#pausaDe').value;carregarPrioEd();
+$('#ausDe').value=hojeK();$('#exDia').value=hojeK();$('#regDe').value=hojeK();$('#ferDia').value=hojeK();$('#pausaDe').value=confirmado(hojeK())?addD(hojeK(),1):hojeK();renderPausa();$('#prioDe').value=$('#pausaDe').value;carregarPrioEd();desenharNomes();
 renderTudo();
 sincronizarAoAbrir();
 </script>
