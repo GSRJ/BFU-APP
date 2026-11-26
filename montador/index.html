@@ -256,6 +256,15 @@ code.k{font:12.5px var(--mono);background:var(--bg3);padding:1px 5px;border-radi
         <div class="list" id="ferList"></div>
       </div>
     </div>
+    <div class="card">
+      <h3>Tempo de pausa</h3>
+      <p class="hint">Com 15 ou 20 minutos, as pausas ficam dentro de 1h a 1h30 a partir das 15h00, sempre com pelo menos 3 AAS trabalhando. Com 30 minutos, segue como antes.</p>
+      <div class="form">
+        <div class="f"><label>A partir de</label><input type="date" id="pausaDe"></div>
+        <div class="f"><label>Tempo</label><div style="display:flex;gap:6px" id="pausaBtns"></div></div>
+      </div>
+      <div class="list" id="pausaList"></div>
+    </div>
     <div id="cardAgentes"></div>
     <div class="card">
       <h3>Dados</h3>
@@ -336,6 +345,16 @@ const CPTM_ATE='2026-11-26'; /* rodapé da CPTM só até 25/11 */
 const CAFE_SLOTS_3=['15h00','15h30','16h00'];
 /* pausa de 30 minutos: os horários andam de meia em meia hora */
 const CAFE_SLOTS_4=['15h00','15h30','16h00','16h30'];
+/* tempo de pausa: S.pausas=[{de,min}], vale a última mudança com data até o dia. Antes de qualquer mudança: 30 min */
+function pausaMin(k){let m=30;for(const p of (S.pausas||[]).slice().sort((a,b)=>a.de<b.de?-1:1))if(p.de<=k)m=+p.min;return m}
+const hm=t=>`${Math.floor(t/60)}h${String(t%60).padStart(2,'0')}`;
+/* 15 ou 20 min: horários de 'dur' em 'dur' minutos a partir das 15h00, no máximo 'cab' por horário.
+   Procura fechar em 1h (pelo menos 60 min de janela) e nunca passar de 1h30, salvo se o efetivo não permitir */
+function slotsPausa(dur,n,cab){
+ const precisa=Math.ceil(n/cab),alvo=Math.ceil(60/dur),teto=Math.floor(90/dur);
+ const q=Math.max(precisa,Math.min(n,alvo,teto));
+ return Array.from({length:q},(_,i)=>hm(900+i*dur));
+}
 const JANTA_3=['18h–19h','19h–20h','20h–21h'];
 const JANTA_4=['17h–18h','18h–19h','19h–20h','20h–21h'];
 const JICO={'17h–18h':'🕔','18h–19h':'🕕','19h–20h':'🕖','20h–21h':'🕗'};
@@ -915,6 +934,11 @@ function montarCafe(k,disp,postos,ctx){
   if(sso&&apo&&m[sso]===m[apo])s+=200;
   return s;
  };
+ const dur=pausaMin(k);
+ if(dur!==30){
+  const cab=Math.max(1,n-3),slots=slotsPausa(dur,n,cab);
+  return melhorDistribuicao(disp,slots,balancear(n,slots.length,cab),cab,penal);
+ }
  if(n<=4){
   const slots=CAFE_SLOTS_4.slice(0,n);
   return melhorDistribuicao(disp,slots,slots.map(()=>1),1,penal);
@@ -1523,6 +1547,7 @@ function renderEsc(){
  });
  T.appendChild(tb);
  montarCardAgentes();
+ renderPausa();
  const F=$('#ferList');F.innerHTML='';
  const fk=Object.keys(S.feriados).sort();
  if(!fk.length)F.appendChild(el('div','empty','Só os feriados automáticos.'));
@@ -1543,6 +1568,32 @@ $('#regAdd').onclick=()=>{
  salvar();limparCache();renderEsc();renderCiclo();renderCal();
  toast('Alteração de escala registrada');
 };
+function renderPausa(){
+ const de=$('#pausaDe').value||hojeK(),atual=pausaMin(de);
+ const B=$('#pausaBtns');B.innerHTML='';
+ [15,20,30].forEach(m=>{
+  const b=el('button','btn'+(m===atual?' pri':''),m+' min');b.style.flex='1';
+  b.onclick=()=>{
+   const k=$('#pausaDe').value;if(!k)return toast('Informe a data');
+   if(confirmado(k))return toast('Esse dia já está confirmado. Escolha um dia ainda previsto.');
+   S.pausas=(S.pausas||[]).filter(p=>p.de!==k);S.pausas.push({de:k,min:m});
+   salvar();limparCache(k);renderTudo();toast(`Pausa de ${m} min a partir de ${br(k)}`);
+  };
+  B.appendChild(b);
+ });
+ const L=$('#pausaList');L.innerHTML='';
+ const ps=(S.pausas||[]).slice().sort((a,b)=>a.de<b.de?-1:1);
+ if(!ps.length)L.appendChild(el('div','empty','30 min em todos os dias.'));
+ ps.forEach(p=>{
+  const it=el('div','item');
+  it.appendChild(el('strong',null,br(p.de)));
+  it.appendChild(el('span',null,`a partir deste dia: ${p.min} min`));
+  if(!confirmado(p.de)){const x=el('button','btn sm danger x','Remover');
+   x.onclick=()=>{S.pausas=S.pausas.filter(q=>q!==p);salvar();limparCache(p.de);renderTudo()};it.appendChild(x);}
+  L.appendChild(it);
+ });
+}
+$('#pausaDe').onchange=renderPausa;
 $('#ferAdd').onclick=()=>{
  const k=$('#ferDia').value,n=$('#ferNome').value.trim()||'Feriado';
  if(!k)return toast('Informe a data');
@@ -1707,7 +1758,7 @@ function renderTudo(){renderFoco();renderCiclo();renderPostos();renderAus();rend
 Object.entries(FORMATOS).forEach(([k,v])=>$('#regFmt').appendChild(new Option(v.rot,k)));
 $('#calDe').value='2026-11';$('#calAte').value='2028-12';
 $('#calDe').onchange=renderCal;$('#calAte').onchange=renderCal;
-$('#ausDe').value=hojeK();$('#exDia').value=hojeK();$('#regDe').value=hojeK();$('#ferDia').value=hojeK();
+$('#ausDe').value=hojeK();$('#exDia').value=hojeK();$('#regDe').value=hojeK();$('#ferDia').value=hojeK();$('#pausaDe').value=confirmado(hojeK())?addD(hojeK(),1):hojeK();renderPausa();
 renderTudo();
 sincronizarAoAbrir();
 </script>
