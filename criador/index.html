@@ -908,6 +908,7 @@ function textoGBD(k){
    L.push(`⏳ *Ausência parcial:* ${parc.map(id=>{const m=motivoParcial(id,k);return m?`${nome(id)} (${m})`:nome(id)}).join(' • ')}`);
    if(S.rodizio.exameBloqueia)L.push(`↩️ _${parc.length>1?'Quando voltarem':'Quando voltar'}, a SSO define ${parc.length>1?'os postos':'o posto'} e os horários de pausa e intervalo._`);
   }}
+ {const fd=(S.fraseDia||{})[k];if(fd){L.push('');L.push(fd)}}
  if(S.estacao.rodape&&!(k>='2026-11-26'&&/CPTM/i.test(S.estacao.rodape))){L.push('');L.push(S.estacao.rodape)} /* rodapé da CPTM só até 25/11 */
  return L.join('\n');
 }
@@ -1439,17 +1440,29 @@ function renderCiclo(){
   const bt=el('button','btn sm','Trocar dois');
   const bh=el('button','btn sm','Trocar pausa/intervalo');
   const bf=el('button','btn sm','Ausência');
-  ac.append(bc,be,bt,bh,bf);
+  const bd=el('button','btn sm'+((S.fraseDia||{})[k]?' pri':''),'Frase do dia');
+  ac.append(bc,be,bt,bh,bd,bf);
   if(d.travado){const bl=el('button','btn sm danger','Soltar');
    bl.onclick=()=>{delete S.manuais[k];salvar();limparCache(k);renderCiclo()};ac.appendChild(bl)}
   card.appendChild(ac);
   const ed=el('div','editor');
   const abrir=fn=>{const ja=ed.classList.contains('on')&&ed.dataset.modo===fn.name;
    ed.classList.toggle('on',!ja);ed.dataset.modo=ja?'':fn.name;if(!ja)fn(ed,k)};
-  be.onclick=()=>abrir(edPostos);bt.onclick=()=>abrir(edTroca);bh.onclick=()=>abrir(edTrocaHora);bf.onclick=()=>abrir(edAusencia);
+  be.onclick=()=>abrir(edPostos);bt.onclick=()=>abrir(edTroca);bh.onclick=()=>abrir(edTrocaHora);bf.onclick=()=>abrir(edAusencia);bd.onclick=()=>abrir(edFraseDia);
   card.appendChild(ed);box.appendChild(card);
  }
  if(!renderCiclo._f){renderCiclo._f=true;try{renderFoco()}finally{renderCiclo._f=false}}
+}
+/* frase só deste dia (além da geral): S.fraseDia={k:texto} */
+function edFraseDia(ed,k){
+ ed.innerHTML='';
+ ed.appendChild(el('div','hint','Frase só deste dia. Sai no final do GBD, antes da frase geral. Use *negrito* e _itálico_ como no WhatsApp. Para tirar, salve vazio.'));
+ const ta=el('textarea');ta.rows=2;ta.maxLength=300;ta.value=(S.fraseDia||{})[k]||'';ta.placeholder='Ex.: ⚠️ *Hoje tem jogo no Allianz: reforço na Linha de Bloqueio*';
+ ta.style.cssText='width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);margin-top:6px';
+ ed.appendChild(ta);
+ const b=el('button','btn pri sm','Salvar frase do dia');b.style.marginTop='8px';
+ b.onclick=()=>{const v=ta.value.trim();S.fraseDia=S.fraseDia||{};if(v)S.fraseDia[k]=v;else delete S.fraseDia[k];salvar();limparCache(k);renderTudo();toast(v?'Frase do dia salva':'Frase do dia tirada')};
+ ed.appendChild(b);
 }
 function edPostos(ed,k){
  ed.innerHTML='';
@@ -1744,7 +1757,7 @@ function renderConfig(){
   [['manha','Manhã'],['noite','Noite']].forEach(([v,r])=>sT.appendChild(new Option(r,v)));sT.value=turnoId();
   sT.onchange=()=>{S.estacao.turno=TURNOS_OK[sT.value].rot;salvar();limparCache();aplicarCabecalho();renderTudo()};
   d.appendChild(sT);g1.appendChild(d);}
- mk('inicioCiclo','Início da contagem dos ciclos','date');mk('rodape','Rodapé');
+ mk('inicioCiclo','Início da contagem dos ciclos','date');mk('rodape','Rodapé (frase geral no final)');
  const dT=el('div','f');dT.appendChild(el('label',null,'Tamanho do ciclo (0 = nº de operacionais)'));
  const iT=el('input');iT.type='number';iT.min='0';iT.value=S.estacao.tamCiclo||0;
  iT.onchange=()=>{S.estacao.tamCiclo=+iT.value||0;salvar();limparCache();aplicarCabecalho();renderTudo()};

@@ -1130,6 +1130,7 @@ function textoGBD(k){
    L.push(`↩️ _${parc.length>1?'Quando voltarem':'Quando voltar'}, a SSO define ${parc.length>1?'os postos':'o posto'} e os horários de pausa e intervalo._`);
   }}
  if(k<CPTM_ATE){L.push('');L.push('🚆 _Operação assistida pela CPTM._');}
+ {const fd=(S.fraseDia||{})[k];if(fd){L.push('');L.push(fd);}}
  {const f=fraseDo(k);if(f){L.push('');L.push(f);}}
  return L.join('\n');
 }
@@ -1246,10 +1247,11 @@ function renderCiclo(){
   const bt=el('button','btn sm','Trocar dois');
   const bh=el('button','btn sm','Trocar pausa/intervalo');
   const bp=el('button','btn sm',`Tempo de pausa (${pausaMin(k)} min)`);
+  const bd=el('button','btn sm'+((S.fraseDia||{})[k]?' pri':''),'Frase do dia');
   const bf=el('button','btn sm','Ausência hoje');
   const bk=el('button','btn sm'+(confirmado(k)?'':' pri'),confirmado(k)?'Voltar a previsto':'Confirmar');
   bk.onclick=()=>alternarConfirmado(k);
-  ac.append(bc,bk,be,bt,bh,bp,bf);
+  ac.append(bc,bk,be,bt,bh,bp,bd,bf);
   if(d.travado&&!d.realizado){
    const bl=el('button','btn sm danger','Soltar');
    bl.onclick=()=>{delete S.manuais[k];salvar();limparCache(k);renderCiclo()};
@@ -1263,6 +1265,7 @@ function renderCiclo(){
   bt.onclick=()=>abrir(montarTroca);
  bh.onclick=()=>abrir(montarTrocaHora);
   bp.onclick=()=>abrir(montarTempoPausa);
+  bd.onclick=()=>abrir(edFraseDia);
   bf.onclick=()=>abrir(montarAusencia);
   card.appendChild(ed);
   box.appendChild(card);
@@ -1623,6 +1626,17 @@ $('#regAdd').onclick=()=>{
  salvar();limparCache();renderEsc();renderCiclo();renderCal();
  toast('Alteração de escala registrada');
 };
+/* frase só deste dia (além da geral): S.fraseDia={k:texto} */
+function edFraseDia(ed,k){
+ ed.innerHTML='';
+ ed.appendChild(el('div','hint','Frase só deste dia. Sai no final do GBD, antes da frase geral. Use *negrito* e _itálico_ como no WhatsApp. Para tirar, salve vazio.'));
+ const ta=el('textarea');ta.rows=2;ta.maxLength=300;ta.value=(S.fraseDia||{})[k]||'';ta.placeholder='Ex.: ⚠️ *Hoje tem jogo no Allianz: reforço na Linha de Bloqueio*';
+ ta.style.cssText='width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);margin-top:6px';
+ ed.appendChild(ta);
+ const b=el('button','btn pri sm','Salvar frase do dia');b.style.marginTop='8px';
+ b.onclick=()=>{const v=ta.value.trim();S.fraseDia=S.fraseDia||{};if(v)S.fraseDia[k]=v;else delete S.fraseDia[k];salvar();limparCache(k);renderTudo();toast(v?'Frase do dia salva':'Frase do dia tirada')};
+ ed.appendChild(b);
+}
 /* editor no cartão do dia: troca o tempo de pausa só no dia ou do dia em diante */
 function montarTempoPausa(ed,k){
  ed.innerHTML='';
