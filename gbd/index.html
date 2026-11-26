@@ -506,14 +506,14 @@ function montarMapa(box,dd,k){
   const url=URL.createObjectURL(r.inteira),im=new Image();im.alt='Escalação do dia na planta da estação';im.src=url;
   cb.innerHTML='';cb.appendChild(im);
   const base=nome.replace(/\.png$/,'');
-  const arqs=[new File([r.mapa],base+' - planta.png',{type:'image/png'}),new File([r.equipe],base+' - equipe.png',{type:'image/png'})];
+  const arqs=[new File([r.mapa],base+'.png',{type:'image/png'})];
   const salvar=()=>arqs.forEach((f,i)=>setTimeout(()=>{const u=URL.createObjectURL(f),a=document.createElement('a');a.href=u;a.download=f.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000)},i*400));
   bb.disabled=false;bb.onclick=salvar;
   bw.disabled=false;bw.onclick=async()=>{
    if(navigator.canShare&&navigator.canShare({files:arqs})){
     try{await navigator.share({files:arqs});return}catch(e){if(e&&e.name==='AbortError')return}
    }
-   salvar();toast('Imagens salvas. Anexe no WhatsApp.');
+   salvar();toast('Imagem salva. Anexe no WhatsApp.');
   };
  }).catch(()=>{if(vez===MAPA_VEZ)cb.innerHTML='<div class="esp">Não foi possível montar a imagem.</div>'});
 }
