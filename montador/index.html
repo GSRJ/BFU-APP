@@ -346,7 +346,7 @@ const CAFE_SLOTS_3=['15h00','15h30','16h00'];
 /* pausa de 30 minutos: os horários andam de meia em meia hora */
 const CAFE_SLOTS_4=['15h00','15h30','16h00','16h30'];
 /* tempo de pausa: S.pausas=[{de,min}], vale a última mudança com data até o dia. Antes de qualquer mudança: 30 min */
-function pausaMin(k){let m=30;for(const p of (S.pausas||[]).slice().sort((a,b)=>a.de<b.de?-1:1))if(p.de<=k)m=+p.min;return m}
+function pausaMin(k){if(S.pausaDia&&S.pausaDia[k])return +S.pausaDia[k];let m=30;for(const p of (S.pausas||[]).slice().sort((a,b)=>a.de<b.de?-1:1))if(p.de<=k)m=+p.min;return m}
 const hm=t=>`${Math.floor(t/60)}h${String(t%60).padStart(2,'0')}`;
 /* 15 ou 20 min: horários de 'dur' em 'dur' minutos a partir das 15h00, no máximo 'cab' por horário.
    Procura fechar em 1h (pelo menos 60 min de janela) e nunca passar de 1h30, salvo se o efetivo não permitir */
@@ -1192,10 +1192,11 @@ function renderCiclo(){
   const be=el('button','btn sm','Editar postos');
   const bt=el('button','btn sm','Trocar dois');
   const bh=el('button','btn sm','Trocar pausa/intervalo');
+  const bp=el('button','btn sm',`Tempo de pausa (${pausaMin(k)} min)`);
   const bf=el('button','btn sm','Ausência hoje');
   const bk=el('button','btn sm'+(confirmado(k)?'':' pri'),confirmado(k)?'Voltar a previsto':'Confirmar');
   bk.onclick=()=>alternarConfirmado(k);
-  ac.append(bc,bk,be,bt,bh,bf);
+  ac.append(bc,bk,be,bt,bh,bp,bf);
   if(d.travado&&!d.realizado){
    const bl=el('button','btn sm danger','Soltar');
    bl.onclick=()=>{delete S.manuais[k];salvar();limparCache(k);renderCiclo()};
@@ -1208,6 +1209,7 @@ function renderCiclo(){
   be.onclick=()=>abrir(montarEditor);
   bt.onclick=()=>abrir(montarTroca);
  bh.onclick=()=>abrir(montarTrocaHora);
+  bp.onclick=()=>abrir(montarTempoPausa);
   bf.onclick=()=>abrir(montarAusencia);
   card.appendChild(ed);
   box.appendChild(card);
@@ -1568,6 +1570,32 @@ $('#regAdd').onclick=()=>{
  salvar();limparCache();renderEsc();renderCiclo();renderCal();
  toast('Alteração de escala registrada');
 };
+/* editor no cartão do dia: troca o tempo de pausa só no dia ou do dia em diante */
+function montarTempoPausa(ed,k){
+ ed.innerHTML='';
+ if(confirmado(k)){ed.appendChild(el('div','aviso i','Dia confirmado. Toque em "Voltar a previsto" para trocar o tempo de pausa.'));return}
+ const atual=pausaMin(k);
+ ed.appendChild(el('div','hint',`Agora: ${atual} min. Com 15 ou 20 min, todos pausam dentro de 1h a 1h30 a partir das 15h00, com pelo menos 3 AAS trabalhando.`));
+ const f=el('div','form');
+ const dv=el('div','f');dv.appendChild(el('label',null,'Vale para'));
+ const so=el('select');[['dia','Só este dia'],['diante','Deste dia em diante']].forEach(([v,tx])=>so.appendChild(new Option(tx,v)));
+ dv.appendChild(so);f.appendChild(dv);ed.appendChild(f);
+ const B=el('div');B.style.cssText='display:flex;gap:6px;margin-top:8px';
+ [15,20,30].forEach(m=>{
+  const b=el('button','btn'+(m===atual?' pri':''),m+' min');b.style.flex='1';
+  b.onclick=()=>{
+   S.pausaDia=S.pausaDia||{};
+   if(so.value==='dia'){S.pausaDia[k]=m;}
+   else{delete S.pausaDia[k];S.pausas=(S.pausas||[]).filter(p=>p.de!==k);S.pausas.push({de:k,min:m});
+        for(const q of Object.keys(S.pausaDia))if(q>k)delete S.pausaDia[q];}
+   if(S.manuais&&S.manuais[k]&&S.manuais[k].c)delete S.manuais[k].c;
+   salvar();limparCache(k);renderTudo();
+   toast(so.value==='dia'?`Pausa de ${m} min em ${br(k)}`:`Pausa de ${m} min a partir de ${br(k)}`);
+  };
+  B.appendChild(b);
+ });
+ ed.appendChild(B);
+}
 function renderPausa(){
  const de=$('#pausaDe').value||hojeK(),atual=pausaMin(de);
  const B=$('#pausaBtns');B.innerHTML='';
@@ -1583,7 +1611,12 @@ function renderPausa(){
  });
  const L=$('#pausaList');L.innerHTML='';
  const ps=(S.pausas||[]).slice().sort((a,b)=>a.de<b.de?-1:1);
- if(!ps.length)L.appendChild(el('div','empty','30 min em todos os dias.'));
+ if(!ps.length&&!Object.keys(S.pausaDia||{}).length)L.appendChild(el('div','empty','30 min em todos os dias.'));
+ Object.keys(S.pausaDia||{}).sort().forEach(q=>{
+  const it=el('div','item');it.appendChild(el('strong',null,br(q)));it.appendChild(el('span',null,`só este dia: ${S.pausaDia[q]} min`));
+  if(!confirmado(q)){const x=el('button','btn sm danger x','Remover');x.onclick=()=>{delete S.pausaDia[q];salvar();limparCache(q);renderTudo()};it.appendChild(x);}
+  L.appendChild(it);
+ });
  ps.forEach(p=>{
   const it=el('div','item');
   it.appendChild(el('strong',null,br(p.de)));
