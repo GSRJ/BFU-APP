@@ -290,6 +290,16 @@ code.k{font:12.5px var(--mono);background:var(--bg3);padding:1px 5px;border-radi
       </div>
       <div class="list" id="pausaList"></div>
     </div>
+    <div class="card">
+      <h3>Frase no final do GBD</h3>
+      <p class="hint">Aparece na última linha do GBD a partir da data escolhida. Use *negrito* e _itálico_ como no WhatsApp. Para tirar, salve com o campo vazio.</p>
+      <div class="form">
+        <div class="f" style="grid-column:1/-1;flex-basis:100%"><label>Frase</label><textarea id="fraseTxt" rows="2" maxlength="300" placeholder="Ex.: 🚆 _Bom trabalho a todos!_" style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg)"></textarea></div>
+        <div class="f"><label>A partir de</label><input type="date" id="fraseDe"></div>
+        <div class="f"><button class="btn pri" id="fraseAdd" style="width:100%">Salvar frase</button></div>
+      </div>
+      <div class="list" id="fraseList"></div>
+    </div>
     <div id="cardAgentes"></div>
     <div class="card">
       <h3>Dados</h3>
@@ -377,6 +387,8 @@ const CAFE_SLOTS_3=['15h00','15h30','16h00'];
 /* pausa de 30 minutos: os horários andam de meia em meia hora */
 const CAFE_SLOTS_4=['15h00','15h30','16h00','16h30'];
 /* tempo de pausa: S.pausas=[{de,min}], vale a última mudança com data até o dia. Antes de qualquer mudança: 30 min */
+/* frase no final do GBD: S.frases=[{de,txt}], vale a última com data até o dia; texto vazio tira a frase */
+function fraseDo(k){let f='';for(const p of (S.frases||[]).slice().sort((a,b)=>a.de<b.de?-1:1))if(p.de<=k)f=p.txt||'';return f.trim()}
 function pausaMin(k){if(S.pausaDia&&S.pausaDia[k])return +S.pausaDia[k];let m=30;for(const p of (S.pausas||[]).slice().sort((a,b)=>a.de<b.de?-1:1))if(p.de<=k)m=+p.min;return m}
 const hm=t=>`${Math.floor(t/60)}h${String(t%60).padStart(2,'0')}`;
 /* 15 ou 20 min: horários de 'dur' em 'dur' minutos a partir das 15h00, no máximo 'cab' por horário.
@@ -1118,6 +1130,7 @@ function textoGBD(k){
    L.push(`↩️ _${parc.length>1?'Quando voltarem':'Quando voltar'}, a SSO define ${parc.length>1?'os postos':'o posto'} e os horários de pausa e intervalo._`);
   }}
  if(k<CPTM_ATE){L.push('');L.push('🚆 _Operação assistida pela CPTM._');}
+ {const f=fraseDo(k);if(f){L.push('');L.push(f);}}
  return L.join('\n');
 }
 function motivoParcial(id,k){return ((S.exMotivo||{})[k+'|'+id]||'').trim()}
@@ -1589,7 +1602,7 @@ function renderEsc(){
  });
  T.appendChild(tb);
  montarCardAgentes();
- renderPausa();
+ renderPausa();renderFrase();
  const F=$('#ferList');F.innerHTML='';
  const fk=Object.keys(S.feriados).sort();
  if(!fk.length)F.appendChild(el('div','empty','Só os feriados automáticos.'));
@@ -1667,6 +1680,25 @@ function renderPausa(){
  });
 }
 $('#pausaDe').onchange=renderPausa;
+function renderFrase(){
+ const L=$('#fraseList');if(!L)return;L.innerHTML='';
+ const fs=(S.frases||[]).slice().sort((a,b)=>a.de<b.de?-1:1);
+ if(!fs.length)L.appendChild(el('div','empty','Sem frase no final.'));
+ fs.forEach(p=>{
+  const it=el('div','item');it.appendChild(el('strong',null,br(p.de)));
+  it.appendChild(el('span',null,p.txt?p.txt:'(sem frase a partir deste dia)'));
+  if(!confirmado(p.de)){const x=el('button','btn sm danger x','Remover');x.onclick=()=>{S.frases=S.frases.filter(q=>q!==p);salvar();limparCache(p.de);renderTudo()};it.appendChild(x)}
+  L.appendChild(it);
+ });
+}
+$('#fraseDe').onchange=()=>{$('#fraseTxt').value=fraseDo($('#fraseDe').value||hojeK())};
+$('#fraseAdd').onclick=()=>{
+ const k=$('#fraseDe').value,txt=$('#fraseTxt').value.trim();
+ if(!k)return toast('Informe a data');
+ if(confirmado(k))return toast('Esse dia já está confirmado. Escolha um dia ainda previsto.');
+ S.frases=(S.frases||[]).filter(p=>p.de!==k);S.frases.push({de:k,txt});
+ salvar();limparCache(k);renderTudo();toast(txt?'Frase salva a partir de '+br(k):'Frase tirada a partir de '+br(k));
+};
 /* ---- prioridade dos postos ---- */
 let PRIO_ED=null;
 function prioDoDia(k,fer){
@@ -1914,7 +1946,7 @@ function renderTudo(){aplicarNomesPostos();renderFoco();renderCiclo();renderPost
 Object.entries(FORMATOS).forEach(([k,v])=>$('#regFmt').appendChild(new Option(v.rot,k)));
 $('#calDe').value='2026-11';$('#calAte').value='2028-12';
 $('#calDe').onchange=renderCal;$('#calAte').onchange=renderCal;
-$('#ausDe').value=hojeK();$('#exDia').value=hojeK();$('#regDe').value=hojeK();$('#ferDia').value=hojeK();$('#pausaDe').value=confirmado(hojeK())?addD(hojeK(),1):hojeK();renderPausa();$('#prioDe').value=$('#pausaDe').value;carregarPrioEd();desenharNomes();
+$('#ausDe').value=hojeK();$('#exDia').value=hojeK();$('#regDe').value=hojeK();$('#ferDia').value=hojeK();$('#pausaDe').value=confirmado(hojeK())?addD(hojeK(),1):hojeK();renderPausa();$('#prioDe').value=$('#pausaDe').value;carregarPrioEd();desenharNomes();$('#fraseDe').value=$('#pausaDe').value;$('#fraseTxt').value=fraseDo($('#fraseDe').value);
 renderTudo();
 sincronizarAoAbrir();
 </script>
