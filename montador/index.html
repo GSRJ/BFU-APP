@@ -403,7 +403,7 @@ function slotsPausa(dur,n,cab){
 const JANTA_3=['18h–19h','19h–20h','20h–21h'];
 const JANTA_4=['17h–18h','18h–19h','19h–20h','20h–21h','21h–22h'];
 const JICO={'17h–18h':'🕔','18h–19h':'🕕','19h–20h':'🕖','20h–21h':'🕗','21h–22h':'🕘'};
-/* a partir de 26/11: intervalo de 18h às 22h, com mais gente às 20h, depois às 21h, depois 19h e 18h */
+/* a partir de 26/11: intervalo de 18h às 22h, todos os turnos com alguém e mais gente às 20h e 21h */
 const JANTA_TARDE_DESDE='2026-11-26';
 const JANTA_5=['18h–19h','19h–20h','20h–21h','21h–22h'];
 const ultimoTurno=k=>k>=JANTA_TARDE_DESDE?'21h–22h':'20h–21h';
@@ -908,7 +908,8 @@ function resolverDia(k,ctx){
     if(ssoAmanha&&id===ssoAmanha)s-=35;
    }
   }
-  if(porAgente['vanessa']&&porAgente['vanessa']===porAgente['josefa']){s+=1000;avisos.push(['e','Vanessa e Josefa no mesmo posto'])}
+  /* a regra de Vanessa e Josefa separadas valeu até 25/11 */
+  if(k<'2026-11-26'&&porAgente['vanessa']&&porAgente['vanessa']===porAgente['josefa']){s+=1000;avisos.push(['e','Vanessa e Josefa no mesmo posto'])}
   return {s,avisos};
  }
 
@@ -1044,9 +1045,14 @@ function montarJanta(k,disp,postos,comAsl,ctx,cafe){
   return s;
  };
  if(k>=JANTA_TARDE_DESDE){
-  /* enche 20h até o limite (sempre 3 AAS trabalhando), depois 21h, depois 19h e 18h */
+  /* todos os turnos com alguém; quem sobra vai para 20h e 21h (20h primeiro),
+     sem passar do limite que deixa 3 AAS trabalhando; se não couber, volta para 19h e 18h */
   const cab=Math.max(1,n-3),caps=[0,0,0,0];let r=n;
-  for(const i of [2,3,1,0]){const q=Math.min(cab,r);caps[i]=q;r-=q;}
+  for(const i of [2,3,1,0])if(r>0){caps[i]=1;r--}
+  for(const ordem of [[2,3],[1,0]]){
+   let mexeu=true;
+   while(r>0&&mexeu){mexeu=false;for(const i of ordem)if(r>0&&caps[i]<cab){caps[i]++;r--;mexeu=true}}
+  }
   for(let i=2;r>0;i=(i+1)%4){caps[i]++;r--}
   const exp=[];JANTA_5.forEach((t,i)=>{for(let j=0;j<caps[i];j++)exp.push(t)});
   return ordenarJanta(disp,exp,cafe,penal);
