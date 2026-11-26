@@ -1771,7 +1771,9 @@ function renderConfig(){
    if(abrir){pane.innerHTML='';seletorIcone(pane,p.ico,ic=>{p.ico=ic;bIco.textContent=ic;salvar();limparCache();renderTudo()})}
   };
   it.appendChild(bIco);
-  it.appendChild(el('strong',null,p.nome));
+  {const inp=el('input');inp.type='text';inp.value=p.nome;inp.maxLength=40;inp.title='Nome do posto';inp.style.cssText='flex:1;min-width:120px;font-weight:600';
+   inp.onchange=()=>{const v=inp.value.trim();if(!v){inp.value=p.nome;return toast('O nome não pode ficar vazio')}p.nome=v;salvar();limparCache();renderTudo();toast('Nome salvo')};
+   it.appendChild(inp);}
   const lb=el('label','sub');lb.style.display='flex';lb.style.gap='5px';lb.style.alignItems='center';
   const cb=el('input');cb.type='checkbox';cb.checked=p.max1;cb.style.width='auto';
   cb.onchange=()=>{p.max1=cb.checked;salvar();limparCache();renderTudo()};
