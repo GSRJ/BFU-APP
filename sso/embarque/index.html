@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="only light">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#141414">
+<meta name="robots" content="noindex">
+<title>Aviso de embarque · BFU</title>
+<link rel="icon" href="../../icon-192.png">
+<style>
+:root{--y:#FFC61A;--k:#141414;--bg:#EEEEE9;--mt:#5E5E57;--ln:#D8D8D0;--wa:#1FAF55;--wa2:#E6F6EC;--c:#7B3FBF;--f:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;--mono:ui-monospace,Consolas,monospace}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{background:var(--bg);color:var(--k);font:500 15px/1.4 var(--f);min-height:100dvh}
+[hidden]{display:none!important}
+.top{position:sticky;top:0;z-index:5;background:var(--k);color:#fff;border-bottom:5px solid var(--y);padding:calc(10px + env(safe-area-inset-top)) 14px 10px;display:flex;align-items:center;gap:10px}
+.top a{flex:none;color:var(--y);font-weight:700;font-size:14px;text-decoration:none;padding:8px 10px;border:2px solid var(--y);border-radius:9px;white-space:nowrap}
+.top b{flex:1;min-width:0;font-size:19px;font-weight:800;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+main{max-width:620px;margin:0 auto;padding:16px 16px 60px;display:flex;flex-direction:column;gap:14px}
+.card{background:#fff;border:2px solid var(--ln);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px}
+h2{margin:0;font-size:19px;font-weight:800}
+.campo{display:flex;flex-direction:column;gap:5px}
+.campo span{font-size:13px;font-weight:800;color:var(--mt)}
+.campo em{font-style:normal;font-weight:600}
+.campo input,.campo select{width:100%;min-width:0;font:700 17px/1.2 var(--f);border:2px solid var(--ln);border-radius:11px;padding:11px 12px;background:#fff;color:var(--k)}
+.campo input:focus,.campo select:focus{outline:3px solid var(--y);border-color:var(--k)}
+#iPref,#iNum{font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase}
+.tres{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tres .campo:first-child{grid-column:1/-1}
+.dois{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.msg{margin:0;background:var(--wa2);border:2px solid #BFE6CC;border-radius:12px;padding:12px 14px;font:600 16px/1.5 var(--f);white-space:pre-wrap;word-break:break-word}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px;border:2px solid var(--ln);border-radius:12px;background:#fff;color:var(--k);font:800 16px/1.1 var(--f);cursor:pointer;padding:8px 14px;text-decoration:none}
+.btn svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.btn.wa{background:var(--wa);border-color:var(--wa);color:#fff;width:100%;min-height:58px;font-size:17px}
+.btn.wa[aria-disabled=true]{opacity:.45;pointer-events:none}
+.acoes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.dica{margin:0;color:var(--mt);font-size:13.5px}
+.reg{display:flex;flex-direction:column;gap:8px}
+.it{border:2px solid var(--ln);border-left:6px solid var(--c);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.it .cab{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.it .pf{font:800 15px/1 var(--mono);letter-spacing:.06em;background:#2D2F32;color:#F2F2F2;border-radius:6px;padding:5px 8px}
+.it .para{font-weight:800}
+.it time{margin-left:auto;color:var(--mt);font-size:13px;font-weight:700}
+.it p{margin:0;font-size:14.5px}
+.it a{align-self:flex-start;color:#14803F;font-weight:800;font-size:14px;text-decoration:none;border:2px solid #9AD8B0;border-radius:9px;padding:6px 10px}
+.rcab{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.btn.mini{min-height:40px;font-size:14px;padding:4px 12px}
+</style>
+</head>
+<body>
+<header class="top">
+  <a href="../index.html" id="voltar">‹ Apoio SSO</a>
+  <b>AVISO DE EMBARQUE</b>
+</header>
+<main>
+  <section class="card">
+    <h2>Dados do embarque</h2>
+    <div class="tres">
+      <label class="campo"><span>Tipo</span><select id="iTipo"><option value="">—</option><option>DV</option><option>MR</option><option>TEA</option><option>Idoso</option><option>Cadeirante</option><option>Cadeirante motorizado</option><option>Outro</option></select></label>
+      <label class="campo"><span>Carro</span><select id="iCarro"><option value="">—</option><option value="1">1º</option><option value="2">2º</option><option value="3">3º</option><option value="4">4º</option><option value="5">5º</option><option value="6">6º</option><option value="7">7º</option><option value="8">8º</option></select></label>
+      <label class="campo"><span>Porta</span><select id="iPorta"><option value="">—</option><option value="1">1ª</option><option value="2">2ª</option><option value="3">3ª</option><option value="4">4ª</option></select></label>
+    </div>
+    <div class="dois">
+      <label class="campo"><span>Nº do carro</span><input type="text" id="iNum" maxlength="12" autocomplete="off" placeholder="Ex: 7A23"></label>
+      <label class="campo"><span>Prefixo do trem</span><input type="text" id="iPref" maxlength="12" autocomplete="off" placeholder="Ex: U510"></label>
+    </div>
+    <label class="campo"><span>Estação de desembarque</span><select id="iDest"><option value="">Escolha a estação</option></select></label>
+  </section>
+
+  <section class="card">
+    <h2>Mensagem</h2>
+    <pre class="msg" id="msg"></pre>
+    <a class="btn wa" id="bWa" href="#" target="_blank" rel="noopener" aria-disabled="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.6-5.2A8.5 8.5 0 1 1 21 12z"/></svg><span id="bWaTx">Escolha a estação de desembarque</span></a>
+    <div class="acoes"><button class="btn" id="bCopiar" type="button">Copiar mensagem</button><button class="btn" id="bLimpar" type="button">Novo embarque</button></div>
+    <p class="dica">Ao tocar em enviar, o embarque entra no registro abaixo.</p>
+  </section>
+
+  <section class="card">
+    <div class="rcab"><h2>Registro de embarques</h2><button class="btn mini" id="bExp" type="button">Exportar (CSV)</button></div>
+    <p class="dica">Fica guardado neste aparelho.</p>
+    <div class="reg" id="reg"></div>
+  </section>
+</main>
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+/* telefones e ordem das estações: os mesmos de "Falar com estação" */
+const EST={
+  BRA:['BRÁ','Brás','11926950365'],
+  TAT:['TAT','Tatuapé','11926009431'],
+  CIT:['ITQ','Itaquera (Corinthians-Itaquera)','11926829202'],
+  DOB:['DOB','Dom Bosco','11926951980'],
+  JBO:['JBO','José Bonifácio','11926956242'],
+  GUA:['GUA','Guaianases','11925602414'],
+  AGN:['AGN','Antônio Gianetti Neto','11925784098'],
+  FVC:['FVC','Ferraz de Vasconcelos','11925599772'],
+  POA:['POA','Poá','11924998023'],
+  CVN:['CVN','Calmon Viana','11924912734'],
+  SUZ:['SUZ','Suzano','11924858440'],
+  JPB:['JPB','Jundiapeba','11924816419'],
+  BCB:['BCB','Brás Cubas','11924808668'],
+  MDC:['MDC','Mogi das Cruzes','11924782522'],
+  EST:['EST','Estudantes','11924742257'],
+  EGO:['EGO','Engenheiro Goulart','11984709876'],
+  USP:['USP','USP Leste','11924606632'],
+  ERM:['ERM','Comendador Ermelino','11925247005'],
+  SMP:['SMP','São Miguel Paulista','11926721012'],
+  JHE:['JHE','Jardim Helena-Vila Mara','11926789466'],
+  ITI:['ITI','Itaim Paulista','11926801429'],
+  JRO:['JRO','Jardim Romano','11926827007'],
+  EMF:['EMF','Engenheiro Manoel Feio','11926659043'],
+  IQC:['IQC','Itaquaquecetuba','11926773019'],
+  ARC:['ARC','Aracaré','11972263857'],
+  GCE:['GCE','Guarulhos-Cecap','11926666344'],
+  AGU:['AGU','Aeroporto-Guarulhos','11926477002']
+};
+// Ordem das estações em cada linha (sentido centro → ponta).
+const LINHAS=[
+  {n:'11',nome:'CORAL',rota:'Brás ↔ Estudantes',est:['BRA','TAT','CIT','DOB','JBO','GUA','AGN','FVC','POA','CVN','SUZ','JPB','BCB','MDC','EST']},
+  {n:'12',nome:'SAFIRA',rota:'Brás ↔ Calmon Viana',est:['BRA','TAT','EGO','USP','ERM','SMP','JHE','ITI','JRO','EMF','IQC','ARC','CVN']},
+  {n:'13',nome:'JADE',rota:'Engenheiro Goulart ↔ Aeroporto-Guarulhos',est:['EGO','GCE','AGU']}
+];
+const CHAVE='embarques-v1';
+let REG=[];try{REG=JSON.parse(localStorage.getItem(CHAVE)||'[]')}catch(e){}if(!Array.isArray(REG))REG=[];
+const salvar=()=>{try{localStorage.setItem(CHAVE,JSON.stringify(REG))}catch(e){}};
+/* estações por linha, cada uma uma vez */
+{const vis=new Set(),sel=$('#iDest');LINHAS.forEach(l=>{const g=document.createElement('optgroup');g.label='Linha '+l.n+' – '+l.nome;l.est.forEach(k=>{if(vis.has(k))return;vis.add(k);const o=document.createElement('option');o.value=k;o.textContent=EST[k][1];g.appendChild(o)});if(g.children.length)sel.appendChild(g)})}
+const TIPO={'Idoso':'idoso','Cadeirante':'cadeirante','Cadeirante motorizado':'cadeirante motorizado','Outro':'passageiro'};
+const limpa=v=>v.toUpperCase().replace(/[^A-Z0-9]/g,'');
+function dados(){return{tipo:$('#iTipo').value,carro:$('#iCarro').value,porta:$('#iPorta').value,num:limpa($('#iNum').value),pref:limpa($('#iPref').value),dest:$('#iDest').value}}
+function montar(d){
+  const t=d.tipo?(TIPO[d.tipo]||d.tipo):'passageiro';
+  let m='Foi embarcado um '+t;
+  if(d.carro)m+=' no '+d.carro+'º carro';
+  if(d.porta)m+=(d.carro?', ':' na ')+d.porta+'ª porta';
+  if(d.num)m+=', Nº '+d.num;
+  if(d.pref)m+=', trem '+d.pref;
+  if(d.dest)m+=', para '+EST[d.dest][1];
+  return m+'.\n\nAtt. SSO BF';
+}
+const link=(m,k)=>'https://wa.me/55'+EST[k][2]+'?text='+encodeURIComponent(m);
+function atualizar(){
+  const d=dados(),m=montar(d),b=$('#bWa');
+  $('#msg').textContent=m;
+  if(d.dest){b.href=link(m,d.dest);b.setAttribute('aria-disabled','false');$('#bWaTx').textContent='Enviar para '+EST[d.dest][1]+' no WhatsApp'}
+  else{b.removeAttribute('href');b.setAttribute('aria-disabled','true');$('#bWaTx').textContent='Escolha a estação de desembarque'}
+}
+['#iTipo','#iCarro','#iPorta','#iNum','#iPref','#iDest'].forEach(s=>{$(s).addEventListener('input',atualizar);$(s).addEventListener('change',atualizar)});
+$('#bWa').addEventListener('click',()=>{
+  const d=dados();if(!d.dest)return;
+  REG.unshift(Object.assign({em:new Date().toISOString(),destNome:EST[d.dest][1],msg:montar(d)},d));salvar();listar();
+});
+$('#bCopiar').onclick=async()=>{const t=$('#msg').textContent;try{await navigator.clipboard.writeText(t)}catch(e){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(_){}a.remove()}const b=$('#bCopiar');b.textContent='Copiada';setTimeout(()=>b.textContent='Copiar mensagem',1500)};
+$('#bLimpar').onclick=()=>{['#iTipo','#iCarro','#iPorta','#iNum','#iPref','#iDest'].forEach(s=>$(s).value='');atualizar();$('#iTipo').focus()};
+const z=n=>String(n).padStart(2,'0');
+const dh=iso=>{const d=new Date(iso);return z(d.getDate())+'/'+z(d.getMonth()+1)+'/'+d.getFullYear()+' '+z(d.getHours())+'h'+z(d.getMinutes())};
+function listar(){
+  const el=$('#reg');el.innerHTML='';$('#bExp').disabled=!REG.length;
+  if(!REG.length){el.innerHTML='<p class="dica">Nenhum embarque registrado ainda.</p>';return}
+  REG.forEach(r=>{
+    const d=document.createElement('div');d.className='it';
+    d.innerHTML='<div class="cab"><span class="pf"></span><span class="para"></span><time></time></div><p></p><a target="_blank" rel="noopener">Reenviar</a>';
+    const pf=d.querySelector('.pf');pf.textContent=r.pref||'—';
+    d.querySelector('.para').textContent='→ '+(r.destNome||'');
+    d.querySelector('time').textContent=dh(r.em);
+    d.querySelector('p').textContent=r.msg.split('\n')[0];
+    const a=d.querySelector('a');if(EST[r.dest])a.href=link(r.msg,r.dest);else a.hidden=true;
+    el.appendChild(d);
+  });
+}
+$('#bExp').onclick=()=>{
+  if(!REG.length)return;
+  const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const L=[['Data e hora','Tipo','Carro','Porta','Nº do carro','Trem','Estação de desembarque','Mensagem'].map(q).join(';')];
+  REG.forEach(r=>L.push([dh(r.em),r.tipo,r.carro?r.carro+'º':'',r.porta?r.porta+'ª':'',r.num,r.pref,r.destNome,r.msg.replace(/\n+/g,' ')].map(q).join(';')));
+  const d=new Date(),nome='embarques-'+d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate())+'.csv';
+  const blob=new Blob(['﻿'+L.join('\r\n')],{type:'text/csv;charset=utf-8'}),f=new File([blob],nome,{type:'text/csv'});
+  if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f],title:'Registro de embarques'}).catch(()=>{});return}
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=nome;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);
+};
+atualizar();listar();
+</script>
+</body>
+</html>
