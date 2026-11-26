@@ -84,6 +84,7 @@ main{max-width:620px;margin:0 auto;padding:16px 16px 60px;display:flex;flex-dire
 <script>
 // Telefones das estações. Formato: DDD + número, só dígitos.
 const EST={
+  BFU:['BFU','Palmeiras-Barra Funda','11926885833'],
   LUZ:['LUZ','Luz','11926824593'],
   BRA:['BRÁ','Brás','11926950365'],
   TAT:['TAT','Tatuapé','11926809431'],
@@ -115,9 +116,9 @@ const EST={
 };
 // Ordem das estações em cada linha (sentido centro → ponta).
 const LINHAS=[
-  {n:'11',nome:'CORAL',rota:'Luz ↔ Estudantes',est:['LUZ','BRA','TAT','CIT','DOB','JBO','GUA','AGN','FVC','POA','CVN','SUZ','JPB','BCB','MDC','EST']},
+  {n:'11',nome:'CORAL',rota:'Palmeiras-Barra Funda ↔ Estudantes',est:['BFU','LUZ','BRA','TAT','CIT','DOB','JBO','GUA','AGN','FVC','POA','CVN','SUZ','JPB','BCB','MDC','EST']},
   {n:'12',nome:'SAFIRA',rota:'Brás ↔ Calmon Viana',est:['BRA','TAT','EGO','USP','ERM','SMP','JHE','ITI','JRO','EMF','IQC','ARC','CVN']},
-  {n:'13',nome:'JADE',rota:'Luz (Expresso Aeroporto) e Engenheiro Goulart ↔ Aeroporto-Guarulhos',est:['LUZ','EGO','GCE','AGU']}
+  {n:'13',nome:'JADE',rota:'Palmeiras-Barra Funda (Expresso Aeroporto) e Engenheiro Goulart ↔ Aeroporto-Guarulhos',est:['BFU','LUZ','EGO','GCE','AGU']}
 ];
 const linhasDe={};
 LINHAS.forEach(l=>l.est.forEach(k=>(linhasDe[k]=linhasDe[k]||[]).push(l.n)));
