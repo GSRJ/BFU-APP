@@ -66,6 +66,10 @@ pre{margin:0;padding:15px 14px;background:var(--mar);color:#E7EEF8;
  font:13px/1.62 var(--mono);white-space:pre-wrap;word-break:break-word}
 .nota{padding:10px 14px;background:#F6F9FD;border-top:1px solid var(--li);font-size:13px;line-height:1.4;color:var(--mut)}
 .nota b{color:var(--tx)}
+.mapaesc .cb{padding:0;background:#071330}
+.mapaesc img{display:block;width:100%;height:auto}
+.mapaesc .esp{padding:40px 14px;text-align:center;color:#9DB0D4;font-size:14px}
+.btn.wa{background:#1FA855;border-color:#1FA855;color:#fff}.btn.wa:hover{filter:brightness(1.08);color:#fff}
 
 
 /* rodízio com fundo azul claro, no mesmo tom dos postos */
@@ -292,6 +296,7 @@ footer .off{display:inline-block;padding:4px 10px;border-radius:999px;background
 <div class="toast" id="toast"></div>
 <div class="avpop" id="avPop" role="alert"><div class="t" id="avPt"></div><div class="n" id="avPn"></div><div class="p" id="avPp"></div><button type="button" id="avOk">Entendi</button></div>
 
+<script src="escala.js"></script>
 <script>
 "use strict";
 /* dados embutidos na publicação; o arquivo gbd-dados.json, quando existir, substitui */
@@ -472,6 +477,9 @@ function render(){
  if(dd&&verDia===foco)box.appendChild($('#avisos'));
  box.appendChild(c);
 
+ /* escala no mapa: a planta com a foto de cada agente no posto (só a tarde) */
+ if(dd&&(turno||'tarde')==='tarde'&&window.EscalaBFU)montarMapa(box,dd,verDia);
+
  /* ciclo do posto de rodízio até a data */
  if(dd&&dd.ciclo&&D.ciclos&&(D.ciclos[dd.ciclo]||verCiclo))montarCiclo(box,dd);
  if(typeof atualizarAvisos==='function'){atualizarAvisos();avConferir();}
@@ -481,6 +489,32 @@ function render(){
 
 /* ---------- o GBD em blocos ---------- */
 /* lê o texto do WhatsApp: cabeçalho (ASL), seções entre linhas ━, linhas "posto ▸ nomes", "hora ▸ nomes", "nome • nome" e notas em itálico */
+let MAPA_VEZ=0;
+function montarMapa(box,dd,k){
+ const vez=++MAPA_VEZ;
+ const c=el('div','card mapaesc');
+ const h=el('div','ch');h.appendChild(el('span','q','Escala no mapa'));h.appendChild(el('span','spacer'));
+ const bw=el('button','btn wa sm','Enviar no WhatsApp');bw.disabled=true;
+ const bb=el('button','btn claro sm','Salvar imagem');bb.disabled=true;
+ h.append(bb,bw);c.appendChild(h);
+ const cb=el('div','cb');cb.appendChild(el('div','esp','Montando a imagem…'));c.appendChild(cb);
+ box.appendChild(c);
+ const nome=`Escala BFU tarde ${br(k).replace(/\//g,'-')}.png`;
+ EscalaBFU.desenhar(dd.txt).then(blob=>{
+  if(vez!==MAPA_VEZ||!blob)return;
+  const url=URL.createObjectURL(blob),im=new Image();im.alt='Escala do dia na planta da estação';im.src=url;
+  cb.innerHTML='';cb.appendChild(im);
+  const arq=new File([blob],nome,{type:'image/png'});
+  const salvar=()=>{const a=document.createElement('a');a.href=url;a.download=nome;document.body.appendChild(a);a.click();a.remove()};
+  bb.disabled=false;bb.onclick=salvar;
+  bw.disabled=false;bw.onclick=async()=>{
+   if(navigator.canShare&&navigator.canShare({files:[arq]})){
+    try{await navigator.share({files:[arq]});return}catch(e){if(e&&e.name==='AbortError')return}
+   }
+   salvar();toast('Imagem salva. Anexe no WhatsApp.');
+  };
+ }).catch(()=>{if(vez===MAPA_VEZ)cb.innerHTML='<div class="esp">Não foi possível montar a imagem.</div>'});
+}
 function gbdParse(txt){
  const o={lid:[],secs:[],notas:[]};let cur=null,sep=false,vazia=false;
  const limpa=x=>x.replace(/\*/g,'').replace(/^_+|_+$/g,'').trim();
