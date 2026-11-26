@@ -804,9 +804,20 @@ function intervalos(k,disp,postos,comApoio,cobre){
  }
  return {cafe,janta};
 }
+/* pausa de 15 ou 20 min escolhida nos botões: horários de 'dur' em 'dur' a partir do primeiro horário,
+   no máximo 'cab' por horário; procura fechar em 1h e não passar de 1h30, salvo se o efetivo não permitir */
+function slotsPausa(ini,dur,n,cab){
+ const precisa=Math.ceil(n/cab),alvo=Math.ceil(60/dur),teto=Math.floor(90/dur);
+ const q=Math.max(precisa,Math.min(n,alvo,teto));
+ return Array.from({length:q},(_,i)=>hhmm(ini+i*dur));
+}
 function montarCafe(k,disp,postos){
  const n=disp.length;if(!n)return{};
  const cfg=S.cafe,penal=penalizador(k,disp,postos,'cafe');
+ if(cfg.auto&&(+cfg.duracao===15||+cfg.duracao===20)){
+  const cab=Math.max(1,n-(+cfg.min||0)),sl=slotsPausa(cfg.inicio,+cfg.duracao,n,cab);
+  return distribuir(disp,sl,balancear(n,sl.length,cab,'equilibrado'),cab,penal);
+ }
  if(n<=cfg.limite){
   const sl=cfg.reduzido.slice(0,Math.max(n,1));
   if(sl.length>=n)return distribuir(disp,sl,sl.map(()=>1),1,penal);
@@ -981,18 +992,25 @@ function formIntervalos(host,cfg,aoMudar){
   host.innerHTML='';
   const c=cfg.cafe,j=cfg.janta;
   const b1=el('div');b1.appendChild(el('h4',null,'Pausa'));
+  const tp=el('div','f');tp.style.marginTop='8px';tp.appendChild(el('label',null,'Tempo de pausa'));
+  const tb=el('div');tb.style.cssText='display:flex;gap:6px';
+  [15,20,30].forEach(m=>{const b=el('button','btn'+(c.auto&&+c.duracao===m?' pri':''),m+' min');b.type='button';b.style.flex='1';
+   b.onclick=()=>{c.auto=true;c.duracao=m;if(m===30){c.espaco=30;}aplica();toast(`Pausa de ${m} min`)};tb.appendChild(b)});
+  tp.appendChild(tb);b1.appendChild(tp);
+  const auto=c.auto&&(+c.duracao===15||+c.duracao===20);
+  if(auto)b1.appendChild(el('p','hint',`Com ${c.duracao} min, as pausas saem de ${c.duracao} em ${c.duracao} minutos e ficam dentro de 1h a 1h30 a partir do primeiro horário, sempre respeitando o mínimo no posto. Exemplo com 6 agentes: ${slotsPausa(c.inicio,+c.duracao,6,Math.max(1,6-(+c.min||0))).join(' · ')}`));
   const g1=el('div','form');g1.style.marginTop='8px';
   hora(g1,'Primeiro horário',c.inicio,v=>c.inicio=v);
-  num(g1,'Duração (min)',c.duracao,v=>c.duracao=v,0,120);
-  num(g1,'De quanto em quanto (min)',c.espaco,v=>c.espaco=v,5,120);
-  num(g1,'Quantos horários',c.qtd,v=>c.qtd=v,1,8);
+  num(g1,'Duração (min)',c.duracao,v=>{c.duracao=v;c.auto=false},0,120);
+  if(!auto){num(g1,'De quanto em quanto (min)',c.espaco,v=>c.espaco=v,5,120);
+  num(g1,'Quantos horários',c.qtd,v=>c.qtd=v,1,8);}
   b1.appendChild(g1);
   const g1b=el('div','form');g1b.style.marginTop='8px';
-  num(g1b,'Com efetivo curto: de quanto em quanto',c.espacoRed,v=>c.espacoRed=v,5,120);
-  num(g1b,'Com efetivo curto: quantos horários',c.qtdRed,v=>c.qtdRed=v,1,10);
+  if(!auto){num(g1b,'Com efetivo curto: de quanto em quanto',c.espacoRed,v=>c.espacoRed=v,5,120);
+  num(g1b,'Com efetivo curto: quantos horários',c.qtdRed,v=>c.qtdRed=v,1,10);}
   num(g1b,'Mínimo no posto durante a pausa',c.min,v=>c.min=v,0,20);
   b1.appendChild(g1b);
-  b1.appendChild(el('div','prev',`${c.titulo}   →   ${c.horarios.join(' · ')}\nefetivo curto: ${c.reduzido.join(' · ')}`));
+  if(!auto)b1.appendChild(el('div','prev',`${c.titulo}   →   ${c.horarios.join(' · ')}\nefetivo curto: ${c.reduzido.join(' · ')}`));
   host.appendChild(b1);
   const b2=el('div');b2.style.marginTop='16px';b2.appendChild(el('h4',null,'Intervalo'));
 
