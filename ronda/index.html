@@ -207,6 +207,17 @@ dialog.full[open]{display:flex;flex-direction:column}
 .bprob .x{flex:none;width:36px;height:36px;border-radius:18px;border:1.5px solid var(--line);background:var(--panel);font-size:16px;cursor:pointer}
 .bform{display:flex;flex-direction:column;gap:2px;padding:12px;border:1.5px solid var(--line);border-radius:14px;background:var(--bg)}
 .bform .big2{margin-top:12px}
+.bitens{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.bit{border:1.5px solid var(--line);border-radius:12px;background:var(--panel);overflow:hidden}
+.bit.on{border-color:var(--k,#111);box-shadow:0 0 0 2px var(--k,#111) inset}
+.bit-m{display:flex;align-items:flex-start;gap:10px;width:100%;text-align:left;border:0;background:none;color:var(--ink);padding:10px 12px 8px;font:inherit;cursor:pointer}
+.bit-m .rd{flex:none;width:20px;height:20px;border-radius:50%;border:2px solid #8A8F96;margin-top:1px;display:grid;place-items:center}
+.bit-m .rd.on{border-color:var(--k,#111)}.bit-m .rd.on::after{content:"";width:10px;height:10px;border-radius:50%;background:var(--k,#111)}
+.bit-m .tx{display:flex;flex-direction:column;gap:2px;min-width:0}
+.bit-m b{font-size:15.5px;line-height:1.25}
+.bit-m .tx>span{font-size:13px;color:var(--muted);line-height:1.3}
+.bit-p{display:block;margin:0 12px 10px 42px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:6px 12px;font-weight:700;font-size:13px;line-height:1;cursor:pointer}
+.bit-load{font-size:14px;color:var(--muted);margin:6px 0}
 .bnav{display:flex;justify-content:space-between;align-items:center;margin-top:8px;color:var(--ink2);font-size:15px}
 .bnav button{min-height:44px;background:none;border:0;font-weight:700;font-size:16px;color:var(--accent);cursor:pointer}
 .bsum h2{font-size:24px;font-weight:800}
@@ -642,7 +653,7 @@ body.in-hub .top::before{display:none!important}
   <section class="sheet" id="sheet" aria-live="polite"></section>
 </main>
 <section class="basic" id="basic" hidden aria-live="polite"></section>
-<div class="foot-strip" aria-hidden="true"><span>Desenvolvido por AAS GERSON · versão <b id="appVer">119</b></span></div>
+<div class="foot-strip" aria-hidden="true"><span>Desenvolvido por AAS GERSON · versão <b id="appVer">120</b></span></div>
 
 <dialog id="dlg">
   <h2 id="dlgT"></h2>
@@ -3195,9 +3206,31 @@ async function startBasic(){
 function bProbHTML(p,i){
   return `<div class="bprob"><div><b>${esc(p.local||'Local não informado')}</b><br><span>${esc(p.desc||'Sem descrição')}</span>${p.photos.length?`<br><small>📷 ${p.photos.length} foto${p.photos.length===1?'':'s'}</small>`:''}</div><button type="button" class="x" data-b="del" data-i="${i}" aria-label="Remover problema">✕</button></div>`;
 }
+/* itens de cada pergunta da ronda básica, para a pessoa escolher qual está com problema */
+const B_ITENS={};
+function bCarregaItens(q){
+  if(!q||q.extra||B_ITENS[q.key])return;
+  B_ITENS[q.key]='…';
+  locItens(q).then(r=>{B_ITENS[q.key]=r.items.map(it=>({id:it.p.id,name:it.name,w:it.w}));if(bDraft&&!bDone()&&BQ[basic.idx]===q)bRender(true);}).catch(()=>{B_ITENS[q.key]=[];if(bDraft)bRender(true);});
+}
+function bItensHTML(q,d){
+  const L=B_ITENS[q.key];
+  if(!Array.isArray(L))return `<p class="bit-load">Carregando os itens…</p>`;
+  const rd=on=>`<span class="rd${on?' on':''}" aria-hidden="true"></span>`;
+  let h=`<div class="bitens" role="radiogroup" aria-label="Qual item está com problema">`;
+  L.forEach((it,i)=>{const on=d.sel===i;
+    h+=`<div class="bit${on?' on':''}"><button type="button" class="bit-m" role="radio" aria-checked="${on}" data-b="pick" data-i="${i}">${rd(on)}<span class="tx"><b>${esc(it.name)}</b><span>📍 ${esc(it.w)}</span></span></button><button type="button" class="bit-p" data-b="mapa" data-i="${i}">🗺️ Ver na planta</button></div>`;});
+  const on=d.sel==='outro';
+  h+=`<div class="bit${on?' on':''}"><button type="button" class="bit-m" role="radio" aria-checked="${on}" data-b="pick" data-i="outro">${rd(on)}<span class="tx"><b>Outro</b><span>Não é nenhum dos itens acima</span></span></button></div></div>`;
+  if(on)h+=`<label class="lbl" for="bLocal" style="margin-top:10px">Qual o local?</label><input class="inp" id="bLocal" type="text" autocomplete="off" placeholder="Ex.: perto da escada rolante 05" value="${esc(d.local)}">`;
+  return h;
+}
 function bDraftHTML(){
-  const d=bDraft;
-  return `<div class="bform"><label class="lbl" for="bLocal">Qual o local do item?</label><input class="inp" id="bLocal" type="text" autocomplete="off" placeholder="Ex.: perto da escada rolante 05" value="${esc(d.local)}">`+
+  const d=bDraft,q=BQ[basic.idx];
+  const topo=q.extra
+    ?`<label class="lbl" for="bLocal">Qual o local?</label><input class="inp" id="bLocal" type="text" autocomplete="off" placeholder="Ex.: perto da escada rolante 05" value="${esc(d.local)}">`
+    :`<label class="lbl">Qual item está com problema?</label>`+bItensHTML(q,d);
+  return `<div class="bform">`+topo+
    `<label class="lbl" for="bDesc" style="margin-top:12px">Descreva o problema</label><textarea class="inp" id="bDesc" placeholder="O que está errado?">${esc(d.desc)}</textarea>`+
    `<label class="lbl" style="margin-top:12px">Foto do problema</label><div class="photos"><button type="button" class="big cta" data-b="cam">📷 Tirar foto</button><button type="button" class="big plain" data-b="gal">🖼 Galeria</button></div>`+
    (d.photos.length?`<div class="thumbs">${d.photos.map((f,i)=>`<figure><img src="${f.d}" alt="Foto ${i+1}"><button type="button" data-b="rmph" data-i="${i}" aria-label="Remover foto ${i+1}">✕</button></figure>`).join('')}</div>`:'')+
@@ -3223,7 +3256,7 @@ function renderBasic(){
       h+=basic.edit!=null?`<div class="bnav"><button type="button" data-b="tosum">↩ Voltar ao resumo</button><span>Corrigindo</span></div></div>`:`<div class="bnav"><button type="button" data-b="back">↩ Voltar</button><span>${basic.idx+1} / ${BQ.length}</span></div></div>`;
     }
   }
-  el.innerHTML=h;el.scrollTop=0;updateBand();
+  const st=el.scrollTop;el.innerHTML=h;el.scrollTop=renderBasic.manter?st:0;renderBasic.manter=false;updateBand();
   const sum=bDone();
   if(sum&&!renderBasic.wasSum&&!touring)bSlideToSend(el);
   renderBasic.wasSum=sum;
@@ -3243,6 +3276,8 @@ function bSlideToSend(el){
     requestAnimationFrame(step);
   },700);
 }
+/* redesenha sem voltar ao topo, guardando o que já foi digitado */
+function bRender(manter){const l=$('#bLocal'),d=$('#bDesc');if(bDraft){if(l)bDraft.local=l.value;if(d)bDraft.desc=d.value;}renderBasic.manter=!!manter;renderBasic();}
 function bAdvance(){
   if(basic.edit!=null){basic.edit=null;basic.idx=BQ.length;bDraft=null;bSave();renderBasic();return;}
   const prev=BQ[basic.idx];basic.idx++;bDraft=null;
@@ -3419,19 +3454,26 @@ $('#basic').addEventListener('click',async e=>{
   if(a==='go'){basic.intro=false;bSave();renderBasic();}
   else if(a==='back')bBack();
   else if(a==='ok'){if((an.probs||[]).length&&!await ask('Apagar problemas?','Marcar "Tudo em ordem" apaga os problemas já registrados neste item.','Apagar'))return;an.st='ok';an.probs=[];bAdvance();}
-  else if(a==='bad'){an.st='problema';an.probs=an.probs||[];if(!bDraft&&!an.probs.length)bDraft={local:'',desc:'',photos:[]};bSave();renderBasic();}
-  else if(a==='add'){bDraft={local:'',desc:'',photos:[]};renderBasic();}
+  else if(a==='bad'){an.st='problema';an.probs=an.probs||[];if(!bDraft&&!an.probs.length)bDraft={local:'',desc:'',photos:[],sel:null};bCarregaItens(q);bSave();renderBasic();}
+  else if(a==='add'){bDraft={local:'',desc:'',photos:[],sel:null};bCarregaItens(q);bRender(true);}
+  else if(a==='pick'){const v=b.dataset.i;bDraft.sel=v==='outro'?'outro':+v;bRender(true);if(v==='outro')setTimeout(()=>{const l=$('#bLocal');if(l)l.focus();},50);}
+  else if(a==='mapa'){bRender(true);openLoc(q,+b.dataset.i);}
   else if(a==='cancel'){bDraft=null;if(!(an.probs||[]).length){delete basic.ans[q.key];}bSave();renderBasic();}
   else if(a==='save'){
-    const l=$('#bLocal').value.trim(),d=$('#bDesc').value.trim();
+    const li=$('#bLocal'),d=$('#bDesc').value.trim(),L=B_ITENS[q.key];let l=li?li.value.trim():'',item=null;
+    if(!q.extra){
+      if(bDraft.sel==null){notify('Escolha qual item está com problema, ou Outro.');return;}
+      if(bDraft.sel!=='outro'&&Array.isArray(L)&&L[bDraft.sel]){item=L[bDraft.sel];l=item.name+' · '+item.w;}
+    }
     if(!l&&!d){notify('Informe o local e descreva o problema.');return;}
-    an.probs.push({local:l,desc:d,photos:bDraft.photos,t:nowHM(),d:todayISO()});bDraft=null;bSave();renderBasic();
+    const pr={local:l,desc:d,photos:bDraft.photos,t:nowHM(),d:todayISO()};if(item)pr.item=item.id;
+    an.probs.push(pr);bDraft=null;bSave();renderBasic();
   }
   else if(a==='del'){an.probs.splice(+b.dataset.i,1);if(!an.probs.length){delete basic.ans[q.key];}bSave();renderBasic();}
   else if(a==='next')bAdvance();
   else if(a==='cam')$('#bPhotoCam').click();
   else if(a==='gal')$('#bPhotoIn').click();
-  else if(a==='rmph'){bDraft.photos.splice(+b.dataset.i,1);const l=$('#bLocal'),d=$('#bDesc');bDraft.local=l.value;bDraft.desc=d.value;renderBasic();}
+  else if(a==='rmph'){bDraft.photos.splice(+b.dataset.i,1);bRender(true);}
   else if(a==='send')bEnviarTudo();
   else if(a==='txtall')bSendText();
   else if(a==='edit'){const i=+b.dataset.q;if(i>=0){basic.edit=i;basic.idx=i;basic.intro=false;bDraft=null;bSave();renderBasic();}}
@@ -3452,10 +3494,14 @@ async function locCfg(k){
   try{const c=await kvGet(k==='mez'?'config':'config-'+k);if(c&&Array.isArray(c.points)){c.points.forEach(q=>{if(q.area==='A_TEC')q.area=A_TEC;});fixOutro(c);return await cfgMigrada(k,c);}}catch(_){}
   return null;
 }
-async function openLoc(q){
+async function locItens(q){
   const cf=await locCfg(q.k),areas=LOC_CATS[q.cat]||[];
   const items=await withArea(q.k,cf,newRonda(),async()=>allPoints().filter(p=>!p.custom&&areas.includes(p.area)).map(p=>({p,name:noPlat(p.name),w:whereText(p)})));
-  loc={q,cf,items,i:-1,full:false};
+  return {cf,items};
+}
+async function openLoc(q,i){
+  const {cf,items}=await locItens(q);
+  loc={q,cf,items,i:i==null?-1:i,full:i!=null};
   renderLoc();const d=$('#locDlg');d.classList.toggle('intour',!!touring);if(touring)d.show();else d.showModal();
 }
 function locPlan(){
@@ -3619,13 +3665,14 @@ const TOUR_BASIC=[
  {t:'Volte para a pergunta',p:'Toque em Fechar e responda.',el:()=>$('#locBody [data-lb=close]'),
   tap:()=>{const d=$('#locDlg');d.close();d.classList.remove('intour');}},
  {t:'Achou um problema? Toque em ⚠️',p:'Depois descreva o local e tire a foto.',el:()=>B('[data-b=bad]'),
-  tap:()=>{const q=BQ[basic.idx];basic.ans[q.key]={st:'problema',probs:[]};bDraft={local:'',desc:'',photos:[]};renderBasic();}},
- {t:'Local, descrição e foto',p:'Preencha, tire a foto e toque em Salvar.',
-  prep:async()=>{const l=B('#bLocal');tourHole(B('.bform'));await sleep(80);l.scrollIntoView({block:'center',behavior:'instant'});
-    await typeInto(l,'Junto ao bloqueio 05');bDraft.local=l.value;const d=B('#bDesc');await typeInto(d,'Hidrante com a porta quebrada.');bDraft.desc=d.value;await sleep(150);
+  tap:()=>{const q=BQ[basic.idx];basic.ans[q.key]={st:'problema',probs:[]};bDraft={local:'',desc:'',photos:[],sel:null};bCarregaItens(q);renderBasic();}},
+ {t:'Item, descrição e foto',p:'Escolha qual item tem o problema (🗺️ mostra na planta), descreva, tire a foto e toque em Salvar.',
+  prep:async()=>{for(let i=0;i<30&&!B('[data-b=pick]');i++)await sleep(100);tourHole(B('.bform'));await sleep(80);
+    const pk=B('[data-b=pick]');if(pk){pk.scrollIntoView({block:'center',behavior:'instant'});await tourTap(pk,()=>{bDraft.sel=0;bRender(true);});await sleep(300);}
+    const d=B('#bDesc');d.scrollIntoView({block:'center',behavior:'instant'});await typeInto(d,'Hidrante com a porta quebrada.');bDraft.desc=d.value;await sleep(150);
     await tourTap(B('[data-b=cam]'),()=>{bDraft.photos.push(demoPhoto());renderBasic();});await sleep(450);},
   el:()=>B('[data-b=save]'),
-  tap:()=>{const q=BQ[basic.idx];basic.ans[q.key].probs.push({local:bDraft.local,desc:bDraft.desc,photos:bDraft.photos,t:nowHM(),d:todayISO()});bDraft=null;bFillOk();}},
+  tap:()=>{const q=BQ[basic.idx],L=B_ITENS[q.key],it=Array.isArray(L)&&bDraft.sel!=null?L[bDraft.sel]:null;basic.ans[q.key].probs.push({local:it?it.name+' · '+it.w:(bDraft.local||'Junto ao bloqueio 05'),desc:bDraft.desc,photos:bDraft.photos,t:nowHM(),d:todayISO()});bDraft=null;bFillOk();}},
  {t:'No fim, envie à SSO',p:'Um toque só: vai a imagem com os dados da ronda, as fotos e o texto. Escolha a conversa da SSO no WhatsApp.',el:()=>B('[data-b=send]')},
  {t:'Pronto!',p:'Nada foi salvo. Rever: Como usar, na tela inicial.',prep:async()=>{tourRestore();}}
 ];
