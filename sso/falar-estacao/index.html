@@ -84,22 +84,23 @@ main{max-width:620px;margin:0 auto;padding:16px 16px 60px;display:flex;flex-dire
 <script>
 // Telefones das estações. Formato: DDD + número, só dígitos.
 const EST={
+  LUZ:['LUZ','Luz','11926824593'],
   BRA:['BRÁ','Brás','11926950365'],
-  TAT:['TAT','Tatuapé','11926009431'],
+  TAT:['TAT','Tatuapé','11926809431'],
   CIT:['ITQ','Itaquera (Corinthians-Itaquera)','11926829202'],
   DOB:['DOB','Dom Bosco','11926951980'],
-  JBO:['JBO','José Bonifácio','11926956242'],
-  GUA:['GUA','Guaianases','11925602414'],
+  JBO:['JBO','José Bonifácio','11926958245'],
+  GUA:['GUA','Guaianases','11925802414'],
   AGN:['AGN','Antônio Gianetti Neto','11925784098'],
   FVC:['FVC','Ferraz de Vasconcelos','11925599772'],
   POA:['POA','Poá','11924998023'],
   CVN:['CVN','Calmon Viana','11924912734'],
   SUZ:['SUZ','Suzano','11924858440'],
-  JPB:['JPB','Jundiapeba','11924816419'],
-  BCB:['BCB','Brás Cubas','11924808668'],
+  JPB:['JPB','Jundiapeba','11924810419'],
+  BCB:['BCB','Brás Cubas','11924808666'],
   MDC:['MDC','Mogi das Cruzes','11924782522'],
   EST:['EST','Estudantes','11924742257'],
-  EGO:['EGO','Engenheiro Goulart','11984709876'],
+  EGO:['EGO','Engenheiro Goulart','11924709876'],
   USP:['USP','USP Leste','11924606632'],
   ERM:['ERM','Comendador Ermelino','11925247005'],
   SMP:['SMP','São Miguel Paulista','11926721012'],
@@ -114,7 +115,7 @@ const EST={
 };
 // Ordem das estações em cada linha (sentido centro → ponta).
 const LINHAS=[
-  {n:'11',nome:'CORAL',rota:'Brás ↔ Estudantes',est:['BRA','TAT','CIT','DOB','JBO','GUA','AGN','FVC','POA','CVN','SUZ','JPB','BCB','MDC','EST']},
+  {n:'11',nome:'CORAL',rota:'Luz ↔ Estudantes',est:['LUZ','BRA','TAT','CIT','DOB','JBO','GUA','AGN','FVC','POA','CVN','SUZ','JPB','BCB','MDC','EST']},
   {n:'12',nome:'SAFIRA',rota:'Brás ↔ Calmon Viana',est:['BRA','TAT','EGO','USP','ERM','SMP','JHE','ITI','JRO','EMF','IQC','ARC','CVN']},
   {n:'13',nome:'JADE',rota:'Engenheiro Goulart ↔ Aeroporto-Guarulhos',est:['EGO','GCE','AGU']}
 ];
