@@ -143,7 +143,9 @@ async function desenhar(txt){
  const corte=(partes)=>{const h=partes.reduce((a,p)=>a+(p[1]-p[0]),0),c=document.createElement('canvas');c.width=cv.width;c.height=Math.round(h*S);const q=c.getContext('2d');let y=0;
   for(const[a,b]of partes){q.drawImage(cv,0,Math.round(a*S),cv.width,Math.round((b-a)*S),0,Math.round(y*S),cv.width,Math.round((b-a)*S));y+=b-a}return c};
  const fimMapa=yMapa+hMapa+PAD,topoEq=yEq-60;
- const mapa=corte([[0,fimMapa]]),equipe=corte([[0,yMapa-8],[topoEq,H0]]);
+ const mapa=corte([[0,fimMapa+44]]),equipe=corte([[0,yMapa-8],[topoEq,H0]]);
+ {const q=mapa.getContext('2d');q.setTransform(S,0,0,S,0,0);q.fillStyle=C.bg;q.fillRect(0,fimMapa-PAD+10,W0,PAD+44);
+  q.fillStyle='#7F92B8';q.font=`500 20px ${FB}`;q.textAlign='left';q.textBaseline='alphabetic';q.fillText('appbfu.vercel.app · desenvolvido pelo AAS Gerson',PAD,fimMapa+14)}
  const blob=c=>new Promise(ok=>c.toBlob(ok,'image/png'));
  return {inteira:await blob(cv),mapa:await blob(mapa),equipe:await blob(equipe)};
 }
