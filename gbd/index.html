@@ -501,18 +501,19 @@ function montarMapa(box,dd,k){
  const cb=el('div','cb');cb.appendChild(el('div','esp','Montando a imagem…'));c.appendChild(cb);
  box.appendChild(c);
  const nome=`Escala BFU tarde ${br(k).replace(/\//g,'-')}.png`;
- EscalaBFU.desenhar(dd.txt).then(blob=>{
-  if(vez!==MAPA_VEZ||!blob)return;
-  const url=URL.createObjectURL(blob),im=new Image();im.alt='Escala do dia na planta da estação';im.src=url;
+ EscalaBFU.desenhar(dd.txt).then(r=>{
+  if(vez!==MAPA_VEZ||!r||!r.inteira)return;
+  const url=URL.createObjectURL(r.inteira),im=new Image();im.alt='Escalação do dia na planta da estação';im.src=url;
   cb.innerHTML='';cb.appendChild(im);
-  const arq=new File([blob],nome,{type:'image/png'});
-  const salvar=()=>{const a=document.createElement('a');a.href=url;a.download=nome;document.body.appendChild(a);a.click();a.remove()};
+  const base=nome.replace(/\.png$/,'');
+  const arqs=[new File([r.mapa],base+' - planta.png',{type:'image/png'}),new File([r.equipe],base+' - equipe.png',{type:'image/png'})];
+  const salvar=()=>arqs.forEach((f,i)=>setTimeout(()=>{const u=URL.createObjectURL(f),a=document.createElement('a');a.href=u;a.download=f.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000)},i*400));
   bb.disabled=false;bb.onclick=salvar;
   bw.disabled=false;bw.onclick=async()=>{
-   if(navigator.canShare&&navigator.canShare({files:[arq]})){
-    try{await navigator.share({files:[arq]});return}catch(e){if(e&&e.name==='AbortError')return}
+   if(navigator.canShare&&navigator.canShare({files:arqs})){
+    try{await navigator.share({files:arqs});return}catch(e){if(e&&e.name==='AbortError')return}
    }
-   salvar();toast('Imagem salva. Anexe no WhatsApp.');
+   salvar();toast('Imagens salvas. Anexe no WhatsApp.');
   };
  }).catch(()=>{if(vez===MAPA_VEZ)cb.innerHTML='<div class="esp">Não foi possível montar a imagem.</div>'});
 }
