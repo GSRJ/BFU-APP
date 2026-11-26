@@ -366,6 +366,8 @@ const POSTOS={
  PLAT:   {rot:'Plataformas',                 ico:'🚉', ab:'Plat'},
 };
 const ORDEM=['SSO','CARTOES','APOIO','LB','RONDA','PLAT'];
+/* ordem em que os postos aparecem no GBD: sempre a mesma, seja qual for a prioridade (posto sem gente não aparece) */
+const ORDEM_GBD=['SSO','APOIO','CARTOES','LB','RONDA','PLAT'];
 /* nome e ícone de cada posto podem ser trocados no app: S.postosNome={id:{rot,ico}} */
 const POSTOS_PADRAO=JSON.parse(JSON.stringify(POSTOS));
 const ICONES=['🎙️','💳','🤝','🚧','🚶','🚉','🚆','🚇','🎫','🪪','🛗','♿','🚪','🚦','🛤️','📣','📻','🖥️','📞','📋','🧭','👀','🔑','🧰','🧯','🚑','⛑️','🚨','🧹','🏢','🅿️','🧾','🛠️','🕵️','🚻','🧑‍✈️'];
@@ -1093,7 +1095,7 @@ function textoGBD(k){
  L.push('━━━━━━━━━━━━━━');
  L.push('📍 *POSTOS*');
  L.push('━━━━━━━━━━━━━━');
- for(const p of [...prioridade(k),...ORDEM].filter((v,i,a)=>a.indexOf(v)===i)){
+ for(const p of ORDEM_GBD){
   const ids=d.postos[p];if(!ids||!ids.length)continue;
   if(p==='SSO'&&emExame(ids[0],k)){
    const c=d.ssoCobre,m=motivoParcial(ids[0],k);
