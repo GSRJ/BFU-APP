@@ -92,6 +92,10 @@ video{display:none}
 .z img{grid-column:1/-1;max-width:100%;max-height:64px;border:1px solid var(--ln);border-radius:4px;image-rendering:pixelated;background:#fff}
 .t{position:relative;display:flex;flex-direction:column;gap:10px;border:2px solid var(--ln);border-left:6px solid var(--tl);border-radius:14px;padding:12px 12px 12px 14px;background:#fff}
 .t .cab{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.t.rem{border-left-color:#9A9A92;background:#FAFAF7}
+.t.rem .placa{background:#6B6D70}
+.t.rem .lin{font-size:15px;font-weight:700}
+.qtd{color:var(--mt);font-weight:700}
 .t .placa{font:800 21px/1 var(--mono);letter-spacing:.08em;color:#F2F2F2;background:#2D2F32;border-radius:8px;padding:8px 12px}
 .t .info{display:grid;grid-template-columns:repeat(auto-fit,minmax(84px,1fr));gap:6px;margin:0}
 .t .info div{background:var(--tl2);border-radius:9px;padding:6px 9px;min-width:0}
@@ -188,6 +192,15 @@ label.cfg input[type=range]{flex:1;accent-color:var(--k)}
     <button class="btn fix" id="bPip" type="button"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="14" rx="2"/><rect x="12" y="11" width="7" height="5" rx="1"/></svg>Fixar aviso na tela</button>
   </section>
 
+  <details class="mais" id="remBox" hidden>
+    <summary>Trens removidos <span class="qtd" id="remQtd"></span></summary>
+    <div class="corpo">
+      <p class="dica">Os dados dos trens removidos ficam guardados neste aparelho para consultar depois ou exportar.</p>
+      <button class="btn" id="bExpRem" type="button"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Exportar planilha (CSV)</button>
+      <div class="trens" id="remLista"></div>
+    </div>
+  </details>
+
   <details class="mais">
     <summary>Ajustes e teste</summary>
     <div class="corpo">
@@ -224,6 +237,7 @@ let cfg={zonas:[],prefixos:[],obs:{},intervalo:2,limiar:140,paradoMin:3};
 try{Object.assign(cfg,JSON.parse(localStorage.getItem(CHAVE)||'{}'))}catch(e){}
 if(!cfg.obs||typeof cfg.obs!=='object')cfg.obs={};
 if(!cfg.info||typeof cfg.info!=='object')cfg.info={};
+if(!Array.isArray(cfg.removidos))cfg.removidos=[]; // trens removidos, guardados para consulta e exportação
 const areasAvisadas=new Set(); // áreas que já tiveram aviso desde o começo da vigia
 const salvar=()=>{try{localStorage.setItem(CHAVE,JSON.stringify(cfg))}catch(e){}};
 
@@ -369,11 +383,50 @@ function listarTrens(){
     const [bEd,bRm]=d.querySelectorAll('.ac button');
     // editar: volta o trem para o formulário; o botão vira "Salvar alterações"
     bEd.onclick=()=>{const inf=cfg.info[p]||{};$('#iPref').value=p;$('#iTipo').value=inf.tipo||'';$('#iPorta').value=inf.porta||'';$('#iCarro').value=inf.carro||'';$('#iNum').value=inf.num||'';$('#iObs').value=txt;botaoAdd();$('#fPref').scrollIntoView({behavior:'smooth',block:'center'});$('#iTipo').focus()};
-    bRm.onclick=()=>{cfg.prefixos.splice(i,1);delete cfg.obs[p];delete cfg.info[p];delete estadoTrem[p];salvar();listarTrens()};
+    bRm.onclick=()=>{
+      if(!confirm('Remover o trem '+p+' da lista?\n\nEle para de gerar avisos. Os dados dele (tipo, carro, porta, nº do carro, observação e onde foi visto) ficam guardados em "Trens removidos", no fim da página, para consultar ou exportar.'))return;
+      const ag=new Date();
+      cfg.removidos.unshift({p,info:Object.assign({},cfg.info[p]||{}),obs:cfg.obs[p]||'',visto:s?{onde:s.onde,quando:s.quando}:null,em:ag.toISOString()});
+      cfg.prefixos.splice(cfg.prefixos.indexOf(p),1);delete cfg.obs[p];delete cfg.info[p];delete estadoTrem[p];salvar();listarTrens();
+      registrar('Trem '+p+' removido da lista. Os dados estão em Trens removidos.');
+    };
     el.appendChild(d);
   });
-  estado();
+  estado();listarRemovidos();
 }
+/* trens removidos: consulta, volta para a lista e exportação */
+const dataHora=iso=>{const d=new Date(iso),z=n=>String(n).padStart(2,'0');return z(d.getDate())+'/'+z(d.getMonth()+1)+'/'+d.getFullYear()+' às '+z(d.getHours())+'h'+z(d.getMinutes())};
+function listarRemovidos(){
+  const box=$('#remBox'),el=$('#remLista');if(!box)return;
+  box.hidden=!cfg.removidos.length;$('#remQtd').textContent=cfg.removidos.length?'('+cfg.removidos.length+')':'';
+  el.innerHTML='';
+  cfg.removidos.forEach((r,i)=>{
+    const d=document.createElement('div');d.className='t rem';
+    d.innerHTML='<div class="cab"><b class="placa"></b><span class="ac"><button class="x" type="button">Voltar para a lista</button></span></div><div class="lin"></div><div class="obs"></div><div class="st"><span class="tx"></span></div>';
+    d.querySelector('.placa').textContent=r.p;
+    const i0=r.info||{},partes=[i0.tipo,i0.carro?i0.carro+'º carro':'',i0.porta?i0.porta+'ª porta':'',i0.num?'carro nº '+i0.num:''].filter(Boolean);
+    const lin=d.querySelector('.lin');lin.textContent=partes.join(' · ');lin.hidden=!partes.length;
+    const ob=d.querySelector('.obs');ob.textContent=r.obs||'';ob.hidden=!r.obs;
+    d.querySelector('.tx').textContent=(r.visto?'Visto por último em '+r.visto.onde+' às '+r.visto.quando:'Não foi visto')+' · removido em '+dataHora(r.em);
+    d.querySelector('.ac button').onclick=()=>{
+      if(cfg.prefixos.includes(r.p)){alert('O trem '+r.p+' já está na lista.');return}
+      cfg.prefixos.push(r.p);cfg.info[r.p]=Object.assign({},r.info||{});if(r.obs)cfg.obs[r.p]=r.obs;
+      cfg.removidos.splice(i,1);salvar();listarTrens();registrar('Trem '+r.p+' voltou para a lista.');
+    };
+    el.appendChild(d);
+  });
+}
+function exportarRemovidos(){
+  if(!cfg.removidos.length)return;
+  const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const L=[['Prefixo','Tipo','Carro','Porta','Nº do carro','Observação','Visto por último em','Horário','Removido em'].map(q).join(';')];
+  cfg.removidos.forEach(r=>{const i=r.info||{};L.push([r.p,i.tipo,i.carro?i.carro+'º':'',i.porta?i.porta+'ª':'',i.num,r.obs,r.visto&&r.visto.onde,r.visto&&r.visto.quando,dataHora(r.em)].map(q).join(';'))});
+  const z=n=>String(n).padStart(2,'0'),d=new Date(),nome='trens-removidos-'+d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate())+'.csv';
+  const blob=new Blob(['\ufeff'+L.join('\r\n')],{type:'text/csv;charset=utf-8'}),f=new File([blob],nome,{type:'text/csv'});
+  if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f],title:'Trens removidos'}).catch(()=>{});return}
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=nome;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);
+}
+$('#bExpRem').onclick=exportarRemovidos;
 
 /* ---------- OCR ---------- */
 async function prepararOCR(){
