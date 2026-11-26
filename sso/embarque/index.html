@@ -140,7 +140,7 @@ function montar(d){
   if(d.num)m+=', Nº '+d.num;
   if(d.pref)m+=', trem '+d.pref;
   if(d.dest)m+=', para '+EST[d.dest][1];
-  return m+'.'+(d.obs?'\nObs.: '+d.obs:'')+'\n\nAtt. SSO BF';
+  return m+'.'+(d.obs?'\nObs.: '+d.obs:'')+'\n\nAt.te SSO BFU';
 }
 const link=(m,k)=>'https://wa.me/55'+EST[k][2]+'?text='+encodeURIComponent(m);
 function atualizar(){
@@ -167,7 +167,7 @@ function listar(){
     const pf=d.querySelector('.pf');pf.textContent=r.pref||'—';
     d.querySelector('.para').textContent='→ '+(r.destNome||'');
     d.querySelector('time').textContent=dh(r.em);
-    d.querySelector('p').textContent=r.msg.split('\n\nAtt.')[0];d.querySelector('p').style.whiteSpace='pre-line';
+    d.querySelector('p').textContent=r.msg.replace(/\n\n(Att\.|At\.te) SSO.*$/s,'');d.querySelector('p').style.whiteSpace='pre-line';
     const a=d.querySelector('a');if(EST[r.dest])a.href=link(r.msg,r.dest);else a.hidden=true;
     el.appendChild(d);
   });
