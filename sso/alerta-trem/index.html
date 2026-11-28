@@ -802,6 +802,36 @@ async function lerZonas(){
 }
 
 /* ---------- ciclo de vigia ---------- */
+// a cada 30 s confere se o sinótico ainda mostra a sua estação e se as áreas marcadas
+// automaticamente continuam em cima das estações vizinhas. Avisa depois de 2 conferências
+// seguidas com problema (o leitor às vezes deixa de ler uma sigla)
+let ultPos=0,posFalhas=0,posAvisado=false;
+async function conferirPosicao(){
+  if(!frame||!cfg.minha||!EST[cfg.minha]||Date.now()-ultPos<30000)return;
+  ultPos=Date.now();
+  const W=frame.width,{achadas}=await lerSiglas(),probs=[];
+  if(!achadas[cfg.minha])probs.push(EST[cfg.minha][1]+' não aparece mais no sinótico');
+  for(const z of cfg.zonas.filter(z=>z.auto&&z.est)){
+    if(z.borda){
+      const v=(z.cobre||[z.est]).filter(k=>achadas[k]);
+      if(v.length)probs.push(v.map(k=>EST[k][1]).join(' e ')+' apareceu no sinótico e a '+z.nome.split(' (')[0].toLowerCase()+' não vale mais');
+      continue;
+    }
+    const a=achadas[z.est];
+    if(!a)probs.push(EST[z.est][1]+' não aparece mais no sinótico');
+    else if(a.x<z.x*W||a.x>(z.x+z.w)*W)probs.push('a área de '+z.nome+' não está mais em cima da estação');
+  }
+  const lista=[...new Set(probs)];
+  if(!lista.length){
+    if(posAvisado)registrar('O sinótico voltou a mostrar as estações nas áreas marcadas.');
+    posFalhas=0;posAvisado=false;return;
+  }
+  posFalhas++;
+  if(posFalhas>=2&&!posAvisado){
+    posAvisado=true;
+    falha('O sinótico mudou: '+lista.join('; ')+'. Volte o CIMG para a sua estação ou toque em "Achar estações no sinótico" de novo.','Sinótico fora do lugar');
+  }
+}
 function hora(){return new Date().toLocaleTimeString('pt-BR')}
 async function ciclo(){
   if(!rodando)return;
@@ -818,6 +848,7 @@ async function ciclo(){
     verificarParada(f);
     if(!document.hidden)desenhar();
     const res=await lerZonas();
+    try{await conferirPosicao()}catch(e){console.error(e)}
     for(const p of cfg.prefixos){
       const cp=canon(p);
       for(const {z,linhas} of res){
@@ -861,7 +892,7 @@ $('#bIniciar').onclick=async()=>{
   somCtx();
   if('Notification' in window&&Notification.permission==='default')Notification.requestPermission().then(notifEstado).catch(()=>{});
   try{await prepararOCR()}catch(e){estado('Não carregou o leitor: '+e.message,true);return}
-  rodando=true;perdas=0;areasAvisadas.clear();$('#prog').hidden=false;progresso();assinatura=null;desdeMudou=Date.now();avisouParado=false;
+  rodando=true;perdas=0;areasAvisadas.clear();$('#prog').hidden=false;progresso();assinatura=null;desdeMudou=Date.now();avisouParado=false;ultPos=0;posFalhas=0;posAvisado=false;
   if(!cfg.prefixos.length)registrar('Vigia começou sem trem na lista: nenhum aviso de trem até um prefixo ser adicionado.');
   try{wake=await navigator.wakeLock.request('screen')}catch(e){}
   $('#bIniciar').hidden=true;$('#bParar').hidden=false;
