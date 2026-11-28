@@ -86,6 +86,10 @@ input[type=file]{display:none}
 .tela.largo canvas{max-width:none}
 .ponte{display:flex;flex-direction:column;gap:4px;border:2px dashed var(--ln);border-radius:12px;padding:10px 12px;font-size:14px}
 .ponte b{font-size:15px}.ponte span{color:var(--mt)}
+.passos{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px;font-size:15px}
+details.manual{border:2px solid var(--ln);border-radius:12px;padding:0 12px}
+details.manual summary{cursor:pointer;padding:12px 0;font-weight:800}
+details.manual[open]{padding-bottom:12px}
 .ponte.on{border:2px solid var(--tl);background:var(--tl2)}
 .ponte.on b{color:#0A4E4A}
 .estAv{display:flex;flex-direction:column;gap:6px}
@@ -153,29 +157,33 @@ label.cfg input[type=range]{flex:1;accent-color:var(--k)}
   <span class="est" id="estado">Parado</span>
 </header>
 
-<div class="soPc" role="note"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg><div><b>Só funciona no computador</b>O Acompanhar PCD lê o sinótico na tela do PC. Abra esta página no Chrome ou no Edge do computador do sinótico.</div></div>
+<div class="soPc" role="note"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg><div><b>Só funciona no computador</b>O Acompanhar PCD usa a extensão do SIGO e do CIMG, que só existe no Chrome ou no Edge do computador. Abra esta página no computador da SSO.</div></div>
 
 <main>
 <div class="col">
   <section class="card">
-    <h2><span class="n">1</span>Mostre o sinótico</h2>
-    <p class="dica">Toque no botão e escolha a guia ou a janela do sinótico. Esta página continua aberta na frente.</p>
-    <button class="btn pri grande" id="bTela"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>Compartilhar a tela do sinótico</button>
-    <p class="outras">Sem acesso à tela? Use a <button class="lnk" id="bCam" type="button">câmera apontada para o monitor</button></p>
-    <div class="ponte" id="ponte"><b id="ponteTit">Extensão do SIGO e do CIMG: não instalada</b><span id="ponteTx">Com a extensão, a imagem do sinótico chega direto do CIMG, sem compartilhar a tela, e os pedidos PCD do SIGO entram sozinhos na lista.</span><a class="lnk" href="extensao.html">Como instalar</a></div>
+    <h2><span class="n">1</span>Abra o SIGO e o CIMG</h2>
+    <div class="ponte" id="ponte"><b id="ponteTit">Extensão não encontrada</b><span id="ponteTx">Instale a extensão uma vez neste computador. Sem ela, esta página não recebe o sinótico nem os pedidos.</span><a class="lnk" href="extensao.html">Como instalar a extensão</a></div>
+    <ol class="passos">
+      <li>Abra o <b>SIGO</b> em outra aba, no <b>Acompanhamento PCD</b>, e faça login.</li>
+      <li>Abra o <b>painel do CIMG</b> da sua linha em outra aba e faça login.</li>
+      <li>Deixe as duas abas abertas. O selo amarelo <b>BFU</b> aparece no canto de cada uma.</li>
+    </ol>
+    <p class="dica">O sinótico e os pedidos chegam sozinhos aqui. Não precisa compartilhar a tela.</p>
+    <button hidden id="bTela" type="button"></button><button hidden id="bCam" type="button"></button>
   </section>
 
   <section class="card">
     <h2><span class="n">2</span>Marque as estações</h2>
     <label class="campo"><span>Em qual estação você está?</span><select id="iMinha"><option value="">Escolha a sua estação</option></select></label>
     <div class="estAv" id="estAv" hidden></div>
-    <p class="dica">Para outras áreas, toque em <b>Marcar área</b> e arraste um retângulo sobre o lugar onde o prefixo do trem aparece na estação. Dê um nome à área. Pode marcar várias.</p>
+    <p class="dica">Toque em <b>Marcar</b> ao lado de cada estação e arraste um retângulo, no sinótico abaixo, sobre o lugar onde o prefixo do trem aparece nessa estação. Role a imagem para os lados para achar a estação. Só precisa fazer uma vez.</p>
     <div class="row">
-      <button class="btn pri" id="bMarcar" disabled>Marcar área</button>
+      <button class="btn" id="bMarcar" disabled>Outra área</button>
       <button class="btn" id="bFoto" disabled>Atualizar imagem</button>
       <button class="btn" id="bLer" disabled>Ler agora</button>
     </div>
-    <div class="tela" id="tela"><canvas id="cv" width="800" height="450"></canvas><div class="vazio" id="telaVazia">A imagem do sinótico aparece aqui depois do passo 1.</div></div>
+    <div class="tela" id="tela"><canvas id="cv" width="800" height="450"></canvas><div class="vazio" id="telaVazia">O sinótico aparece aqui quando o CIMG estiver aberto e a extensão ligada.</div></div>
     <video id="video" playsinline muted></video>
     <div class="zonas" id="zonas"></div>
   </section>
@@ -183,8 +191,10 @@ label.cfg input[type=range]{flex:1;accent-color:var(--k)}
 
 <div class="col">
   <section class="card">
-    <h2><span class="n">3</span>Trens para avisar</h2>
-    <div class="sigo" id="sigoBox" hidden><b>Pedidos PCD do SIGO</b><label class="campo"><span>Trazer para a lista</span><select id="iFiltro"><option value="minha">Só os que descem na minha estação</option><option value="todos">Todos os pedidos em aberto</option></select></label><p class="dica" id="sigoTx"></p></div>
+    <h2><span class="n">3</span>Pedidos PCD</h2>
+    <p class="dica">Os pedidos do SIGO entram sozinhos na lista abaixo. Quando o pedido é concluído ou cancelado no SIGO, ele sai da lista.</p>
+    <div class="sigo" id="sigoBox"><b>SIGO</b><label class="campo"><span>Trazer para a lista</span><select id="iFiltro"><option value="minha">Só os que descem na minha estação</option><option value="todos">Todos os pedidos em aberto</option></select></label><p class="dica" id="sigoTx"></p></div>
+    <details class="manual"><summary>Adicionar um trem à mão</summary>
     <form id="fPref" class="add">
       <label class="campo"><span>Prefixo do trem</span><input type="text" id="iPref" placeholder="Digite o prefixo (ex: U510)" maxlength="12" autocomplete="off"></label>
       <div class="tres">
@@ -196,13 +206,14 @@ label.cfg input[type=range]{flex:1;accent-color:var(--k)}
       <label class="campo"><span>Observações <em>(opcional)</em></span><textarea id="iObs" maxlength="300" placeholder="Qualquer outra informação"></textarea></label>
       <button class="btn pri" id="bAddTrem">Adicionar trem</button>
     </form>
+    </details>
     <div class="trens" id="trens"></div>
   </section>
 
   <section class="card inicio">
     <h2><span class="n">4</span>Comece a vigiar</h2>
-    <p class="falta">Faça os passos 1 e 2 para liberar o botão.</p>
-    <p class="semTrem" id="semTrem">Nenhum trem sendo acompanhado. Sem trem no passo 3, o Acompanhar PCD lê a tela mas não avisa ninguém.</p>
+    <p class="falta">Abra o CIMG (passo 1) e marque as estações (passo 2) para liberar o botão.</p>
+    <p class="semTrem" id="semTrem">Nenhum pedido na lista ainda. Com o SIGO aberto, os pedidos para a sua estação entram sozinhos.</p>
     <button class="btn go" id="bIniciar" disabled><svg viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></svg>Começar a vigiar</button>
     <button class="btn stop" id="bParar" hidden>Parar</button>
     <div class="prog" id="prog" hidden><span id="progTxt">0 de 0 áreas avisadas</span><span class="barra"><i id="progBar"></i></span></div>
@@ -348,7 +359,7 @@ $('#iMinha').onchange=e=>{cfg.minha=e.target.value;salvar();listarEstAviso();apl
 const ponte={ligada:false,versao:'',pedidosT:0,imagemT:0,lista:null};
 if(!cfg.sigo||typeof cfg.sigo!=='object')cfg.sigo={}; // prefixo -> id do pedido no SIGO
 if(!cfg.filtro)cfg.filtro='minha';
-$('#iFiltro').value=cfg.filtro;
+$('#iFiltro').value=cfg.filtro;$('#sigoTx').textContent='Aguardando o SIGO. Abra o Acompanhamento PCD em outra aba.';
 $('#iFiltro').onchange=e=>{cfg.filtro=e.target.value;salvar();aplicarPedidos()};
 const TIPO_SIGO=t=>/visual/i.test(t)?'DV':/motoriz/i.test(t)?'Cadeirante motorizado':/cadeir/i.test(t)?'Cadeirante':/mobilidade/i.test(t)?'MR':/autis|tea\b/i.test(t)?'TEA':/idos/i.test(t)?'Idoso':'Outro';
 // porta do SIGO: "1/2" = 1º carro, 2ª porta; "3c 3p" = 3º carro, 3ª porta; "1" = só o carro
@@ -382,7 +393,7 @@ function aplicarPedidos(){
 function mostrarPonte(){
   const b=$('#ponte');if(!ponte.ligada)return;
   b.classList.add('on');
-  $('#ponteTit').textContent='Extensão ligada';
+  $('#ponteTit').textContent='Extensão ligada';$('#ponte .lnk').hidden=true;
   const h=t=>t?new Date(t).toLocaleTimeString('pt-BR').slice(0,5):'—';
   $('#ponteTx').textContent=(ponte.imagemT?'Sinótico do CIMG recebido às '+h(ponte.imagemT):'Aguardando o sinótico: deixe o CIMG aberto em outra aba')+' · '+(ponte.pedidosT?'SIGO lido às '+h(ponte.pedidosT):'Aguardando o SIGO: deixe o Acompanhamento PCD aberto');
   $('#sigoBox').hidden=false;
@@ -533,7 +544,7 @@ function infoPartes(p){const i=cfg.info[p]||{};return [i.tipo,i.carro?i.carro+'�
 function detalhes(p){return [infoPartes(p).join(' · '),cfg.obs[p]||''].filter(Boolean).join('\n')}
 function listarTrens(){
   const el=$('#trens');el.innerHTML='';
-  if(!cfg.prefixos.length){el.innerHTML='<p class="dica">Nenhum trem na lista. Adicione o prefixo acima para receber avisos.</p>'}
+  if(!cfg.prefixos.length){el.innerHTML='<p class="dica">Nenhum pedido na lista. Os pedidos do SIGO entram aqui sozinhos.</p>'}
   cfg.prefixos.forEach((p,i)=>{
     const s=estadoTrem[p],d=document.createElement('div');
     d.className='t'+(s&&s.agora?' visto':s?' jaVisto':'');
