@@ -82,19 +82,6 @@ input[type=file]{display:none}
 .tela{position:relative;background:#1E1E1B;border-radius:12px;overflow:hidden;line-height:0;min-height:180px}
 .tela.marcando{cursor:crosshair;touch-action:none;outline:4px solid var(--y)}
 .tela canvas{width:100%;height:auto;display:block}
-.tela.largo{overflow-x:auto;overflow-y:hidden}
-.tela.largo canvas{max-width:none}
-.ponte{display:flex;flex-direction:column;gap:4px;border:2px dashed var(--ln);border-radius:12px;padding:10px 12px;font-size:14px}
-.ponte b{font-size:15px}.ponte span{color:var(--mt)}
-.ponte.on{border:2px solid var(--tl);background:var(--tl2)}
-.ponte.on b{color:#0A4E4A}
-.estAv{display:flex;flex-direction:column;gap:6px}
-.estAv .lin{font-size:13px;font-weight:800;color:var(--mt);margin-top:4px}
-.ea{display:flex;align-items:center;gap:8px;border:2px solid var(--ln);border-radius:10px;padding:8px 10px}
-.ea b{flex:1;min-width:0}.ea small{display:block;color:var(--mt);font-weight:600}
-.ea.ok{border-color:var(--tl);background:var(--tl2)}
-.ea .ck{font-weight:800;color:var(--tl)}
-.sigo{display:flex;flex-direction:column;gap:8px;border:2px solid var(--tl);background:var(--tl2);border-radius:12px;padding:10px 12px}
 .tela .vazio{position:absolute;inset:0;display:grid;place-items:center;color:#B5B5AD;font:600 15px/1.4 var(--f);padding:20px;text-align:center}
 video{display:none}
 .zonas,.trens{display:flex;flex-direction:column;gap:8px}
@@ -162,14 +149,11 @@ label.cfg input[type=range]{flex:1;accent-color:var(--k)}
     <p class="dica">Toque no botão e escolha a guia ou a janela do sinótico. Esta página continua aberta na frente.</p>
     <button class="btn pri grande" id="bTela"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>Compartilhar a tela do sinótico</button>
     <p class="outras">Sem acesso à tela? Use a <button class="lnk" id="bCam" type="button">câmera apontada para o monitor</button></p>
-    <div class="ponte" id="ponte"><b id="ponteTit">Extensão do SIGO e do CIMG: não instalada</b><span id="ponteTx">Com a extensão, a imagem do sinótico chega direto do CIMG, sem compartilhar a tela, e os pedidos PCD do SIGO entram sozinhos na lista.</span><a class="lnk" href="extensao.html">Como instalar</a></div>
   </section>
 
   <section class="card">
     <h2><span class="n">2</span>Marque as estações</h2>
-    <label class="campo"><span>Em qual estação você está?</span><select id="iMinha"><option value="">Escolha a sua estação</option></select></label>
-    <div class="estAv" id="estAv" hidden></div>
-    <p class="dica">Para outras áreas, toque em <b>Marcar área</b> e arraste um retângulo sobre o lugar onde o prefixo do trem aparece na estação. Dê um nome à área. Pode marcar várias.</p>
+    <p class="dica">Toque em <b>Marcar área</b> e arraste um retângulo sobre o lugar onde o prefixo do trem aparece na estação. Dê um nome à área. Pode marcar várias.</p>
     <div class="row">
       <button class="btn pri" id="bMarcar" disabled>Marcar área</button>
       <button class="btn" id="bFoto" disabled>Atualizar imagem</button>
@@ -184,7 +168,6 @@ label.cfg input[type=range]{flex:1;accent-color:var(--k)}
 <div class="col">
   <section class="card">
     <h2><span class="n">3</span>Trens para avisar</h2>
-    <div class="sigo" id="sigoBox" hidden><b>Pedidos PCD do SIGO</b><label class="campo"><span>Trazer para a lista</span><select id="iFiltro"><option value="minha">Só os que descem na minha estação</option><option value="todos">Todos os pedidos em aberto</option></select></label><p class="dica" id="sigoTx"></p></div>
     <form id="fPref" class="add">
       <label class="campo"><span>Prefixo do trem</span><input type="text" id="iPref" placeholder="Digite o prefixo (ex: U510)" maxlength="12" autocomplete="off"></label>
       <div class="tres">
@@ -265,148 +248,6 @@ const estadoTrem={}; // prefixo -> {onde,quando}
 let nCiclo=0;
 const presenca={};   // prefixo|zona -> {hist,falta,avisado}
 
-/* ---------- estações (mesmos dados de "Falar com estação") ---------- */
-const EST={
-  BFU:['BFU','Palmeiras-Barra Funda','11926885833'],
-  LUZ:['LUZ','Luz','11926824593'],
-  BRA:['BRÁ','Brás','11962778936'],
-  TAT:['TAT','Tatuapé','11926809431'],
-  CIT:['ITQ','Itaquera (Corinthians-Itaquera)','11926829202'],
-  DOB:['DOB','Dom Bosco','11926951980'],
-  JBO:['JBO','José Bonifácio','11926958245'],
-  GUA:['GUA','Guaianases','11925802414'],
-  AGN:['AGN','Antônio Gianetti Neto','11925784098'],
-  FVC:['FVC','Ferraz de Vasconcelos','11925599772'],
-  POA:['POA','Poá','11924998023'],
-  CVN:['CVN','Calmon Viana','11924912734'],
-  SUZ:['SUZ','Suzano','11924858440'],
-  JPB:['JPB','Jundiapeba','11924810419'],
-  BCB:['BCB','Brás Cubas','11924808666'],
-  MDC:['MDC','Mogi das Cruzes','11924782522'],
-  EST:['EST','Estudantes','11924742257'],
-  EGO:['EGO','Engenheiro Goulart','11924709876'],
-  USP:['USP','USP Leste','11924606632'],
-  ERM:['ERM','Comendador Ermelino','11925247005'],
-  SMP:['SMP','São Miguel Paulista','11926721012'],
-  JHE:['JHE','Jardim Helena-Vila Mara','11926789466'],
-  ITI:['ITI','Itaim Paulista','11926801429'],
-  JRO:['JRO','Jardim Romano','11926827007'],
-  EMF:['EMF','Engenheiro Manoel Feio','11926659043'],
-  IQC:['IQC','Itaquaquecetuba','11926773019'],
-  ARC:['ARC','Aracaré','11972263857'],
-  GCE:['GCE','Guarulhos-Cecap','11926666344'],
-  AGU:['AGU','Aeroporto-Guarulhos','11926477002']
-};
-// Ordem das estações em cada linha (sentido centro → ponta).
-const LINHAS=[
-  {n:'11',nome:'CORAL',rota:'Palmeiras-Barra Funda ↔ Estudantes',est:['BFU','LUZ','BRA','TAT','CIT','DOB','JBO','GUA','AGN','FVC','POA','CVN','SUZ','JPB','BCB','MDC','EST']},
-  {n:'12',nome:'SAFIRA',rota:'Brás ↔ Calmon Viana',est:['BRA','TAT','EGO','USP','ERM','SMP','JHE','ITI','JRO','EMF','IQC','ARC','CVN']},
-  {n:'13',nome:'JADE',rota:'Palmeiras-Barra Funda (Expresso Aeroporto) e Engenheiro Goulart ↔ Aeroporto-Guarulhos',est:['BFU','LUZ','EGO','GCE','AGU']}
-];
-const SIGO_COD={BAS:'BRA',ITQ:'CIT'}; // siglas do SIGO que diferem das nossas
-const nrm=x=>String(x||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/z/g,'s').replace(/[^a-z0-9]/g,'');
-// "BFU - Palmeiras - Barra Funda" vira BFU; se a sigla não bater, procura pelo nome
-function estDoSigo(txt){
-  const m=String(txt||'').match(/^\s*([A-Z]{2,4})\s*-/);
-  if(m){const c=SIGO_COD[m[1]]||m[1];if(EST[c])return c;const k=Object.keys(EST).find(k=>EST[k][0]===c);if(k)return k}
-  const n=nrm(String(txt).replace(/^\s*[A-Z]{2,4}\s*-\s*/,''));
-  return Object.keys(EST).find(k=>n&&(nrm(EST[k][1])===n||nrm(EST[k][1]).includes(n)||n.includes(nrm(EST[k][1]))))||null;
-}
-// as duas estações antes da sua, dos dois lados de cada linha
-function vizinhas(k){
-  const res=[];
-  for(const l of LINHAS){
-    const i=l.est.indexOf(k);if(i<0)continue;
-    for(const dir of [-1,1]){
-      const ponta=dir<0?l.est[0]:l.est[l.est.length-1];
-      for(const d of [1,2]){const j=i+dir*d;if(j<0||j>=l.est.length)break;
-        if(!res.some(r=>r.k===l.est[j]))res.push({k:l.est[j],d,linha:l.n,lado:'vindo de '+EST[ponta][1]})}
-    }
-  }
-  return res;
-}
-{const sel=$('#iMinha'),vis=new Set();LINHAS.forEach(l=>{const g=document.createElement('optgroup');g.label='Linha '+l.n+' – '+l.nome;l.est.forEach(k=>{if(vis.has(k))return;vis.add(k);const o=document.createElement('option');o.value=k;o.textContent=EST[k][1];g.appendChild(o)});sel.appendChild(g)});sel.value=cfg.minha||''}
-let marcarEst=null; // estação que o próximo retângulo vai marcar
-function listarEstAviso(){
-  const box=$('#estAv');if(!cfg.minha||!EST[cfg.minha]){box.hidden=true;return}
-  box.hidden=false;box.innerHTML='<p class="dica">Marque no sinótico estas estações. O aviso toca quando o trem passa pela <b>segunda</b> e pela <b>primeira</b> estação antes de '+EST[cfg.minha][1]+', dos dois lados.</p>';
-  let linha='';
-  vizinhas(cfg.minha).forEach(v=>{
-    if(v.linha!==linha){linha=v.linha;const t=document.createElement('div');t.className='lin';t.textContent='Linha '+v.linha;box.appendChild(t)}
-    const z=cfg.zonas.find(z=>z.est===v.k),d=document.createElement('div');d.className='ea'+(z?' ok':'');
-    d.innerHTML='<b></b><span class="ck"></span><button class="btn mini" type="button"></button>';
-    d.querySelector('b').innerHTML=EST[v.k][1]+'<small>'+(v.d===1?'estação anterior':'2 estações antes')+' · '+v.lado+'</small>';
-    d.querySelector('.ck').textContent=z?'✓ marcada':'';
-    const b=d.querySelector('button');b.textContent=z?'Marcar de novo':'Marcar';b.disabled=!frame;
-    b.onclick=()=>{marcarEst=v;if(!marcando)$('#bMarcar').click();$('#bMarcar').textContent='Arraste sobre '+EST[v.k][1]+'…';$('#tela').scrollIntoView({behavior:'smooth',block:'center'})};
-    box.appendChild(d);
-  });
-}
-$('#iMinha').onchange=e=>{cfg.minha=e.target.value;salvar();listarEstAviso();aplicarPedidos()};
-
-/* ---------- extensão: pedidos do SIGO e imagem do CIMG ---------- */
-const ponte={ligada:false,versao:'',pedidosT:0,imagemT:0,lista:null};
-if(!cfg.sigo||typeof cfg.sigo!=='object')cfg.sigo={}; // prefixo -> id do pedido no SIGO
-if(!cfg.filtro)cfg.filtro='minha';
-$('#iFiltro').value=cfg.filtro;
-$('#iFiltro').onchange=e=>{cfg.filtro=e.target.value;salvar();aplicarPedidos()};
-const TIPO_SIGO=t=>/visual/i.test(t)?'DV':/motoriz/i.test(t)?'Cadeirante motorizado':/cadeir/i.test(t)?'Cadeirante':/mobilidade/i.test(t)?'MR':/autis|tea\b/i.test(t)?'TEA':/idos/i.test(t)?'Idoso':'Outro';
-// porta do SIGO: "1/2" = 1º carro, 2ª porta; "3c 3p" = 3º carro, 3ª porta; "1" = só o carro
-function portaSigo(v){v=String(v||'');let m=v.match(/(\d+)\s*\/\s*(\d+)/);if(m)return[m[1],m[2]];m=v.match(/(\d+)\s*c\D*(\d+)\s*p/i);if(m)return[m[1],m[2]];m=v.match(/^\s*(\d+)\s*$/);return m?[m[1],'']:['','']}
-const encerrado=s=>/conclu|cancel|finaliz|encerr/i.test(s||'');
-function aplicarPedidos(){
-  const L=ponte.lista;if(!L)return;
-  const minha=cfg.minha&&EST[cfg.minha];
-  const alvo=L.filter(p=>p.trem&&!encerrado(p.status)&&(cfg.filtro==='todos'||!minha||estDoSigo(p.destino)===cfg.minha));
-  const novos=[];
-  for(const p of alvo){
-    const pf=limpo(p.trem);if(pf.length<2)continue;
-    const [carro,porta]=portaSigo(p.porta),dk=estDoSigo(p.destino);
-    const info={tipo:TIPO_SIGO(p.tipo),carro:+carro>=1&&+carro<=8?String(+carro):'',porta:+porta>=1&&+porta<=4?String(+porta):'',num:limpo(p.carro||'').slice(0,12)};
-    const obs=[p.obs,'SIGO '+p.hora+': '+(p.origem||'?').replace(/\s*-\s*/,' ')+' → '+(p.destino||'?').replace(/\s*-\s*/,' ')].filter(Boolean).join(' · ');
-    if(!cfg.prefixos.includes(pf)){cfg.prefixos.push(pf);novos.push(pf+' ('+info.tipo+(dk?', desce em '+EST[dk][1]:'')+')')}
-    cfg.info[pf]=info;cfg.obs[pf]=obs;cfg.sigo[pf]=p.id;
-  }
-  // pedido concluído ou cancelado no SIGO: o trem sai da lista e fica em "Trens removidos"
-  for(const [pf,id] of Object.entries(cfg.sigo)){
-    const p=L.find(x=>x.id===id);
-    if(p&&encerrado(p.status)&&cfg.prefixos.includes(pf)){
-      cfg.removidos.unshift({p:pf,info:Object.assign({},cfg.info[pf]||{}),obs:(cfg.obs[pf]||'')+' · '+p.status+' no SIGO',visto:estadoTrem[pf]?{onde:estadoTrem[pf].onde,quando:estadoTrem[pf].quando}:null,em:new Date().toISOString()});
-      cfg.prefixos.splice(cfg.prefixos.indexOf(pf),1);delete cfg.info[pf];delete cfg.obs[pf];delete estadoTrem[pf];delete cfg.sigo[pf];
-      registrar('SIGO: '+pf+' '+p.status.toLowerCase()+'. Saiu da lista.');
-    }
-  }
-  if(novos.length){registrar('SIGO: '+novos.join(', ')+' entrou na lista.');bip();if(!pip&&pipPossivel()&&rodando)abrirPip()}
-  salvar();listarTrens();mostrarPonte();
-}
-function mostrarPonte(){
-  const b=$('#ponte');if(!ponte.ligada)return;
-  b.classList.add('on');
-  $('#ponteTit').textContent='Extensão ligada';
-  const h=t=>t?new Date(t).toLocaleTimeString('pt-BR').slice(0,5):'—';
-  $('#ponteTx').textContent=(ponte.imagemT?'Sinótico do CIMG recebido às '+h(ponte.imagemT):'Aguardando o sinótico: deixe o CIMG aberto em outra aba')+' · '+(ponte.pedidosT?'SIGO lido às '+h(ponte.pedidosT):'Aguardando o SIGO: deixe o Acompanhamento PCD aberto');
-  $('#sigoBox').hidden=false;
-  if(ponte.lista){const ab=ponte.lista.filter(p=>!encerrado(p.status));const meus=ab.filter(p=>cfg.minha&&estDoSigo(p.destino)===cfg.minha);
-    $('#sigoTx').textContent=ab.length+' em aberto no SIGO'+(cfg.minha?', '+meus.length+' descendo em '+EST[cfg.minha][1]:'. Escolha a sua estação no passo 2.')}
-}
-window.addEventListener('message',async e=>{
-  if(e.source!==window||!e.data||!e.data.bfuPonte)return;
-  const d=e.data;
-  if(d.bfuPonte==='ola'){ponte.ligada=true;ponte.versao=d.versao;mostrarPonte()}
-  else if(d.bfuPonte==='pedidos'){ponte.ligada=true;ponte.lista=d.lista||[];ponte.pedidosT=d.t||Date.now();aplicarPedidos()}
-  else if(d.bfuPonte==='sigoVivo'){ponte.pedidosT=d.t;mostrarPonte()}
-  else if(d.bfuPonte==='imagem'&&d.blob){
-    try{
-      const bm=await createImageBitmap(d.blob);
-      if(imgFonte&&imgFonte.close)imgFonte.close();
-      pararStream();imgFonte=bm;fonteArquivo=false;ponte.ligada=true;ponte.imagemT=d.t||Date.now();
-      await capturar();listarEstAviso();mostrarPonte();
-    }catch(err){registrar('Imagem do CIMG não abriu: '+err.message,true)}
-  }
-  else if(d.bfuPonte==='erro'){registrar(d.msg,true);estado(d.msg,true)}
-});
-window.postMessage({bfuPonteQuer:'tudo'},location.origin);
-
 /* ---------- fonte da imagem ---------- */
 async function ligarStream(stream){
   pararStream();
@@ -457,7 +298,7 @@ async function capturar(){
   if(!f)return null;
   desenhar();
   $('#telaVazia').hidden=true;
-  ['#bMarcar','#bFoto','#bLer'].forEach(s=>$(s).disabled=false);listarEstAviso();
+  ['#bMarcar','#bFoto','#bLer'].forEach(s=>$(s).disabled=false);
   estado();
   return f;
 }
@@ -466,9 +307,7 @@ async function capturar(){
 let arrasto=null;
 function desenhar(){
   if(!frame)return;
-  if(cv.width!==frame.width||cv.height!==frame.height){cv.width=frame.width;cv.height=frame.height;
-    // sinótico do CIMG é bem largo: mostra mais alto, com rolagem para os lados
-    const larg=frame.width/frame.height>2.6;$('#tela').classList.toggle('largo',larg);cv.style.width=larg?Math.round(frame.width/frame.height*360)+'px':''}
+  if(cv.width!==frame.width||cv.height!==frame.height){cv.width=frame.width;cv.height=frame.height}
   cx.drawImage(frame,0,0);
   const lw=Math.max(2,frame.width/400),fs=Math.max(14,frame.width/60);
   cx.font=`700 ${fs}px system-ui,sans-serif`;
@@ -481,22 +320,16 @@ function desenhar(){
   }
 }
 function pos(e){const r=cv.getBoundingClientRect();return{x:Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)),y:Math.min(1,Math.max(0,(e.clientY-r.top)/r.height))}}
-$('#bMarcar').onclick=()=>{marcando=!marcando;if(!marcando)marcarEst=null;$('#bMarcar').classList.toggle('on',marcando);$('#bMarcar').textContent=marcando?'Arraste sobre a imagem…':'Marcar área';$('#tela').classList.toggle('marcando',marcando)};
+$('#bMarcar').onclick=()=>{marcando=!marcando;$('#bMarcar').classList.toggle('on',marcando);$('#bMarcar').textContent=marcando?'Arraste sobre a imagem…':'Marcar área';$('#tela').classList.toggle('marcando',marcando)};
 cv.addEventListener('pointerdown',e=>{if(!marcando||!frame)return;e.preventDefault();cv.setPointerCapture(e.pointerId);const p=pos(e);arrasto={x0:p.x,y0:p.y,x:p.x,y:p.y,w:0,h:0}});
 cv.addEventListener('pointermove',e=>{if(!arrasto)return;const p=pos(e);Object.assign(arrasto,{x:Math.min(p.x,arrasto.x0),y:Math.min(p.y,arrasto.y0),w:Math.abs(p.x-arrasto.x0),h:Math.abs(p.y-arrasto.y0)});desenhar()});
 cv.addEventListener('pointerup',()=>{
   if(!arrasto)return;const a=arrasto;arrasto=null;
   if(a.w>0.01&&a.h>0.01){
-    if(marcarEst){
-      const v=marcarEst,nome=EST[v.k][1]+(v.d===1?' (anterior)':' (2 antes)');
-      cfg.zonas=cfg.zonas.filter(z=>z.est!==v.k);
-      cfg.zonas.push({id:Date.now().toString(36),nome,est:v.k,dist:v.d,x:a.x,y:a.y,w:a.w,h:a.h});salvar();listarZonas();
-    }else{
-      const nome=(prompt('Nome desta área (ex.: Barra Funda plat. 4):','Área '+(cfg.zonas.length+1))||'').trim();
-      if(nome){cfg.zonas.push({id:Date.now().toString(36),nome,x:a.x,y:a.y,w:a.w,h:a.h});salvar();listarZonas()}
-    }
+    const nome=(prompt('Nome desta área (ex.: Barra Funda plat. 4):','Área '+(cfg.zonas.length+1))||'').trim();
+    if(nome){cfg.zonas.push({id:Date.now().toString(36),nome,x:a.x,y:a.y,w:a.w,h:a.h});salvar();listarZonas()}
   }
-  marcarEst=null;$('#bMarcar').click();desenhar();
+  $('#bMarcar').click();desenhar();
 });
 
 function listarZonas(){
@@ -509,7 +342,7 @@ function listarZonas(){
     d.querySelector('button').onclick=()=>{if(confirm('Apagar a área "'+z.nome+'"?')){cfg.zonas.splice(i,1);salvar();listarZonas();desenhar()}};
     el.appendChild(d);
   });
-  estado();listarEstAviso();
+  estado();
 }
 
 /* ---------- prefixos ---------- */
