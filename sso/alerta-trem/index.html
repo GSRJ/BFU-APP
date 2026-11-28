@@ -322,6 +322,9 @@ const escH=x=>String(x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 const SIGO_COD={BAS:'BRA',ITQ:'CIT'}; // siglas do SIGO que diferem das nossas
 const nrm=x=>String(x||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/z/g,'s').replace(/[^a-z0-9]/g,'');
 const sigla=k=>EST[k][0].normalize('NFD').replace(/[̀-ͯ]/g,'');
+// como a estação aparece escrita no sinótico do CIMG, quando é diferente da sigla
+const SIG_CIMG={BFU:'BF'};
+const siglaCimg=k=>SIG_CIMG[k]||sigla(k);
 // "BFU - Palmeiras - Barra Funda" vira BFU; se a sigla não bater, procura pelo nome
 function estDoSigo(txt){
   const m=String(txt||'').match(/^\s*([A-Z]{2,4})\s*-/);
@@ -376,7 +379,7 @@ async function lerSiglas(){
   const {data}=await w.recognize(preparar({x:0,y:0,w:1,h:1}));
   const words=(data.words||[]).map(x=>({t:limpo(x.text),x:((x.bbox.x0+x.bbox.x1)/2-pad)/esc,y0:(x.bbox.y0-pad)/esc,y1:(x.bbox.y1-pad)/esc})).filter(x=>x.t.length>=2&&x.t.length<=4);
   const cods=Object.keys(EST),achadas={};
-  for(const x of words){const k=cods.find(k=>k===x.t||sigla(k)===x.t);if(k&&!achadas[k])achadas[k]=x}
+  for(const x of words){const k=cods.find(k=>siglaCimg(k)===x.t)||cods.find(k=>k===x.t||sigla(k)===x.t);if(k&&!achadas[k])achadas[k]=x}
   return {words,achadas};
 }
 // confere se a estação escolhida aparece no sinótico mostrado
@@ -390,8 +393,8 @@ async function verificarMinha(){
   el.className='verif';el.textContent='Conferindo se '+EST[cfg.minha][1]+' aparece no sinótico…';
   try{
     const {achadas}=await lerSiglas(),nome=EST[cfg.minha][1];
-    if(achadas[cfg.minha]){el.className='verif ok';el.textContent='✓ '+nome+' ('+sigla(cfg.minha)+') aparece no sinótico.'}
-    else{el.className='verif no';el.innerHTML='⚠ Não achei '+escH(nome)+' ('+sigla(cfg.minha)+') no sinótico. Confira se escolheu a estação certa e role o CIMG até ela aparecer. <button class="lnk" type="button" id="bVerif">Conferir de novo</button>';$('#bVerif').onclick=()=>{$('#bFoto').click();setTimeout(verificarMinha,600)}}
+    if(achadas[cfg.minha]){el.className='verif ok';el.textContent='✓ '+nome+' ('+siglaCimg(cfg.minha)+') aparece no sinótico.'}
+    else{el.className='verif no';el.innerHTML='⚠ Não achei '+escH(nome)+' ('+siglaCimg(cfg.minha)+') no sinótico. Confira se escolheu a estação certa e role o CIMG até ela aparecer. <button class="lnk" type="button" id="bVerif">Conferir de novo</button>';$('#bVerif').onclick=()=>{$('#bFoto').click();setTimeout(verificarMinha,600)}}
   }catch(e){el.className='verif no';el.textContent='Não consegui ler o sinótico: '+e.message}
   verificando=false;
 }
@@ -403,7 +406,7 @@ async function acharEstacoes(){
   try{
     const W=frame.width,H=frame.height,{words,achadas}=await lerSiglas();
     // limites entre estações: qualquer sigla de 3 letras na imagem (inclui estações de fora da lista)
-    const xs=[...new Set(words.filter(x=>/^[A-Z]{3}$/.test(x.t)).map(x=>x.x).concat(Object.values(achadas).map(a=>a.x)))].sort((a,b)=>a-b);
+    const xs=[...new Set(words.filter(x=>/^[A-Z]{2,3}$/.test(x.t)).map(x=>x.x).concat(Object.values(achadas).map(a=>a.x)))].sort((a,b)=>a-b);
     const falta=[],ok=[];
     for(const v of vizinhas(cfg.minha)){
       const a=achadas[v.k];if(!a){falta.push(EST[v.k][1]);continue}
