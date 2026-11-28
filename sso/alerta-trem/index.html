@@ -323,7 +323,8 @@ const SIGO_COD={BAS:'BRA',ITQ:'CIT'}; // siglas do SIGO que diferem das nossas
 const nrm=x=>String(x||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/z/g,'s').replace(/[^a-z0-9]/g,'');
 const sigla=k=>EST[k][0].normalize('NFD').replace(/[̀-ͯ]/g,'');
 // como a estação aparece escrita no sinótico do CIMG, quando é diferente da sigla
-const SIG_CIMG={BFU:'BF'};
+// conferido nos painéis CCO Linha 11 e CCO Linha 12/13; Barra Funda só aparece como BF1, BF2 e BF3
+const SIG_CIMG={BFU:'BF',BRA:'BAS',DOB:'DBO',USP:'USL'};
 const siglaCimg=k=>SIG_CIMG[k]||sigla(k);
 // "BFU - Palmeiras - Barra Funda" vira BFU; se a sigla não bater, procura pelo nome
 function estDoSigo(txt){
@@ -380,6 +381,8 @@ async function lerSiglas(){
   const words=(data.words||[]).map(x=>({t:limpo(x.text),x:((x.bbox.x0+x.bbox.x1)/2-pad)/esc,y0:(x.bbox.y0-pad)/esc,y1:(x.bbox.y1-pad)/esc})).filter(x=>x.t.length>=2&&x.t.length<=4);
   const cods=Object.keys(EST),achadas={};
   for(const x of words){const k=cods.find(k=>siglaCimg(k)===x.t)||cods.find(k=>k===x.t||sigla(k)===x.t);if(k&&!achadas[k])achadas[k]=x}
+  // caixas numeradas (BF1, BAS2, LUZ3) valem quando a sigla sozinha não aparece
+  for(const x of words){const m=x.t.match(/^([A-Z]{2,3})[0-9]$/);if(!m)continue;const k=cods.find(k=>siglaCimg(k)===m[1]);if(k&&!achadas[k])achadas[k]=x}
   return {words,achadas};
 }
 // confere se a estação escolhida aparece no sinótico mostrado
