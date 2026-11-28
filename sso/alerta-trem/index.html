@@ -441,16 +441,18 @@ async function acharEstacoes(){
         const sem=vz.filter(k=>!achadas[k]);if(!sem.length)continue;
         if(!orient){continue}
         const lado=dir*orient; // -1 = borda esquerda, +1 = borda direita
-        const ponta=EST[dir<0?l.est[0]:l.est[l.est.length-1]][1];
         // borda larga: da beira da imagem até 3/4 do caminho para a primeira sigla, entre 10% e 35% da largura
         const vao=lado<0?(xs.length?xs[0]:W*0.2):(xs.length?W-xs[xs.length-1]:W*0.2);
         const lim=Math.min(W*0.35,Math.max(W*0.1,vao*0.75));
         cfg.zonas=cfg.zonas.filter(z=>!sem.includes(z.est)&&!(z.cobre||[]).some(k=>sem.includes(k)));
         const k0=sem[sem.length-1],d0=vz.indexOf(k0)+1;
+        // o trem que entra por esta borda vem da estação que ficou fora da imagem e segue para a ponta do outro lado
+        const vem={de:EST[k0][1],sentido:EST[dir<0?l.est[l.est.length-1]:l.est[0]][1],linha:l.n};
+        const txVem=vs=>vs.map(v=>'vindo de '+v.de+', sentido '+v.sentido).join(' ou ');
         // a mesma borda pode servir a duas linhas: junta numa área só
         const ja=cfg.zonas.find(z=>z.borda&&z.lado===lado&&z.novaBorda);
-        if(ja){ja.cobre=[...new Set(ja.cobre.concat(sem))];ja.nome='Borda '+(lado<0?'esquerda':'direita')+' (vindo de '+ja.pontas.concat(ponta).join(' ou ')+')';ja.pontas.push(ponta);}
-        else cfg.zonas.push({id:Date.now().toString(36)+'b'+k0,nome:'Borda '+(lado<0?'esquerda':'direita')+' (vindo de '+ponta+')',est:k0,cobre:sem,dist:d0,borda:true,lado,pontas:[ponta],novaBorda:true,auto:true,x:lado<0?0:Math.max(0,(W-lim)/W),y:0.05,w:lim/W,h:0.95});
+        if(ja){ja.cobre=[...new Set(ja.cobre.concat(sem))];if(!ja.vem.some(v=>v.de===vem.de&&v.sentido===vem.sentido))ja.vem.push(vem);ja.nome='Borda '+(lado<0?'esquerda':'direita')+': '+txVem(ja.vem);}
+        else cfg.zonas.push({id:Date.now().toString(36)+'b'+k0,nome:'Borda '+(lado<0?'esquerda':'direita')+': '+txVem([vem]),est:k0,cobre:sem,dist:d0,borda:true,lado,vem:[vem],novaBorda:true,auto:true,x:lado<0?0:Math.max(0,(W-lim)/W),y:0.05,w:lim/W,h:0.95});
         sem.forEach(k=>{const f=falta.indexOf(EST[k][1]);if(f>=0)falta.splice(f,1)});
         bordas.push(sem.map(k=>EST[k][1]).join(' e ')+' (borda '+(lado<0?'esquerda':'direita')+')');
       }
@@ -969,7 +971,16 @@ function avisar(p,onde,id,zid){
   const msg='Trem '+(id||p)+' em '+onde+' às '+hora().slice(0,5)+(obs?' · '+obs.replace(/\n/g,' · '):'');
   if(zid){areasAvisadas.add(zid);progresso()}
   alertaPref=p;
-  const zz=cfg.zonas.find(z=>z.id===zid),dist=zz&&zz.borda?' · entrando pela borda do sinótico':zz&&zz.est?' · estação vizinha da sua':'';
+  const zz=cfg.zonas.find(z=>z.id===zid);
+  // borda automática: "se aproximando, vindo de Itaquera, sentido Palmeiras-Barra Funda"
+  if(zz&&zz.borda&&zz.vem&&zz.vem.length){
+    const vem=zz.vem.map(v=>'vindo de '+v.de+', sentido '+v.sentido).join(' ou ');
+    registrar('Trem '+(id||p)+' se aproximando, '+vem+', às '+hora().slice(0,5)+(obs?' · '+obs.replace(/\n/g,' · '):''));
+    mostrar(id||p,'se aproximando, '+vem,false,obs);
+    falar('Atenção. Trem '+p.split('').join(' ')+' se aproximando, '+vem+(obs?'. '+obs.replace(/\n/g,'. ').replace(/ · /g,', '):''));
+    return;
+  }
+  const dist=zz&&zz.borda?' · entrando pela borda do sinótico':zz&&zz.est?' · estação vizinha da sua':'';
   registrar(msg+dist);mostrar(id||p,'em '+onde+dist,false,obs);falar('Atenção. Trem '+p.split('').join(' ')+' em '+onde+(obs?'. '+obs.replace(/\n/g,'. ').replace(/ · /g,', '):''));
 }
 // quantas áreas marcadas já tiveram pelo menos um aviso
