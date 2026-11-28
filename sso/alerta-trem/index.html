@@ -337,11 +337,18 @@ function vizinhas(k){
     for(const dir of [-1,1]){
       const ponta=dir<0?l.est[0]:l.est[l.est.length-1];
       for(const d of [1]){const j=i+dir*d;if(j<0||j>=l.est.length)break;
-        if(!res.some(r=>r.k===l.est[j]))res.push({k:l.est[j],d,linha:l.n,lado:'vindo de '+EST[ponta][1]})}
+        // de onde vem o trem; o Expresso Aeroporto (Linha 13) aparece pelo nome do serviço
+        // se a vizinha é a ponta da linha, o trem sai dali
+        const sai=l.est[j]===ponta,de=l.n==='13'?(sai?'saindo':'vindo')+' do Expresso Aeroporto':sai?'saindo de '+EST[ponta][1]+' (Linha '+l.n+')':'vindo de '+EST[ponta][1];
+        const ja=res.find(r=>r.k===l.est[j]);
+        if(ja){if(!ja.de.includes(de))ja.de.push(de)}else res.push({k:l.est[j],d,linha:l.n,de:[de]})}
     }
   }
+  // "vindo de Estudantes e do Expresso Aeroporto"
+  for(const r of res)r.lado=r.de.map((x,i)=>i&&x.startsWith('vindo ')&&r.de[i-1].startsWith('vindo ')?x.slice(6):x).join(' e ');
   return res;
 }
+
 {const add=(sel,vazio)=>{const vis=new Set();LINHAS.forEach(l=>{const g=document.createElement('optgroup');g.label='Linha '+l.n+' – '+l.nome;l.est.forEach(k=>{if(vis.has(k))return;vis.add(k);const o=document.createElement('option');o.value=k;o.textContent=EST[k][1];g.appendChild(o)});sel.appendChild(g)})};
  add($('#iMinha'));add($('#iDest'));$('#iMinha').value=cfg.minha||''}
 let marcarEst=null; // estação que o próximo retângulo vai marcar
