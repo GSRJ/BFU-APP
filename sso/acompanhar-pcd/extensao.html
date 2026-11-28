@@ -23,6 +23,11 @@ li b{font-weight:800}
 .btn{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:8px 18px;border-radius:12px;background:var(--tl);color:#fff;font-weight:800;text-decoration:none;margin-top:6px}
 .nota{background:var(--tl2);border-radius:12px;padding:12px 14px;font-size:15px}
 code{background:#F1F1EC;border-radius:5px;padding:1px 5px;font-size:14px}
+.alt{margin-top:12px;background:#FFF7E0;border:2px solid #F2D27A;border-radius:12px;padding:12px 14px;font-size:15px}
+.alt ol{margin:8px 0;gap:8px}
+.url{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.url code{word-break:break-all}
+.url button{border:2px solid var(--tl);background:#fff;color:var(--tl);font:800 14px/1 var(--f);border-radius:9px;padding:9px 12px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -34,12 +39,23 @@ code{background:#F1F1EC;border-radius:5px;padding:1px 5px;font-size:14px}
     <ol>
       <li>No Chrome (ou Edge), abra a <b>Chrome Web Store</b>, procure <b>Tampermonkey</b> e toque em <b>Usar no Chrome</b>.</li>
       <li>Abra <code>chrome://extensions</code>, toque em <b>Detalhes</b> do Tampermonkey e ligue <b>Permitir scripts do usuário</b>. Se não aparecer essa opção, ligue o <b>Modo do desenvolvedor</b>, no canto de cima.</li>
-      <li>Toque no botão abaixo. O Tampermonkey abre uma página: toque em <b>Instalar</b>.<br><a class="btn" href="ponte.user.js">Instalar a ponte do BFU</a></li>
+      <li>Toque no botão abaixo. O Tampermonkey abre uma página: toque em <b>Instalar</b>.<br><a class="btn" href="ponte.user.js">Instalar a ponte do BFU</a>
+        <div class="alt"><b>Abriu uma página cheia de código?</b> O Tampermonkey não pegou o link. Faça assim:
+          <ol>
+            <li>Confira se o Tampermonkey está instalado e se <b>Permitir scripts do usuário</b> está ligado (passo 2). Depois volte aqui e toque no botão de novo.</li>
+            <li>Se ainda abrir o código: clique no ícone do Tampermonkey (quebra-cabeça <b>⧉</b> na barra do Chrome › Tampermonkey) › <b>Painel</b> › aba <b>Utilitários</b> › <b>Instalar a partir do URL</b>, cole o endereço abaixo e toque em <b>Instalar</b>.</li>
+          </ol>
+          <div class="url"><code id="u"></code><button type="button" id="cp">Copiar endereço</button></div>
+        </div></li>
       <li>Abra e faça login no <b>SIGO</b> (Acompanhamento PCD) e no <b>painel do CIMG</b> da sua linha, cada um numa aba. Um selo amarelo "BFU" aparece no canto de cada um.</li>
       <li>Abra o <b>Acompanhar PCD</b>, escolha a sua estação e marque no sinótico as estações que aparecem na lista. Depois toque em <b>Começar a vigiar</b>.</li>
     </ol>
   </section>
   <div class="nota">Antes de instalar no computador da SSO, confirme com a supervisão ou a TI se é permitido. As atualizações chegam sozinhas pelo Tampermonkey.</div>
 </main>
+<script>
+const U=new URL('ponte.user.js',location.href).href;document.getElementById('u').textContent=U;
+document.getElementById('cp').onclick=async e=>{try{await navigator.clipboard.writeText(U)}catch(_){const t=document.createElement('textarea');t.value=U;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove()}e.target.textContent='Copiado';setTimeout(()=>e.target.textContent='Copiar endereço',1500)};
+</script>
 </body>
 </html>
