@@ -732,17 +732,24 @@ const limpo=s=>s.toUpperCase().replace(/[^A-Z0-9]/g,'');
 const ALT={U:'U|V|Y|0|11'};
 const escRe=c=>c.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
 const parte=c=>ALT[c]?'(?:'+ALT[c]+')':escRe(c);
+// depois do prefixo não pode vir outro número (S40 não é S400).
 // prefixo de 4 ou mais caracteres também vale sem o último caractere (U510 lido como US1),
 // desde que depois não venha outro número: S125 não conta como S120. Essa leitura é
 // aproximada e precisa se repetir para avisar
-const padrao=cp=>{const cs=[...cp];let r='(?:'+cs.map(parte).join('')+')';
-  if(cs.length>=4)r+='|(?:'+cs.slice(0,-1).map(parte).join('')+'(?![0-9]))';
+// zeros logo depois das letras são opcionais: S040 vale como S40 e S40 vale como S040
+const semZero=s=>s.replace(/^([A-Z]+)0+(?=[0-9])/,'$1');
+const padrao=(p,cp)=>{
+  const m=limpo(p).match(/^([A-Z]+)0*([1-9][A-Z0-9]*)$/);
+  const ini=m?[...canon(m[1])]:[],cs=m?[...canon(m[2])]:[...cp],zeros=m?'0*':'';
+  const junta=x=>ini.map(parte).join('')+zeros+x.map(parte).join('');
+  let r='(?:'+junta(cs)+'(?![0-9]))';
+  if(ini.length+cs.length>=4&&cs.length>=2)r+='|(?:'+junta(cs.slice(0,-1))+'(?![0-9]))';
   return new RegExp(r)};
 function procurar(linhas,p,cp){
-  const achados=[],re=padrao(cp);
+  const achados=[],re=padrao(p,cp);
   const add=(r,i,n)=>{
     // mostra o prefixo como foi digitado e o resto como foi lido (5120X288 vira S120X288)
-    const id=p+r.slice(i+n),exato=r.includes(p),o=achados.find(x=>parecido(x.id,id));
+    const id=p+r.slice(i+n),exato=new RegExp('^'+semZero(limpo(p))+'(?![0-9])').test(semZero(r.slice(i)))||r.includes(p)&&!/[0-9]/.test(r[r.indexOf(p)+p.length]||''),o=achados.find(x=>parecido(x.id,id));
     if(o){if(exato&&!o.exato){o.id=id;o.exato=true}}else achados.push({id,exato});
   };
   // no sinótico o prefixo vem no começo do código (S128E508); aceita 1 caractere solto antes (traço lido como I ou 1)
