@@ -266,7 +266,7 @@ label.cfg input[type=range]{flex:1;accent-color:var(--k)}
 </div>
 </main>
 
-<div id="alerta" hidden><div class="box"><span class="rot" id="aRot">TREM CHEGANDO</span><h3 id="aTit">S120</h3><p id="aMsg"></p><div class="aobs" id="aObs" hidden></div><ul id="aAnt" hidden></ul><div class="aacoes" id="aAcoes" hidden><a class="btn" id="aSigo" href="https://sigo.triviatrens.com.br/#/pcd/support" target="_blank" rel="noopener">Abrir SIGO</a></div><button class="btn" id="aOk">Ciente</button></div></div>
+<div id="alerta" hidden><div class="box"><span class="rot" id="aRot">TREM CHEGANDO</span><h3 id="aTit">S120</h3><p id="aMsg"></p><div class="aobs" id="aObs" hidden></div><ul id="aAnt" hidden></ul><div class="aacoes" id="aAcoes" hidden><a class="btn" id="aSigo" href="https://sigo.triviatrens.com.br/#/pcd/support" target="_blank" rel="noopener">Abrir SIGO</a></div><button class="btn" id="aPip" type="button" hidden>Fixar aviso na tela</button><button class="btn" id="aOk">Ciente</button></div></div>
 
 <script src="lib/tesseract.min.js"></script>
 <script>
@@ -998,6 +998,9 @@ function falar(txt){try{const u=new SpeechSynthesisUtterance(txt);u.lang='pt-BR'
 let pendentes=[];
 function mostrar(tit,msg,isFalha,obs){
   if($('#alerta').hidden)pendentes=[];
+  // a cada aviso tenta abrir de novo a janela fixada, mesmo que tenha sido fechada.
+  // O Chrome só deixa abrir depois de um clique na página: se ele recusar, o primeiro clique reabre
+  if(!pip&&pipPossivel())abrirPip().then(()=>{if(!pip)pipNoClique=true})
   pendentes.unshift({tit,msg,obs:obs||'',f:!!isFalha,h:hora().slice(0,5)});pendentes=pendentes.slice(0,6);
   $('#aTit').textContent=tit;$('#aMsg').textContent=msg;
   $('#aRot').textContent=isFalha?'ATENÇÃO':'TREM CHEGANDO';
@@ -1011,7 +1014,7 @@ function mostrar(tit,msg,isFalha,obs){
   bip(isFalha);clearInterval(repete);let n=0;
   repete=setInterval(()=>{if(++n>6||$('#alerta').hidden){clearInterval(repete);return}bip(isFalha)},5000);
   try{navigator.vibrate&&navigator.vibrate([400,200,400])}catch(e){}
-  try{if('Notification' in window&&Notification.permission==='granted'){const n=new Notification(tit,{body:msg+(obs?'\n'+obs:''),icon:'../../icon-192.png',requireInteraction:true,tag:tit+msg+Date.now()});n.onclick=()=>{try{parent.focus();window.focus()}catch(e){}n.close()}}}catch(e){}
+  try{if('Notification' in window&&Notification.permission==='granted'){const n=new Notification(tit,{body:msg+(obs?'\n'+obs:''),icon:'../../icon-192.png',requireInteraction:true,tag:tit+msg+Date.now()});n.onclick=()=>{try{parent.focus();window.focus()}catch(e){}if(!pip&&pipPossivel())abrirPip();n.close()}}}catch(e){}
 }
 $('#aOk').onclick=()=>{$('#alerta').hidden=true;clearInterval(repete);pendentes=[];pararPiscar();pipDesenhar()};
 function avisar(p,onde,id,zid){
@@ -1052,11 +1055,14 @@ function piscar(tit,msg){
 function pararPiscar(){if(pisca){pisca.terminate();pisca=null}document.title=TITULO}
 
 /* ---------- janela flutuante, sempre por cima (Document Picture-in-Picture) ---------- */
-let pip=null;
+let pip=null,pipNoClique=false,abrindoPip=false;
+// aviso chegou com a janela fechada: o primeiro clique em qualquer lugar da página reabre
+document.addEventListener('pointerdown',()=>{if(pipNoClique&&!pip&&pipPossivel())abrirPip();pipNoClique=false},true);
 const pipPossivel=()=>'documentPictureInPicture' in window&&window.top===window;
 async function abrirPip(){
-  if(!pipPossivel()||pip)return;
-  try{pip=await documentPictureInPicture.requestWindow({width:360,height:340})}catch(e){pip=null;return}
+  if(!pipPossivel()||pip||abrindoPip)return;
+  abrindoPip=true;
+  try{pip=await documentPictureInPicture.requestWindow({width:360,height:340})}catch(e){pip=null;return}finally{abrindoPip=false}
   const d=pip.document;
   d.title='ALERTA TREM';
   d.head.innerHTML='<meta charset="utf-8"><style>'+
@@ -1194,7 +1200,8 @@ $('#bTeste').onclick=()=>{
   $('#bTeste').disabled=true;$('#bTeste').textContent='Minimize a janela agora…';
   setTimeout(()=>{$('#bTeste').disabled=false;$('#bTeste').textContent='Testar aviso em 10 s';registrar('Teste de aviso');mostrar('TESTE','Se você ouviu o bipe e viu a notificação, o aviso funciona.',false,'Aqui aparecem as observações do trem.');falar('Teste do alerta trem')},10000);
 };
-function botaoPip(){const b=$('#bPip');b.disabled=!!pip;b.lastChild.textContent=pip?'Aviso fixado na tela':'Fixar aviso na tela'}
+function botaoPip(){$('#aPip').hidden=!!pip||!pipPossivel();const b=$('#bPip');b.disabled=!!pip;b.lastChild.textContent=pip?'Aviso fixado na tela':'Fixar aviso na tela'}
+$('#aPip').onclick=()=>abrirPip();
 $('#bPip').onclick=()=>{if(!pipPossivel()){alert('Este navegador não fixa janelas na tela. Use o Chrome ou o Edge do computador.');return}abrirPip()};
 notifEstado();
 listarZonas();listarTrens();
