@@ -168,7 +168,7 @@ label.cfg input[type=range]{flex:1;accent-color:var(--k)}
     <h2><span class="n">1</span>Mostre o sinótico</h2>
     <p class="dica">Toque no botão e escolha a guia ou a janela do sinótico. Esta página continua aberta na frente.</p>
     <button class="btn pri grande" id="bTela"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>Compartilhar a tela do sinótico</button>
-    <p class="dica amp">No CIMG, deixe a <b>Ampliação</b> em 100% e role o sinótico até a sua estação ficar no meio da tela, com as estações próximas dos dois lados. Só elas precisam aparecer.</p>
+    <p class="dica amp">No sinótico, deixe a <b>Ampliação</b> em 100% e role a imagem até a sua estação ficar no meio da tela, com as estações próximas dos dois lados. Só elas precisam aparecer.</p>
     <p class="outras">Sem acesso à tela? Use a <button class="lnk" id="bCam" type="button">câmera apontada para o monitor</button></p>
   </section>
 
@@ -322,7 +322,7 @@ const escH=x=>String(x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 const SIGO_COD={BAS:'BRA',ITQ:'CIT'}; // siglas do SIGO que diferem das nossas
 const nrm=x=>String(x||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/z/g,'s').replace(/[^a-z0-9]/g,'');
 const sigla=k=>EST[k][0].normalize('NFD').replace(/[̀-ͯ]/g,'');
-// como a estação aparece escrita no sinótico do CIMG, quando é diferente da sigla
+// como a estação aparece escrita no sinótico, quando é diferente da sigla
 // conferido nos painéis CCO Linha 11 e CCO Linha 12/13; Barra Funda só aparece como BF1, BF2 e BF3
 const SIG_CIMG={BFU:'BF',BRA:'BAS',DOB:'DBO',USP:'USL'};
 const siglaCimg=k=>SIG_CIMG[k]||sigla(k);
@@ -358,7 +358,7 @@ function vizinhas(k){
 let marcarEst=null; // estação que o próximo retângulo vai marcar
 function listarEstAviso(){
   const box=$('#estAv');if(!cfg.minha||!EST[cfg.minha]){box.hidden=true;return}
-  box.hidden=false;box.innerHTML='<p class="dica">O aviso toca quando o trem passa pela estação vizinha de '+EST[cfg.minha][1]+', de cada lado. Elas aparecem perto da sua no CIMG em 100%. Marque cada uma no sinótico ou toque em <b>Achar estações</b>. Se alguma não aparecer, marque a <b>borda</b> da imagem do lado dela: o trem que entra por ali vem dessa estação.</p>';
+  box.hidden=false;box.innerHTML='<p class="dica">O aviso toca quando o trem passa pela estação vizinha de '+EST[cfg.minha][1]+', de cada lado. Elas aparecem perto da sua no sinótico em 100%. Marque cada uma no sinótico ou toque em <b>Achar estações</b>. Se alguma não aparecer, marque a <b>borda</b> da imagem do lado dela: o trem que entra por ali vem dessa estação.</p>';
   const ach=document.createElement('button');ach.className='btn pri';ach.type='button';ach.id='bAchar';ach.textContent='Achar estações no sinótico';ach.disabled=!frame;ach.onclick=acharEstacoes;box.appendChild(ach);
   let linha='';
   vizinhas(cfg.minha).forEach(v=>{
@@ -397,7 +397,7 @@ async function verificarMinha(){
   try{
     const {achadas}=await lerSiglas(),nome=EST[cfg.minha][1];
     if(achadas[cfg.minha]){el.className='verif ok';el.textContent='✓ '+nome+' ('+siglaCimg(cfg.minha)+') aparece no sinótico.'}
-    else{el.className='verif no';el.innerHTML='⚠ Não achei '+escH(nome)+' ('+siglaCimg(cfg.minha)+') no sinótico. Confira se escolheu a estação certa e role o CIMG até ela aparecer. <button class="lnk" type="button" id="bVerif">Conferir de novo</button>';$('#bVerif').onclick=()=>{$('#bFoto').click();setTimeout(verificarMinha,600)}}
+    else{el.className='verif no';el.innerHTML='⚠ Não achei '+escH(nome)+' ('+siglaCimg(cfg.minha)+') no sinótico. Confira se escolheu a estação certa e role o sinótico até ela aparecer. <button class="lnk" type="button" id="bVerif">Conferir de novo</button>';$('#bVerif').onclick=()=>{$('#bFoto').click();setTimeout(verificarMinha,600)}}
   }catch(e){el.className='verif no';el.textContent='Não consegui ler o sinótico: '+e.message}
   verificando=false;
 }
@@ -418,7 +418,7 @@ async function acharEstacoes(){
       cfg.zonas.push({id:Date.now().toString(36)+v.k,nome:EST[v.k][1],est:v.k,dist:v.d,auto:true,x:Math.max(0,esq/W),y:Math.max(0,a.y1/H),w:Math.min(1,(dir-esq)/W),h:Math.max(.05,1-a.y1/H)});
       ok.push(EST[v.k][1]);
     }
-    // estação que não aparece no CIMG: marca a borda da imagem do lado de onde ela fica
+    // estação que não aparece no sinótico: marca a borda da imagem do lado de onde ela fica
     const bordas=[];
     for(const l of LINHAS){
       const i=l.est.indexOf(cfg.minha);if(i<0)continue;
@@ -446,7 +446,7 @@ async function acharEstacoes(){
     cfg.zonas.forEach(z=>delete z.novaBorda);
     salvar();listarZonas();desenhar();
     registrar((ok.length?'Achadas no sinótico: '+ok.join(', ')+'. ':'')+(bordas.length?'Pela borda: '+bordas.join('; ')+'. ':'')+(falta.length?'Não achei '+falta.join(', ')+': marque à mão.':'Confira as áreas na imagem.'));
-    alert((ok.length?'Achei: '+ok.join(', ')+'.':'Não achei as siglas das estações próximas na imagem.')+(bordas.length?'\n\nNão aparecem no CIMG, então marquei a borda da imagem: '+bordas.join('; ')+'.':'')+(falta.length?'\n\nNão achei: '+falta.join(', ')+'. Marque à mão.':'')+'\n\nConfira os retângulos na imagem.');
+    alert((ok.length?'Achei: '+ok.join(', ')+'.':'Não achei as siglas das estações próximas na imagem.')+(bordas.length?'\n\nNão aparecem no sinótico, então marquei a borda da imagem: '+bordas.join('; ')+'.':'')+(falta.length?'\n\nNão achei: '+falta.join(', ')+'. Marque à mão.':'')+'\n\nConfira os retângulos na imagem.');
   }catch(e){alert('Não consegui ler o sinótico: '+e.message)}
   listarEstAviso();
 }
@@ -793,7 +793,7 @@ async function lerZonas(){
     const el=$('#z-'+z.id);
     if(el){
       const alt=z.h*frame.height,peq=alt<16;
-      el.querySelector('.lido').innerHTML=(peq?'<span class="peq">⚠ Área pequena na imagem ('+Math.round(alt)+' px de altura): aumente a Ampliação do CIMG. </span>':'')+'Lido: '+escH(linhas.join(' · ')||'(nada)');
+      el.querySelector('.lido').innerHTML=(peq?'<span class="peq">⚠ Área pequena na imagem ('+Math.round(alt)+' px de altura): aumente a Ampliação do sinótico. </span>':'')+'Lido: '+escH(linhas.join(' · ')||'(nada)');
       let pv=el.querySelector('img');if(!pv){pv=document.createElement('img');pv.alt='O que o leitor vê';el.appendChild(pv)}
       pv.src=img.toDataURL();
     }
@@ -829,7 +829,7 @@ async function conferirPosicao(){
   posFalhas++;
   if(posFalhas>=2&&!posAvisado){
     posAvisado=true;
-    falha('O sinótico mudou: '+lista.join('; ')+'. Volte o CIMG para a sua estação ou toque em "Achar estações no sinótico" de novo.','Sinótico fora do lugar');
+    falha('O sinótico mudou: '+lista.join('; ')+'. Volte o sinótico para a sua estação ou toque em "Achar estações no sinótico" de novo.','Sinótico fora do lugar');
   }
 }
 function hora(){return new Date().toLocaleTimeString('pt-BR')}
