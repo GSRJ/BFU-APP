@@ -1,12 +1,12 @@
 // ==UserScript==
-// @name         BFU · Ponte SIGO e sinótico para o Alerta trem
+// @name         BFU · Ponte SIGO e sinótico para o Acompanhar PCD
 // @namespace    https://appbfu.vercel.app/
 // @version      1.0.0
-// @description  Lê os pedidos de acompanhamento PCD do SIGO e a imagem do sinótico do CIMG e entrega ao Alerta trem do BFU. Só lê o que já aparece na tela; não altera nada nos sistemas.
+// @description  Lê os pedidos de acompanhamento PCD do SIGO e a imagem do sinótico do CIMG e entrega ao Acompanhar PCD do BFU. Só lê o que já aparece na tela; não altera nada nos sistemas.
 // @author       AAS Gerson
 // @match        https://sigo.triviatrens.com.br/*
 // @match        https://appintranet.cptm.sp.gov.br/Operacao/CIMG_CCO/Painel/TempoReal/*
-// @match        https://appbfu.vercel.app/sso/alerta-trem/*
+// @match        https://appbfu.vercel.app/sso/acompanhar-pcd/*
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_addValueChangeListener
@@ -14,8 +14,8 @@
 // @connect      appintranet.cptm.sp.gov.br
 // @run-at       document-idle
 // @noframes
-// @updateURL    https://appbfu.vercel.app/sso/alerta-trem/ponte.user.js
-// @downloadURL  https://appbfu.vercel.app/sso/alerta-trem/ponte.user.js
+// @updateURL    https://appbfu.vercel.app/sso/acompanhar-pcd/ponte.user.js
+// @downloadURL  https://appbfu.vercel.app/sso/acompanhar-pcd/ponte.user.js
 // ==/UserScript==
 
 (function () {
@@ -85,7 +85,7 @@
     return;
   }
 
-  /* ---------- Alerta trem: recebe os dados e entrega à página ---------- */
+  /* ---------- Acompanhar PCD: recebe os dados e entrega à página ---------- */
   const enviar = msg => window.postMessage(Object.assign({ bfuPonte: msg.tipo }, msg), location.origin);
   enviar({ tipo: 'ola', versao: VERSAO });
 
