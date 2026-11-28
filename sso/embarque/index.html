@@ -183,6 +183,9 @@ $('#bExp').onclick=()=>{
   if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f],title:'Registro de embarques'}).catch(()=>{});return}
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=nome;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);
 };
+/* vindo do aviso do Alerta trem: os dados do trem chegam pelo endereço */
+{const q=new URLSearchParams(location.search),m={tipo:'#iTipo',carro:'#iCarro',porta:'#iPorta',num:'#iNum',pref:'#iPref',dest:'#iDest',obs:'#iObs'};
+ for(const [k,s] of Object.entries(m))if(q.get(k)&&$(s))$(s).value=q.get(k);}
 atualizar();listar();
 </script>
 </body>

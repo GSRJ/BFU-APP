@@ -62,6 +62,22 @@ details.mais .corpo{display:flex;flex-direction:column;gap:12px;padding:0 16px 1
 #alerta .aobs{background:rgba(255,255,255,.95);color:var(--tx);border-radius:12px;padding:10px 12px;font-size:17px;font-weight:700;text-align:left;white-space:pre-wrap}
 #alerta ul{margin:0;padding:8px 10px;list-style:none;text-align:left;border-top:1px solid rgba(255,255,255,.4);font-size:14px;font-weight:600}
 #alerta .btn{background:#fff;color:var(--tx);border:0;min-height:54px;font-size:19px;width:100%}
+#alerta .aacoes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#alerta .aacoes .btn{min-height:46px;font-size:16px;background:rgba(255,255,255,.18);color:#fff;border:2px solid rgba(255,255,255,.7);text-decoration:none}
+.dica.amp{background:#FFF7E0;border-left:4px solid var(--y);border-radius:0 8px 8px 0;padding:8px 10px}
+.tela.largo{overflow-x:auto;overflow-y:hidden}
+.tela.largo canvas{max-width:none}
+.estAv{display:flex;flex-direction:column;gap:6px}
+.estAv .lin{font-size:13px;font-weight:800;color:var(--mt);margin-top:4px}
+.ea{display:flex;align-items:center;gap:8px;border:2px solid var(--ln);border-radius:10px;padding:8px 10px}
+.ea b{flex:1;min-width:0}.ea small{display:block;color:var(--mt);font-weight:600}
+.ea.ok{border-color:var(--tl);background:var(--tl2)}
+.ea .ck{font-weight:800;color:var(--tl);font-size:14px}
+details.sigo{border:2px solid var(--tl);background:var(--tl2);border-radius:12px;padding:0 12px}
+details.sigo summary{cursor:pointer;padding:12px 0;font-weight:800;color:#0A4E4A}
+details.sigo[open]{padding-bottom:12px;display:flex;flex-direction:column;gap:8px}
+details.sigo textarea{width:100%;min-height:70px;border:2px solid var(--ln);border-radius:10px;padding:8px;font:500 13px/1.3 var(--mono);background:#fff}
+.z .peq{color:#8E1B1B;font-weight:800}
 .est{flex:none;font-weight:800;font-size:14px;padding:7px 12px;border-radius:999px;background:#3A3A36;color:#fff;white-space:nowrap}
 .est.on{background:var(--tl)}
 .est.err{background:var(--rd)}
@@ -148,11 +164,14 @@ label.cfg input[type=range]{flex:1;accent-color:var(--k)}
     <h2><span class="n">1</span>Mostre o sinótico</h2>
     <p class="dica">Toque no botão e escolha a guia ou a janela do sinótico. Esta página continua aberta na frente.</p>
     <button class="btn pri grande" id="bTela"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>Compartilhar a tela do sinótico</button>
+    <p class="dica amp">No CIMG, deixe a <b>Ampliação</b> perto de 100% e role até as suas estações. Com o sinótico encolhido, as letras ficam pequenas demais para o leitor.</p>
     <p class="outras">Sem acesso à tela? Use a <button class="lnk" id="bCam" type="button">câmera apontada para o monitor</button></p>
   </section>
 
   <section class="card">
     <h2><span class="n">2</span>Marque as estações</h2>
+    <label class="campo"><span>Em qual estação você está?</span><select id="iMinha"><option value="">Escolha a sua estação</option></select></label>
+    <div class="estAv" id="estAv" hidden></div>
     <p class="dica">Toque em <b>Marcar área</b> e arraste um retângulo sobre o lugar onde o prefixo do trem aparece na estação. Dê um nome à área. Pode marcar várias.</p>
     <div class="row">
       <button class="btn pri" id="bMarcar" disabled>Marcar área</button>
@@ -168,6 +187,13 @@ label.cfg input[type=range]{flex:1;accent-color:var(--k)}
 <div class="col">
   <section class="card">
     <h2><span class="n">3</span>Trens para avisar</h2>
+    <details class="sigo" id="sigoBox"><summary>Colar pedidos do SIGO</summary>
+      <p class="dica">No SIGO, em <b>Acompanhamento PCD</b>, selecione as linhas da tabela com o mouse, aperte <b>Ctrl+C</b> e cole aqui.</p>
+      <textarea id="sigoTxt" rows="3" placeholder="Cole aqui as linhas copiadas do SIGO"></textarea>
+      <label class="campo"><span>Trazer para a lista</span><select id="iFiltro"><option value="minha">Só os que descem na minha estação</option><option value="todos">Todos os pedidos em aberto</option></select></label>
+      <button class="btn pri" id="bSigo" type="button">Trazer pedidos</button>
+      <p class="dica" id="sigoRes"></p>
+    </details>
     <form id="fPref" class="add">
       <label class="campo"><span>Prefixo do trem</span><input type="text" id="iPref" placeholder="Digite o prefixo (ex: U510)" maxlength="12" autocomplete="off"></label>
       <div class="tres">
@@ -176,6 +202,7 @@ label.cfg input[type=range]{flex:1;accent-color:var(--k)}
         <label class="campo"><span>Porta</span><select id="iPorta"><option value="">—</option><option value="1">1ª</option><option value="2">2ª</option><option value="3">3ª</option><option value="4">4ª</option></select></label>
       </div>
       <label class="campo"><span>Nº do carro <em>(opcional)</em></span><input type="text" id="iNum" maxlength="12" autocomplete="off" placeholder="Letras e números (ex: 7A23)"></label>
+      <label class="campo"><span>Estação de desembarque <em>(opcional)</em></span><select id="iDest"><option value="">—</option></select></label>
       <label class="campo"><span>Observações <em>(opcional)</em></span><textarea id="iObs" maxlength="300" placeholder="Qualquer outra informação"></textarea></label>
       <button class="btn pri" id="bAddTrem">Adicionar trem</button>
     </form>
@@ -225,7 +252,7 @@ label.cfg input[type=range]{flex:1;accent-color:var(--k)}
 </div>
 </main>
 
-<div id="alerta" hidden><div class="box"><span class="rot" id="aRot">TREM CHEGANDO</span><h3 id="aTit">S120</h3><p id="aMsg"></p><div class="aobs" id="aObs" hidden></div><ul id="aAnt" hidden></ul><button class="btn" id="aOk">Ciente</button></div></div>
+<div id="alerta" hidden><div class="box"><span class="rot" id="aRot">TREM CHEGANDO</span><h3 id="aTit">S120</h3><p id="aMsg"></p><div class="aobs" id="aObs" hidden></div><ul id="aAnt" hidden></ul><div class="aacoes" id="aAcoes" hidden><a class="btn" id="aSigo" href="https://sigo.triviatrens.com.br/#/pcd/support" target="_blank" rel="noopener">Abrir SIGO</a><a class="btn" id="aEst" target="_blank" rel="noopener">Avisar a estação</a></div><button class="btn" id="aOk">Ciente</button></div></div>
 
 <script src="lib/tesseract.min.js"></script>
 <script>
@@ -247,6 +274,167 @@ let assinatura=null,desdeMudou=Date.now(),avisouParado=false,inicioCiclo=0,aviso
 const estadoTrem={}; // prefixo -> {onde,quando}
 let nCiclo=0;
 const presenca={};   // prefixo|zona -> {hist,falta,avisado}
+
+/* ---------- estações (mesmos dados de "Falar com estação") ---------- */
+const EST={
+  BFU:['BFU','Palmeiras-Barra Funda','11926885833'],
+  LUZ:['LUZ','Luz','11926824593'],
+  BRA:['BRÁ','Brás','11962778936'],
+  TAT:['TAT','Tatuapé','11926809431'],
+  CIT:['ITQ','Itaquera (Corinthians-Itaquera)','11926829202'],
+  DOB:['DOB','Dom Bosco','11926951980'],
+  JBO:['JBO','José Bonifácio','11926958245'],
+  GUA:['GUA','Guaianases','11925802414'],
+  AGN:['AGN','Antônio Gianetti Neto','11925784098'],
+  FVC:['FVC','Ferraz de Vasconcelos','11925599772'],
+  POA:['POA','Poá','11924998023'],
+  CVN:['CVN','Calmon Viana','11924912734'],
+  SUZ:['SUZ','Suzano','11924858440'],
+  JPB:['JPB','Jundiapeba','11924810419'],
+  BCB:['BCB','Brás Cubas','11924808666'],
+  MDC:['MDC','Mogi das Cruzes','11924782522'],
+  EST:['EST','Estudantes','11924742257'],
+  EGO:['EGO','Engenheiro Goulart','11924709876'],
+  USP:['USP','USP Leste','11924606632'],
+  ERM:['ERM','Comendador Ermelino','11925247005'],
+  SMP:['SMP','São Miguel Paulista','11926721012'],
+  JHE:['JHE','Jardim Helena-Vila Mara','11926789466'],
+  ITI:['ITI','Itaim Paulista','11926801429'],
+  JRO:['JRO','Jardim Romano','11926827007'],
+  EMF:['EMF','Engenheiro Manoel Feio','11926659043'],
+  IQC:['IQC','Itaquaquecetuba','11926773019'],
+  ARC:['ARC','Aracaré','11972263857'],
+  GCE:['GCE','Guarulhos-Cecap','11926666344'],
+  AGU:['AGU','Aeroporto-Guarulhos','11926477002']
+};
+// Ordem das estações em cada linha (sentido centro → ponta).
+const LINHAS=[
+  {n:'11',nome:'CORAL',rota:'Palmeiras-Barra Funda ↔ Estudantes',est:['BFU','LUZ','BRA','TAT','CIT','DOB','JBO','GUA','AGN','FVC','POA','CVN','SUZ','JPB','BCB','MDC','EST']},
+  {n:'12',nome:'SAFIRA',rota:'Brás ↔ Calmon Viana',est:['BRA','TAT','EGO','USP','ERM','SMP','JHE','ITI','JRO','EMF','IQC','ARC','CVN']},
+  {n:'13',nome:'JADE',rota:'Palmeiras-Barra Funda (Expresso Aeroporto) e Engenheiro Goulart ↔ Aeroporto-Guarulhos',est:['BFU','LUZ','EGO','GCE','AGU']}
+];
+const escH=x=>String(x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const SIGO_COD={BAS:'BRA',ITQ:'CIT'}; // siglas do SIGO que diferem das nossas
+const nrm=x=>String(x||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/z/g,'s').replace(/[^a-z0-9]/g,'');
+const sigla=k=>EST[k][0].normalize('NFD').replace(/[̀-ͯ]/g,'');
+// "BFU - Palmeiras - Barra Funda" vira BFU; se a sigla não bater, procura pelo nome
+function estDoSigo(txt){
+  const m=String(txt||'').match(/^\s*([A-Z]{2,4})\s*-/);
+  if(m){const c=SIGO_COD[m[1]]||m[1];if(EST[c])return c;const k=Object.keys(EST).find(k=>sigla(k)===c);if(k)return k}
+  const n=nrm(String(txt).replace(/^\s*[A-Z]{2,4}\s*-\s*/,''));
+  return n?Object.keys(EST).find(k=>nrm(EST[k][1])===n||nrm(EST[k][1]).includes(n)||n.includes(nrm(EST[k][1])))||null:null;
+}
+// a primeira e a segunda estação antes da sua, dos dois lados de cada linha
+function vizinhas(k){
+  const res=[];
+  for(const l of LINHAS){
+    const i=l.est.indexOf(k);if(i<0)continue;
+    for(const dir of [-1,1]){
+      const ponta=dir<0?l.est[0]:l.est[l.est.length-1];
+      for(const d of [1,2]){const j=i+dir*d;if(j<0||j>=l.est.length)break;
+        if(!res.some(r=>r.k===l.est[j]))res.push({k:l.est[j],d,linha:l.n,lado:'vindo de '+EST[ponta][1]})}
+    }
+  }
+  return res;
+}
+{const add=(sel,vazio)=>{const vis=new Set();LINHAS.forEach(l=>{const g=document.createElement('optgroup');g.label='Linha '+l.n+' – '+l.nome;l.est.forEach(k=>{if(vis.has(k))return;vis.add(k);const o=document.createElement('option');o.value=k;o.textContent=EST[k][1];g.appendChild(o)});sel.appendChild(g)})};
+ add($('#iMinha'));add($('#iDest'));$('#iMinha').value=cfg.minha||''}
+let marcarEst=null; // estação que o próximo retângulo vai marcar
+function listarEstAviso(){
+  const box=$('#estAv');if(!cfg.minha||!EST[cfg.minha]){box.hidden=true;return}
+  box.hidden=false;box.innerHTML='<p class="dica">O aviso toca quando o trem passa pela <b>segunda</b> e pela <b>primeira</b> estação antes de '+EST[cfg.minha][1]+', dos dois lados. Marque cada uma no sinótico ou toque em <b>Achar estações</b>.</p>';
+  const ach=document.createElement('button');ach.className='btn pri';ach.type='button';ach.id='bAchar';ach.textContent='Achar estações no sinótico';ach.disabled=!frame;ach.onclick=acharEstacoes;box.appendChild(ach);
+  let linha='';
+  vizinhas(cfg.minha).forEach(v=>{
+    if(v.linha!==linha){linha=v.linha;const t=document.createElement('div');t.className='lin';t.textContent='Linha '+v.linha;box.appendChild(t)}
+    const z=cfg.zonas.find(z=>z.est===v.k),d=document.createElement('div');d.className='ea'+(z?' ok':'');
+    d.innerHTML='<b></b><span class="ck"></span><button class="btn mini" type="button"></button>';
+    d.querySelector('b').innerHTML=EST[v.k][1]+'<small>'+(v.d===1?'estação anterior':'2 estações antes')+' · '+v.lado+'</small>';
+    d.querySelector('.ck').textContent=z?(z.auto?'✓ achada':'✓ marcada'):'';
+    const b=d.querySelector('button');b.textContent=z?'Marcar de novo':'Marcar';b.disabled=!frame;
+    b.onclick=()=>{marcarEst=v;if(!marcando)$('#bMarcar').click();$('#bMarcar').textContent='Arraste sobre '+EST[v.k][1]+'…';$('#tela').scrollIntoView({behavior:'smooth',block:'center'})};
+    box.appendChild(d);
+  });
+}
+$('#iMinha').onchange=e=>{cfg.minha=e.target.value;salvar();listarEstAviso()};
+// lê o sinótico inteiro, acha as siglas das estações e propõe uma área para cada uma
+async function acharEstacoes(){
+  if(!frame||!cfg.minha)return;
+  const b=$('#bAchar');b.disabled=true;b.textContent='Procurando as estações…';
+  try{
+    const w=await prepararOCR(),W=frame.width,H=frame.height;
+    const sw=W,sh=H,esc=Math.min(Math.max(3,Math.min(7,260/sh)),Math.max(1,3600/sw)),pad=24;
+    const {data}=await w.recognize(preparar({x:0,y:0,w:1,h:1}));
+    const words=(data.words||[]).map(x=>({t:limpo(x.text),x:((x.bbox.x0+x.bbox.x1)/2-pad)/esc,y0:(x.bbox.y0-pad)/esc,y1:(x.bbox.y1-pad)/esc})).filter(x=>x.t.length>=2&&x.t.length<=4);
+    const cods=Object.keys(EST),achadas={};
+    for(const x of words){const k=cods.find(k=>k===x.t||sigla(k)===x.t);if(k&&!achadas[k])achadas[k]=x}
+    // limites entre estações: qualquer sigla de 3 letras na imagem (inclui estações de fora da lista)
+    const xs=[...new Set(words.filter(x=>/^[A-Z]{3}$/.test(x.t)).map(x=>x.x).concat(Object.values(achadas).map(a=>a.x)))].sort((a,b)=>a-b);
+    const falta=[],ok=[];
+    for(const v of vizinhas(cfg.minha)){
+      const a=achadas[v.k];if(!a){falta.push(EST[v.k][1]);continue}
+      const i=xs.indexOf(a.x),esq=i>0?(a.x+xs[i-1])/2:a.x-W*0.04,dir=i<xs.length-1?(a.x+xs[i+1])/2:a.x+W*0.04;
+      cfg.zonas=cfg.zonas.filter(z=>z.est!==v.k);
+      cfg.zonas.push({id:Date.now().toString(36)+v.k,nome:EST[v.k][1]+(v.d===1?' (anterior)':' (2 antes)'),est:v.k,dist:v.d,auto:true,x:Math.max(0,esq/W),y:Math.max(0,a.y1/H),w:Math.min(1,(dir-esq)/W),h:Math.max(.05,1-a.y1/H)});
+      ok.push(EST[v.k][1]);
+    }
+    salvar();listarZonas();desenhar();
+    registrar((ok.length?'Achadas no sinótico: '+ok.join(', ')+'. ':'')+(falta.length?'Não achei '+falta.join(', ')+': marque à mão.':'Confira as áreas na imagem.'));
+    alert((ok.length?'Achei: '+ok.join(', ')+'.\nConfira os retângulos na imagem.':'Não achei as siglas das estações na imagem.')+(falta.length?'\n\nNão achei: '+falta.join(', ')+'. Marque essas à mão.':''));
+  }catch(e){alert('Não consegui ler o sinótico: '+e.message)}
+  listarEstAviso();
+}
+
+/* ---------- colar do SIGO ---------- */
+if(!cfg.filtro)cfg.filtro='minha';
+$('#iFiltro').value=cfg.filtro;$('#iFiltro').onchange=e=>{cfg.filtro=e.target.value;salvar()};
+const TIPO_SIGO=t=>/visual/i.test(t)?'DV':/motoriz/i.test(t)?'Cadeirante motorizado':/cadeir/i.test(t)?'Cadeirante':/mobilidade/i.test(t)?'MR':/autis|tea\b/i.test(t)?'TEA':/idos/i.test(t)?'Idoso':'Outro';
+// porta do SIGO: "1/2" = 1º carro, 2ª porta; "3c 3p" = 3º carro, 3ª porta; "1" = só o carro
+function portaSigo(v){v=String(v||'');let m=v.match(/(\d+)\s*\/\s*(\d+)/);if(m)return[m[1],m[2]];m=v.match(/(\d+)\s*c\D*(\d+)\s*p/i);if(m)return[m[1],m[2]];m=v.match(/^\s*(\d+)\s*$/);return m?[m[1],'']:['','']}
+const encerrado=s=>/conclu|cancel|finaliz|encerr/i.test(s||'');
+// linha copiada do SIGO: Status, Tipo, Registro, Hora, Linha, Origem, Destino, Viagem, Trem, Porta, Observação (separados por tabulação)
+function lerSigo(txt){
+  const out=[];
+  for(const linha of String(txt||'').split(/\r?\n/)){
+    if(!linha.trim())continue;
+    let c=linha.split('\t').map(x=>x.trim());
+    const est=[...linha.matchAll(/\b([A-Z]{2,4}) - ([^\t\n]+)/g)].map(m=>m[0].trim());
+    const p={status:c[0]||'',tipo:c[1]||'',hora:(linha.match(/\b\d{1,2}:\d{2}\b/)||[''])[0],origem:est[0]||'',destino:est[1]||'',trem:'',porta:'',obs:''};
+    if(c.length>=10){p.trem=c[8];p.porta=c[9];p.obs=c[10]||''}
+    else{const t=linha.match(/\t([A-Z]\d{3})\t/)||linha.match(/\b([A-Z]\d{3})\b/);p.trem=t?t[1]:'';const pt=linha.match(/\t(\d+\s*\/\s*\d+|\d+\s*c\s*\d+\s*p|\d)\t/i);p.porta=pt?pt[1]:''}
+    if(/^[A-Z]\d{3}$/.test(limpo(p.trem)))out.push(p);
+  }
+  return out;
+}
+$('#bSigo').onclick=()=>{
+  const L=lerSigo($('#sigoTxt').value);
+  if(!L.length){$('#sigoRes').textContent='Não achei pedidos no texto colado. Copie as linhas da tabela do Acompanhamento PCD.';return}
+  const minha=cfg.minha&&EST[cfg.minha];
+  if(cfg.filtro==='minha'&&!minha){$('#sigoRes').textContent='Escolha a sua estação no passo 2 ou troque para "Todos os pedidos em aberto".';return}
+  const novos=[],atual=[],fora=[];
+  for(const p of L){
+    const pf=limpo(p.trem),dk=estDoSigo(p.destino);
+    if(encerrado(p.status)||(cfg.filtro==='minha'&&dk!==cfg.minha)){fora.push(pf);continue}
+    const [carro,porta]=portaSigo(p.porta);
+    const info={tipo:TIPO_SIGO(p.tipo),carro:+carro>=1&&+carro<=8?String(+carro):'',porta:+porta>=1&&+porta<=4?String(+porta):'',num:'',dest:dk||''};
+    const nota='SIGO '+p.hora+': '+(p.origem||'?').replace(/\s*-\s*/,' ')+' → '+(p.destino||'?').replace(/\s*-\s*/,' ');
+    (cfg.prefixos.includes(pf)?atual:novos).push(pf);
+    if(!cfg.prefixos.includes(pf))cfg.prefixos.push(pf);
+    cfg.info[pf]=Object.assign({},cfg.info[pf]||{},info);cfg.obs[pf]=[p.obs,nota].filter(Boolean).join(' · ');
+  }
+  salvar();listarTrens();$('#sigoTxt').value='';
+  $('#sigoRes').textContent=(novos.length?'Entraram: '+novos.join(', ')+'. ':'')+(atual.length?'Atualizados: '+atual.join(', ')+'. ':'')+(!novos.length&&!atual.length?'Nenhum pedido em aberto '+(cfg.filtro==='minha'?'para '+EST[cfg.minha][1]:'no texto')+'. ':'')+(fora.length?fora.length+' fora do filtro ou encerrados.':'');
+  if(novos.length)registrar('SIGO: '+novos.join(', ')+' entrou na lista.');
+};
+
+/* ---------- ações do aviso ---------- */
+let alertaPref=null;
+function acoesAviso(p){
+  const b=$('#aAcoes');if(!p){b.hidden=true;return}
+  const i=cfg.info[p]||{},q=new URLSearchParams();
+  if(i.tipo)q.set('tipo',i.tipo);if(i.carro)q.set('carro',i.carro);if(i.porta)q.set('porta',i.porta);if(i.num)q.set('num',i.num);q.set('pref',p);if(i.dest)q.set('dest',i.dest);
+  $('#aEst').href='../embarque/index.html?'+q.toString();b.hidden=false;
+}
 
 /* ---------- fonte da imagem ---------- */
 async function ligarStream(stream){
@@ -298,7 +486,7 @@ async function capturar(){
   if(!f)return null;
   desenhar();
   $('#telaVazia').hidden=true;
-  ['#bMarcar','#bFoto','#bLer'].forEach(s=>$(s).disabled=false);
+  ['#bMarcar','#bFoto','#bLer'].forEach(s=>$(s).disabled=false);listarEstAviso();
   estado();
   return f;
 }
@@ -307,7 +495,8 @@ async function capturar(){
 let arrasto=null;
 function desenhar(){
   if(!frame)return;
-  if(cv.width!==frame.width||cv.height!==frame.height){cv.width=frame.width;cv.height=frame.height}
+  if(cv.width!==frame.width||cv.height!==frame.height){cv.width=frame.width;cv.height=frame.height;
+    const larg=frame.width/frame.height>2.6;$('#tela').classList.toggle('largo',larg);cv.style.width=larg?Math.round(frame.width/frame.height*360)+'px':''}
   cx.drawImage(frame,0,0);
   const lw=Math.max(2,frame.width/400),fs=Math.max(14,frame.width/60);
   cx.font=`700 ${fs}px system-ui,sans-serif`;
@@ -320,16 +509,21 @@ function desenhar(){
   }
 }
 function pos(e){const r=cv.getBoundingClientRect();return{x:Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)),y:Math.min(1,Math.max(0,(e.clientY-r.top)/r.height))}}
-$('#bMarcar').onclick=()=>{marcando=!marcando;$('#bMarcar').classList.toggle('on',marcando);$('#bMarcar').textContent=marcando?'Arraste sobre a imagem…':'Marcar área';$('#tela').classList.toggle('marcando',marcando)};
+$('#bMarcar').onclick=()=>{marcando=!marcando;if(!marcando)marcarEst=null;$('#bMarcar').classList.toggle('on',marcando);$('#bMarcar').textContent=marcando?'Arraste sobre a imagem…':'Marcar área';$('#tela').classList.toggle('marcando',marcando)};
 cv.addEventListener('pointerdown',e=>{if(!marcando||!frame)return;e.preventDefault();cv.setPointerCapture(e.pointerId);const p=pos(e);arrasto={x0:p.x,y0:p.y,x:p.x,y:p.y,w:0,h:0}});
 cv.addEventListener('pointermove',e=>{if(!arrasto)return;const p=pos(e);Object.assign(arrasto,{x:Math.min(p.x,arrasto.x0),y:Math.min(p.y,arrasto.y0),w:Math.abs(p.x-arrasto.x0),h:Math.abs(p.y-arrasto.y0)});desenhar()});
 cv.addEventListener('pointerup',()=>{
   if(!arrasto)return;const a=arrasto;arrasto=null;
   if(a.w>0.01&&a.h>0.01){
-    const nome=(prompt('Nome desta área (ex.: Barra Funda plat. 4):','Área '+(cfg.zonas.length+1))||'').trim();
-    if(nome){cfg.zonas.push({id:Date.now().toString(36),nome,x:a.x,y:a.y,w:a.w,h:a.h});salvar();listarZonas()}
+    if(marcarEst){
+      const v=marcarEst;cfg.zonas=cfg.zonas.filter(z=>z.est!==v.k);
+      cfg.zonas.push({id:Date.now().toString(36),nome:EST[v.k][1]+(v.d===1?' (anterior)':' (2 antes)'),est:v.k,dist:v.d,x:a.x,y:a.y,w:a.w,h:a.h});salvar();listarZonas();
+    }else{
+      const nome=(prompt('Nome desta área (ex.: Barra Funda plat. 4):','Área '+(cfg.zonas.length+1))||'').trim();
+      if(nome){cfg.zonas.push({id:Date.now().toString(36),nome,x:a.x,y:a.y,w:a.w,h:a.h});salvar();listarZonas()}
+    }
   }
-  $('#bMarcar').click();desenhar();
+  marcarEst=null;$('#bMarcar').click();desenhar();
 });
 
 function listarZonas(){
@@ -342,7 +536,7 @@ function listarZonas(){
     d.querySelector('button').onclick=()=>{if(confirm('Apagar a área "'+z.nome+'"?')){cfg.zonas.splice(i,1);salvar();listarZonas();desenhar()}};
     el.appendChild(d);
   });
-  estado();
+  estado();listarEstAviso();
 }
 
 /* ---------- prefixos ---------- */
@@ -352,8 +546,8 @@ $('#fPref').onsubmit=e=>{
   if(v.length<2)return;
   if(!cfg.prefixos.includes(v))cfg.prefixos.push(v);
   cfg.obs[v]=$('#iObs').value.trim();
-  cfg.info[v]={tipo:$('#iTipo').value,porta:$('#iPorta').value,carro:$('#iCarro').value,num:$('#iNum').value.toUpperCase().replace(/[^A-Z0-9]/g,'')};
-  ['#iPref','#iObs','#iTipo','#iPorta','#iCarro','#iNum'].forEach(s=>$(s).value='');botaoAdd();
+  cfg.info[v]={tipo:$('#iTipo').value,porta:$('#iPorta').value,carro:$('#iCarro').value,num:$('#iNum').value.toUpperCase().replace(/[^A-Z0-9]/g,''),dest:$('#iDest').value};
+  ['#iPref','#iObs','#iTipo','#iPorta','#iCarro','#iNum','#iDest'].forEach(s=>$(s).value='');botaoAdd();
   salvar();listarTrens();
   // fixa o aviso na tela ao adicionar; se já estiver fixado, listarTrens já atualizou a janela
   if(!pip&&pipPossivel())abrirPip();
@@ -373,16 +567,16 @@ function listarTrens(){
     d.innerHTML='<div class="cab"><b class="placa"></b><span class="ac"><button class="x" type="button">Editar</button><button class="x rm" type="button">Remover</button></span></div><dl class="info"></dl><div class="obs"></div><div class="st"><span class="pt"></span><span class="tx"></span></div>';
     d.querySelector('.placa').textContent=p;
     const i0=cfg.info[p]||{},inf=d.querySelector('.info');
-    [['Tipo',i0.tipo],['Carro',i0.carro&&i0.carro+'º'],['Porta',i0.porta&&i0.porta+'ª']].concat(i0.num?[['Nº do carro',i0.num]]:[]).forEach(([r,v])=>{
+    [['Tipo',i0.tipo],['Carro',i0.carro&&i0.carro+'º'],['Porta',i0.porta&&i0.porta+'ª']].concat(i0.num?[['Nº do carro',i0.num]]:[]).concat(i0.dest&&EST[i0.dest]?[['Desce em',EST[i0.dest][1]]]:[]).forEach(([r,v])=>{
       const c=document.createElement('div'),dt=document.createElement('dt'),dd=document.createElement('dd');
       dt.textContent=r;dd.textContent=v||'—';if(!v)dd.className='vz';if(r==='Nº do carro')c.className='num';c.append(dt,dd);inf.appendChild(c)});
-    inf.hidden=!(i0.tipo||i0.carro||i0.porta||i0.num);
+    inf.hidden=!(i0.tipo||i0.carro||i0.porta||i0.num||i0.dest);
     const ob=d.querySelector('.obs'),txt=cfg.obs[p]||'';
     ob.textContent=txt;ob.hidden=!txt;
     d.querySelector('.st .tx').textContent=s?(s.agora?'Agora em ':'Visto por último em ')+s.onde+' às '+s.quando:'Ainda não visto';
     const [bEd,bRm]=d.querySelectorAll('.ac button');
     // editar: volta o trem para o formulário; o botão vira "Salvar alterações"
-    bEd.onclick=()=>{const inf=cfg.info[p]||{};$('#iPref').value=p;$('#iTipo').value=inf.tipo||'';$('#iPorta').value=inf.porta||'';$('#iCarro').value=inf.carro||'';$('#iNum').value=inf.num||'';$('#iObs').value=txt;botaoAdd();$('#fPref').scrollIntoView({behavior:'smooth',block:'center'});$('#iTipo').focus()};
+    bEd.onclick=()=>{const inf=cfg.info[p]||{};$('#iPref').value=p;$('#iTipo').value=inf.tipo||'';$('#iPorta').value=inf.porta||'';$('#iCarro').value=inf.carro||'';$('#iNum').value=inf.num||'';$('#iDest').value=inf.dest||'';$('#iObs').value=txt;botaoAdd();$('#fPref').scrollIntoView({behavior:'smooth',block:'center'});$('#iTipo').focus()};
     bRm.onclick=()=>{
       if(!confirm('Remover o trem '+p+' da lista?\n\nEle para de gerar avisos. Os dados dele (tipo, carro, porta, nº do carro, observação e onde foi visto) ficam guardados em "Trens removidos", no fim da página, para consultar ou exportar.'))return;
       const ag=new Date();
@@ -484,10 +678,11 @@ function procurar(linhas,p,cp){
     const id=p+r.slice(i+n),exato=r.includes(p),o=achados.find(x=>parecido(x.id,id));
     if(o){if(exato&&!o.exato){o.id=id;o.exato=true}}else achados.push({id,exato});
   };
-  const tenta=r=>{const m=canon(r).match(re);if(m){add(r,m.index,m[0].length);return true}return false};
+  // no sinótico o prefixo vem no começo do código (S128E508); aceita 1 caractere solto antes (traço lido como I ou 1)
+  const tenta=(r,livre)=>{const m=canon(r).match(re);if(m&&(livre||m.index===0||(m.index===1&&/[IL1J]/.test(r[0])))){add(r,m.index,m[0].length);return true}return false};
   let algum=false;
   for(const l of linhas)for(const r of l.split(/\s+/).map(limpo))if(tenta(r))algum=true;
-  if(!algum)for(const l of linhas)tenta(limpo(l));
+  if(!algum)for(const l of linhas){const t=limpo(l);if(t.includes(p))tenta(t,true)}
   return achados;
 }
 // dois prefixos lidos são o mesmo trem se um começa pelo outro ou se diferem em um caractere
@@ -523,7 +718,8 @@ async function lerZonas(){
     res.push({z,linhas,img});
     const el=$('#z-'+z.id);
     if(el){
-      el.querySelector('.lido').textContent='Lido: '+(linhas.join(' · ')||'(nada)');
+      const alt=z.h*frame.height,peq=alt<16;
+      el.querySelector('.lido').innerHTML=(peq?'<span class="peq">⚠ Área pequena na imagem ('+Math.round(alt)+' px de altura): aumente a Ampliação do CIMG. </span>':'')+'Lido: '+escH(linhas.join(' · ')||'(nada)');
       let pv=el.querySelector('img');if(!pv){pv=document.createElement('img');pv.alt='O que o leitor vê';el.appendChild(pv)}
       pv.src=img.toDataURL();
     }
@@ -632,6 +828,7 @@ function mostrar(tit,msg,isFalha,obs){
   pendentes.slice(1).forEach(x=>{const li=document.createElement('li');li.textContent=x.h+' · '+x.tit+' '+x.msg;ant.appendChild(li)});
   ant.hidden=pendentes.length<2;
   piscar(tit,msg);pipDesenhar();
+  acoesAviso(isFalha?null:alertaPref);alertaPref=null;
   $('#alerta').classList.toggle('f',!!isFalha);$('#alerta').hidden=false;
   bip(isFalha);clearInterval(repete);let n=0;
   repete=setInterval(()=>{if(++n>6||$('#alerta').hidden){clearInterval(repete);return}bip(isFalha)},5000);
@@ -643,7 +840,9 @@ function avisar(p,onde,id,zid){
   const obs=detalhes(p);
   const msg='Trem '+(id||p)+' em '+onde+' às '+hora().slice(0,5)+(obs?' · '+obs.replace(/\n/g,' · '):'');
   if(zid){areasAvisadas.add(zid);progresso()}
-  registrar(msg);mostrar(id||p,'em '+onde,false,obs);falar('Atenção. Trem '+p.split('').join(' ')+' em '+onde+(obs?'. '+obs.replace(/\n/g,'. ').replace(/ · /g,', '):''));
+  alertaPref=p;
+  const zz=cfg.zonas.find(z=>z.id===zid),dist=zz&&zz.dist?(zz.dist===1?' · na estação anterior à sua':' · a 2 estações da sua'):'';
+  registrar(msg+dist);mostrar(id||p,'em '+onde+dist,false,obs);falar('Atenção. Trem '+p.split('').join(' ')+' em '+onde+(obs?'. '+obs.replace(/\n/g,'. ').replace(/ · /g,', '):''));
 }
 // quantas áreas marcadas já tiveram pelo menos um aviso
 function progresso(){
