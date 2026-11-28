@@ -342,15 +342,15 @@ function vizinhas(k){
 let marcarEst=null; // estação que o próximo retângulo vai marcar
 function listarEstAviso(){
   const box=$('#estAv');if(!cfg.minha||!EST[cfg.minha]){box.hidden=true;return}
-  box.hidden=false;box.innerHTML='<p class="dica">O aviso toca quando o trem passa pela <b>segunda</b> e pela <b>primeira</b> estação antes de '+EST[cfg.minha][1]+', dos dois lados. Elas aparecem perto da sua no CIMG em 100%. Marque cada uma no sinótico ou toque em <b>Achar estações</b>.</p>';
+  box.hidden=false;box.innerHTML='<p class="dica">O aviso toca quando o trem passa pela <b>segunda</b> e pela <b>primeira</b> estação antes de '+EST[cfg.minha][1]+', dos dois lados. Elas aparecem perto da sua no CIMG em 100%. Marque cada uma no sinótico ou toque em <b>Achar estações</b>. Se alguma não aparecer, marque a <b>borda</b> da imagem do lado dela: o trem que entra por ali vem dessa estação.</p>';
   const ach=document.createElement('button');ach.className='btn pri';ach.type='button';ach.id='bAchar';ach.textContent='Achar estações no sinótico';ach.disabled=!frame;ach.onclick=acharEstacoes;box.appendChild(ach);
   let linha='';
   vizinhas(cfg.minha).forEach(v=>{
     if(v.linha!==linha){linha=v.linha;const t=document.createElement('div');t.className='lin';t.textContent='Linha '+v.linha;box.appendChild(t)}
-    const z=cfg.zonas.find(z=>z.est===v.k),d=document.createElement('div');d.className='ea'+(z?' ok':'');
+    const z=cfg.zonas.find(z=>z.est===v.k||(z.cobre||[]).includes(v.k)),d=document.createElement('div');d.className='ea'+(z?' ok':'');
     d.innerHTML='<b></b><span class="ck"></span><button class="btn mini" type="button"></button>';
     d.querySelector('b').innerHTML=EST[v.k][1]+'<small>'+(v.d===1?'estação anterior':'2 estações antes')+' · '+v.lado+'</small>';
-    d.querySelector('.ck').textContent=z?(z.auto?'✓ achada':'✓ marcada'):'';
+    d.querySelector('.ck').textContent=z?(z.borda?'✓ pela borda':z.auto?'✓ achada':'✓ marcada'):'';
     const b=d.querySelector('button');b.textContent=z?'Marcar de novo':'Marcar';b.disabled=!frame;
     b.onclick=()=>{marcarEst=v;if(!marcando)$('#bMarcar').click();$('#bMarcar').textContent='Arraste sobre '+EST[v.k][1]+'…';$('#tela').scrollIntoView({behavior:'smooth',block:'center'})};
     box.appendChild(d);
@@ -378,9 +378,35 @@ async function acharEstacoes(){
       cfg.zonas.push({id:Date.now().toString(36)+v.k,nome:EST[v.k][1]+(v.d===1?' (anterior)':' (2 antes)'),est:v.k,dist:v.d,auto:true,x:Math.max(0,esq/W),y:Math.max(0,a.y1/H),w:Math.min(1,(dir-esq)/W),h:Math.max(.05,1-a.y1/H)});
       ok.push(EST[v.k][1]);
     }
+    // estação que não aparece no CIMG: marca a borda da imagem do lado de onde ela fica
+    const bordas=[];
+    for(const l of LINHAS){
+      const i=l.est.indexOf(cfg.minha);if(i<0)continue;
+      // para que lado da imagem a linha cresce: compara duas estações dela achadas na imagem
+      const vis=l.est.map((k,j)=>({j,a:achadas[k]})).filter(o=>o.a);
+      let orient=0;
+      for(let m=0;m<vis.length&&!orient;m++)for(let n=m+1;n<vis.length&&!orient;n++)orient=Math.sign((vis[n].a.x-vis[m].a.x)*(vis[n].j-vis[m].j));
+      for(const dir of [-1,1]){
+        const vz=[1,2].map(d=>l.est[i+dir*d]).filter(Boolean);
+        const sem=vz.filter(k=>!achadas[k]);if(!sem.length)continue;
+        if(!orient){continue}
+        const lado=dir*orient; // -1 = borda esquerda, +1 = borda direita
+        const ponta=EST[dir<0?l.est[0]:l.est[l.est.length-1]][1];
+        const lim=lado<0?(xs.length?Math.min(xs[0]/2,W*0.06):W*0.06):(xs.length?Math.min((W-xs[xs.length-1])/2,W*0.06):W*0.06);
+        cfg.zonas=cfg.zonas.filter(z=>!sem.includes(z.est)&&!(z.cobre||[]).some(k=>sem.includes(k)));
+        const k0=sem[sem.length-1],d0=vz.indexOf(k0)+1;
+        // a mesma borda pode servir a duas linhas: junta numa área só
+        const ja=cfg.zonas.find(z=>z.borda&&z.lado===lado&&z.novaBorda);
+        if(ja){ja.cobre=[...new Set(ja.cobre.concat(sem))];ja.nome='Borda '+(lado<0?'esquerda':'direita')+' (vindo de '+ja.pontas.concat(ponta).join(' ou ')+')';ja.pontas.push(ponta);}
+        else cfg.zonas.push({id:Date.now().toString(36)+'b'+k0,nome:'Borda '+(lado<0?'esquerda':'direita')+' (vindo de '+ponta+')',est:k0,cobre:sem,dist:d0,borda:true,lado,pontas:[ponta],novaBorda:true,auto:true,x:lado<0?0:Math.max(0,(W-lim)/W),y:0.12,w:lim/W,h:0.88});
+        sem.forEach(k=>{const f=falta.indexOf(EST[k][1]);if(f>=0)falta.splice(f,1)});
+        bordas.push(sem.map(k=>EST[k][1]).join(' e ')+' (borda '+(lado<0?'esquerda':'direita')+')');
+      }
+    }
+    cfg.zonas.forEach(z=>delete z.novaBorda);
     salvar();listarZonas();desenhar();
-    registrar((ok.length?'Achadas no sinótico: '+ok.join(', ')+'. ':'')+(falta.length?'Não achei '+falta.join(', ')+': confira se aparece no CIMG ou marque à mão.':'Confira as áreas na imagem.'));
-    alert((ok.length?'Achei: '+ok.join(', ')+'.\nConfira os retângulos na imagem.':'Não achei as siglas das estações na imagem.')+(falta.length?'\n\nNão achei: '+falta.join(', ')+'. Role o CIMG para que apareçam ou marque à mão.':''));
+    registrar((ok.length?'Achadas no sinótico: '+ok.join(', ')+'. ':'')+(bordas.length?'Pela borda: '+bordas.join('; ')+'. ':'')+(falta.length?'Não achei '+falta.join(', ')+': marque à mão.':'Confira as áreas na imagem.'));
+    alert((ok.length?'Achei: '+ok.join(', ')+'.':'Não achei as siglas das estações próximas na imagem.')+(bordas.length?'\n\nNão aparecem no CIMG, então marquei a borda da imagem: '+bordas.join('; ')+'.':'')+(falta.length?'\n\nNão achei: '+falta.join(', ')+'. Marque à mão.':'')+'\n\nConfira os retângulos na imagem.');
   }catch(e){alert('Não consegui ler o sinótico: '+e.message)}
   listarEstAviso();
 }
@@ -841,7 +867,7 @@ function avisar(p,onde,id,zid){
   const msg='Trem '+(id||p)+' em '+onde+' às '+hora().slice(0,5)+(obs?' · '+obs.replace(/\n/g,' · '):'');
   if(zid){areasAvisadas.add(zid);progresso()}
   alertaPref=p;
-  const zz=cfg.zonas.find(z=>z.id===zid),dist=zz&&zz.dist?(zz.dist===1?' · na estação anterior à sua':' · a 2 estações da sua'):'';
+  const zz=cfg.zonas.find(z=>z.id===zid),dist=zz&&zz.borda?' · entrando pela borda do sinótico':zz&&zz.dist?(zz.dist===1?' · na estação anterior à sua':' · a 2 estações da sua'):'';
   registrar(msg+dist);mostrar(id||p,'em '+onde+dist,false,obs);falar('Atenção. Trem '+p.split('').join(' ')+' em '+onde+(obs?'. '+obs.replace(/\n/g,'. ').replace(/ · /g,', '):''));
 }
 // quantas áreas marcadas já tiveram pelo menos um aviso
