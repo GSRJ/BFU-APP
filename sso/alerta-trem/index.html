@@ -266,7 +266,7 @@ label.cfg input[type=range]{flex:1;accent-color:var(--k)}
 </div>
 </main>
 
-<div id="alerta" hidden><div class="box"><span class="rot" id="aRot">TREM CHEGANDO</span><h3 id="aTit">S120</h3><p id="aMsg"></p><div class="aobs" id="aObs" hidden></div><ul id="aAnt" hidden></ul><div class="aacoes" id="aAcoes" hidden><a class="btn" id="aSigo" href="https://sigo.triviatrens.com.br/#/pcd/support" target="_blank" rel="noopener">Abrir SIGO</a><a class="btn" id="aEst" target="_blank" rel="noopener">Avisar a estação</a></div><button class="btn" id="aOk">Ciente</button></div></div>
+<div id="alerta" hidden><div class="box"><span class="rot" id="aRot">TREM CHEGANDO</span><h3 id="aTit">S120</h3><p id="aMsg"></p><div class="aobs" id="aObs" hidden></div><ul id="aAnt" hidden></ul><div class="aacoes" id="aAcoes" hidden><a class="btn" id="aSigo" href="https://sigo.triviatrens.com.br/#/pcd/support" target="_blank" rel="noopener">Abrir SIGO</a></div><button class="btn" id="aOk">Ciente</button></div></div>
 
 <script src="lib/tesseract.min.js"></script>
 <script>
@@ -506,9 +506,7 @@ $('#bSigo').onclick=()=>{
 let alertaPref=null;
 function acoesAviso(p){
   const b=$('#aAcoes');if(!p){b.hidden=true;return}
-  const i=cfg.info[p]||{},q=new URLSearchParams();
-  if(i.tipo)q.set('tipo',i.tipo);if(i.carro)q.set('carro',i.carro);if(i.porta)q.set('porta',i.porta);if(i.num)q.set('num',i.num);q.set('pref',p);if(i.dest)q.set('dest',i.dest);
-  $('#aEst').href='../embarque/index.html?'+q.toString();b.hidden=false;
+  b.hidden=false;
 }
 
 /* ---------- fonte da imagem ---------- */
@@ -669,11 +667,11 @@ function removerTrem(p){
   cfg.prefixos.splice(cfg.prefixos.indexOf(p),1);delete cfg.obs[p];delete cfg.info[p];delete estadoTrem[p];salvar();listarTrens();
   registrar('Trem '+p+' removido da lista. Os dados estão em Trens removidos.');
 }
-// trem novo só com o prefixo (pela janela fixada); tipo, carro e porta podem ser completados depois em Editar
-function adicionarPrefixo(v){
+// trem novo pela janela fixada: prefixo, tipo, carro, porta e observação
+function adicionarPelaJanela(v,info,obs){
   v=String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
   if(v.length<2||cfg.prefixos.includes(v))return false;
-  cfg.prefixos.push(v);cfg.obs[v]=cfg.obs[v]||'';cfg.info[v]=cfg.info[v]||{};
+  cfg.prefixos.push(v);cfg.obs[v]=String(obs||'').trim();cfg.info[v]=info||{};
   salvar();listarTrens();registrar('Trem '+v+' adicionado pela janela fixada.');
   return true;
 }
@@ -996,7 +994,7 @@ let pip=null;
 const pipPossivel=()=>'documentPictureInPicture' in window&&window.top===window;
 async function abrirPip(){
   if(!pipPossivel()||pip)return;
-  try{pip=await documentPictureInPicture.requestWindow({width:340,height:330})}catch(e){pip=null;return}
+  try{pip=await documentPictureInPicture.requestWindow({width:360,height:340})}catch(e){pip=null;return}
   const d=pip.document;
   d.title='ALERTA TREM';
   d.head.innerHTML='<meta charset="utf-8"><style>'+
@@ -1016,28 +1014,46 @@ async function abrirPip(){
    '@keyframes p{50%{background:#C2410C}}'+
    '.lt{margin:6px 0 0;display:flex;flex-direction:column;gap:4px;max-height:132px;overflow:auto}'+
    '.lt div{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);border-radius:6px;padding:3px 4px 3px 8px}'+
-   '.lt div.av{background:rgba(11,122,117,.45)}.lt code{font:800 15px ui-monospace,Consolas,monospace}.lt span{flex:1;font-size:12px;color:#C9D4E3;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'+
+   '.lt div.av{background:rgba(11,122,117,.45)}.lt code{font:800 15px ui-monospace,Consolas,monospace}.lt span{flex:1;font-size:12px;line-height:1.25;color:#C9D4E3;font-weight:500}'+
    '.lt button{flex:none;min-height:26px;padding:0 9px;font-size:13px;border-width:1px}.lt button.cf{background:#C62828;border-color:#C62828;color:#fff}'+
-   'form{display:flex;gap:6px;margin:0 12px 10px}form[hidden]{display:none}input{flex:1;min-width:0;min-height:34px;border:0;border-radius:8px;padding:0 10px;font:800 15px ui-monospace,Consolas,monospace;text-transform:uppercase}input::placeholder{text-transform:none;font:500 14px system-ui,sans-serif}form button{flex:none;min-height:34px;padding:0 12px;font-size:14px}'+
+   'form{display:flex;flex-direction:column;gap:6px;padding:10px 12px;flex:1;overflow:auto}form[hidden],.corpo[hidden]{display:none}'+
+   'form label{display:flex;flex-direction:column;gap:2px;font-size:12px;font-weight:600;color:#C9D4E3;flex:1;min-width:0}form .lin{display:flex;gap:6px}'+
+   'input,select{min-height:34px;border:0;border-radius:8px;padding:0 8px;font:700 15px system-ui,sans-serif;color:#162030;background:#fff;width:100%;box-sizing:border-box}'+
+   '#pa{font:800 16px ui-monospace,Consolas,monospace;text-transform:uppercase}input::placeholder{text-transform:none;font:500 14px system-ui,sans-serif}'+
+   '.msg{margin:0;font-size:13px;color:#FFB4A0}.msg:empty{display:none}button.sec{background:transparent;color:#fff}'+
    '</style>';
-  d.body.innerHTML='<div class="cab">ALERTA TREM<i id="est"></i></div><div class="corpo" id="corpo"></div><form id="fa" autocomplete="off"><input id="pa" placeholder="Prefixo" maxlength="12" aria-label="Prefixo do trem"><button>Adicionar</button></form><div class="bt"><button id="ok" hidden>Ciente</button></div>';
+  d.body.innerHTML='<div class="cab">ALERTA TREM<i id="est"></i></div><div class="corpo" id="corpo"></div><form id="fa" autocomplete="off" hidden>'+
+    '<label>Prefixo<input id="pa" maxlength="12" placeholder="ex: S040"></label>'+
+    '<div class="lin"><label style="flex:2">Tipo<select id="pt"></select></label><label>Carro<select id="pc"></select></label><label>Porta<select id="pp"></select></label></div>'+
+    '<label>Observação (se tiver)<input id="po" maxlength="300"></label><p class="msg" id="pm"></p>'+
+    '<div class="lin"><button type="button" class="sec" id="pcan">Cancelar</button><button id="psal">Adicionar</button></div></form>'+
+    '<div class="bt"><button id="novo" type="button">+ Novo trem</button><button id="ok" hidden>Ciente</button></div>';
+  // as opções vêm do formulário da página: ficam iguais às de lá
+  d.getElementById('pt').innerHTML=$('#iTipo').innerHTML;d.getElementById('pc').innerHTML=$('#iCarro').innerHTML;d.getElementById('pp').innerHTML=$('#iPorta').innerHTML;
   d.getElementById('ok').onclick=()=>$('#aOk').click();
-  d.getElementById('fa').onsubmit=e=>{e.preventDefault();const i=d.getElementById('pa'),v=i.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
-    if(cfg.prefixos.includes(v)){i.value='';i.placeholder=v+' já está na lista';return}
-    if(adicionarPrefixo(v)){i.value='';i.placeholder='Prefixo'}};
-  pipLista='';
+  const fa=d.getElementById('fa'),limpaForm=()=>{['pa','pt','pc','pp','po'].forEach(id=>d.getElementById(id).value='');d.getElementById('pm').textContent=''};
+  fa.oninput=()=>{d.getElementById('pm').textContent=''};
+  d.getElementById('novo').onclick=()=>{pipForm=true;pipLista='';pipDesenhar();d.getElementById('pa').focus()};
+  d.getElementById('pcan').onclick=()=>{pipForm=false;limpaForm();pipLista='';pipDesenhar()};
+  fa.onsubmit=e=>{e.preventDefault();
+    const g=id=>d.getElementById(id).value,v=g('pa').toUpperCase().replace(/[^A-Z0-9]/g,''),m=d.getElementById('pm');
+    if(v.length<2){m.textContent='Digite o prefixo do trem.';d.getElementById('pa').focus();return}
+    if(cfg.prefixos.includes(v)){m.textContent=v+' já está na lista.';return}
+    adicionarPelaJanela(v,{tipo:g('pt'),carro:g('pc'),porta:g('pp'),num:'',dest:''},g('po'));
+    pipForm=false;limpaForm();pipLista='';pipDesenhar()};
+  pipForm=false;pipLista='';
   pip.addEventListener('pagehide',()=>{pip=null;botaoPip()});
   botaoPip();
   pipDesenhar();
 }
 // remover pela janela fixada pede um segundo toque em até 4 s
-let pipConfirma=null,pipLista='';
+let pipConfirma=null,pipLista='',pipForm=false;
 function pipTrens(d,c){
   const box=d.createElement('div');box.className='lt';
   for(const p of cfg.prefixos){
     const s=estadoTrem[p],r=d.createElement('div');if(s)r.className='av';
     const cd=d.createElement('code');cd.textContent=p;
-    const tx=d.createElement('span');tx.textContent=s?(s.agora?'agora em ':'avisado · ')+s.onde+' '+s.quando:'ainda não visto';
+    const tx=d.createElement('span');tx.textContent=infoPartes(p).concat(s?(s.agora?'agora em ':'avisado em ')+s.onde+' '+s.quando:'ainda não visto').join(' · ');tx.title=tx.textContent;
     const b=d.createElement('button');b.type='button';
     const conf=pipConfirma&&pipConfirma.p===p&&Date.now()<pipConfirma.ate;
     b.textContent=conf?'Remover?':'×';b.title='Remover '+p;if(conf)b.className='cf';
@@ -1060,7 +1076,10 @@ function pipDesenhar(){
   if(chave===pipLista)return;pipLista=chave;
   c.innerHTML='';
   d.body.className=alertaAberto?(pendentes[0].f?'falha':'alerta'):'';
-  ok.hidden=!alertaAberto;d.getElementById('fa').hidden=!!alertaAberto;
+  ok.hidden=!alertaAberto;
+  // durante um alerta o formulário fica escondido, sem perder o que foi digitado
+  const comForm=pipForm&&!alertaAberto;
+  d.getElementById('fa').hidden=!comForm;c.hidden=comForm;d.getElementById('novo').hidden=!!alertaAberto||comForm;
   const add=(tag,txt)=>{const el=d.createElement(tag);el.textContent=txt;c.appendChild(el);return el};
   if(alertaAberto){
     const a=pendentes[0];add('b',a.tit);add('p',a.msg);if(a.obs)add('div',a.obs).className='obs';add('small','às '+a.h);
