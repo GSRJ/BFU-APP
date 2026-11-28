@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="only light">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#141414">
+<meta name="robots" content="noindex">
+<title>Extensão do Alerta trem · BFU</title>
+<link rel="icon" href="../../icon-192.png">
+<style>
+:root{--y:#FFC61A;--k:#141414;--bg:#EEEEE9;--ln:#D6D6CE;--mt:#5E5E57;--tl:#0B7A75;--tl2:#DDF2F0;--f:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--k);font:500 16px/1.5 var(--f)}
+.top{position:sticky;top:0;display:flex;align-items:center;gap:10px;background:var(--k);color:#fff;border-bottom:5px solid var(--y);padding:10px 14px}
+.top a{color:var(--y);font-weight:700;font-size:14px;text-decoration:none;padding:8px 10px;border:2px solid var(--y);border-radius:9px}
+.top b{font-size:19px;font-weight:800}
+main{max-width:720px;margin:0 auto;padding:18px 16px 60px;display:flex;flex-direction:column;gap:14px}
+h1{margin:0;font-size:28px;line-height:1.15}
+.card{background:#fff;border:2px solid var(--ln);border-radius:16px;padding:16px 18px}
+ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:12px}
+li b{font-weight:800}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:8px 18px;border-radius:12px;background:var(--tl);color:#fff;font-weight:800;text-decoration:none;margin-top:6px}
+.nota{background:var(--tl2);border-radius:12px;padding:12px 14px;font-size:15px}
+code{background:#F1F1EC;border-radius:5px;padding:1px 5px;font-size:14px}
+</style>
+</head>
+<body>
+<header class="top"><a href="index.html">‹ Alerta trem</a><b>Extensão do SIGO e do CIMG</b></header>
+<main>
+  <h1>Instalar a extensão no computador da SSO</h1>
+  <p>Com a extensão, o Alerta trem recebe a imagem do sinótico direto do CIMG, sem compartilhar a tela, e os pedidos de acompanhamento PCD do SIGO entram sozinhos na lista. Ela só lê o que já aparece para você e não muda nada nos sistemas.</p>
+  <section class="card">
+    <ol>
+      <li>No Chrome (ou Edge), abra a <b>Chrome Web Store</b>, procure <b>Tampermonkey</b> e toque em <b>Usar no Chrome</b>.</li>
+      <li>Abra <code>chrome://extensions</code>, toque em <b>Detalhes</b> do Tampermonkey e ligue <b>Permitir scripts do usuário</b>. Se não aparecer essa opção, ligue o <b>Modo do desenvolvedor</b>, no canto de cima.</li>
+      <li>Toque no botão abaixo. O Tampermonkey abre uma página: toque em <b>Instalar</b>.<br><a class="btn" href="ponte.user.js">Instalar a ponte do BFU</a></li>
+      <li>Abra e faça login no <b>SIGO</b> (Acompanhamento PCD) e no <b>painel do CIMG</b> da sua linha, cada um numa aba. Um selo amarelo "BFU" aparece no canto de cada um.</li>
+      <li>Abra o <b>Alerta trem</b>, escolha a sua estação e marque no sinótico as estações que aparecem na lista. Depois toque em <b>Começar a vigiar</b>.</li>
+    </ol>
+  </section>
+  <div class="nota">Antes de instalar no computador da SSO, confirme com a supervisão ou a TI se é permitido. As atualizações chegam sozinhas pelo Tampermonkey.</div>
+</main>
+</body>
+</html>
