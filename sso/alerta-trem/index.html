@@ -324,14 +324,14 @@ function estDoSigo(txt){
   const n=nrm(String(txt).replace(/^\s*[A-Z]{2,4}\s*-\s*/,''));
   return n?Object.keys(EST).find(k=>nrm(EST[k][1])===n||nrm(EST[k][1]).includes(n)||n.includes(nrm(EST[k][1])))||null:null;
 }
-// a primeira e a segunda estação antes da sua, dos dois lados de cada linha
+// a estação vizinha da sua de cada lado de cada linha (a anterior e a próxima, quando houver)
 function vizinhas(k){
   const res=[];
   for(const l of LINHAS){
     const i=l.est.indexOf(k);if(i<0)continue;
     for(const dir of [-1,1]){
       const ponta=dir<0?l.est[0]:l.est[l.est.length-1];
-      for(const d of [1,2]){const j=i+dir*d;if(j<0||j>=l.est.length)break;
+      for(const d of [1]){const j=i+dir*d;if(j<0||j>=l.est.length)break;
         if(!res.some(r=>r.k===l.est[j]))res.push({k:l.est[j],d,linha:l.n,lado:'vindo de '+EST[ponta][1]})}
     }
   }
@@ -342,14 +342,14 @@ function vizinhas(k){
 let marcarEst=null; // estação que o próximo retângulo vai marcar
 function listarEstAviso(){
   const box=$('#estAv');if(!cfg.minha||!EST[cfg.minha]){box.hidden=true;return}
-  box.hidden=false;box.innerHTML='<p class="dica">O aviso toca quando o trem passa pela <b>segunda</b> e pela <b>primeira</b> estação antes de '+EST[cfg.minha][1]+', dos dois lados. Elas aparecem perto da sua no CIMG em 100%. Marque cada uma no sinótico ou toque em <b>Achar estações</b>. Se alguma não aparecer, marque a <b>borda</b> da imagem do lado dela: o trem que entra por ali vem dessa estação.</p>';
+  box.hidden=false;box.innerHTML='<p class="dica">O aviso toca quando o trem passa pela estação vizinha de '+EST[cfg.minha][1]+', de cada lado. Elas aparecem perto da sua no CIMG em 100%. Marque cada uma no sinótico ou toque em <b>Achar estações</b>. Se alguma não aparecer, marque a <b>borda</b> da imagem do lado dela: o trem que entra por ali vem dessa estação.</p>';
   const ach=document.createElement('button');ach.className='btn pri';ach.type='button';ach.id='bAchar';ach.textContent='Achar estações no sinótico';ach.disabled=!frame;ach.onclick=acharEstacoes;box.appendChild(ach);
   let linha='';
   vizinhas(cfg.minha).forEach(v=>{
     if(v.linha!==linha){linha=v.linha;const t=document.createElement('div');t.className='lin';t.textContent='Linha '+v.linha;box.appendChild(t)}
     const z=cfg.zonas.find(z=>z.est===v.k||(z.cobre||[]).includes(v.k)),d=document.createElement('div');d.className='ea'+(z?' ok':'');
     d.innerHTML='<b></b><span class="ck"></span><button class="btn mini" type="button"></button>';
-    d.querySelector('b').innerHTML=EST[v.k][1]+'<small>'+(v.d===1?'estação anterior':'2 estações antes')+' · '+v.lado+'</small>';
+    d.querySelector('b').innerHTML=EST[v.k][1]+'<small>'+v.lado+'</small>';
     d.querySelector('.ck').textContent=z?(z.borda?'✓ pela borda':z.auto?'✓ achada':'✓ marcada'):'';
     const b=d.querySelector('button');b.textContent=z?'Marcar de novo':'Marcar';b.disabled=!frame;
     b.onclick=()=>{marcarEst=v;if(!marcando)$('#bMarcar').click();$('#bMarcar').textContent='Arraste sobre '+EST[v.k][1]+'…';$('#tela').scrollIntoView({behavior:'smooth',block:'center'})};
@@ -375,7 +375,7 @@ async function acharEstacoes(){
       const a=achadas[v.k];if(!a){falta.push(EST[v.k][1]);continue}
       const i=xs.indexOf(a.x),esq=i>0?(a.x+xs[i-1])/2:a.x-W*0.04,dir=i<xs.length-1?(a.x+xs[i+1])/2:a.x+W*0.04;
       cfg.zonas=cfg.zonas.filter(z=>z.est!==v.k);
-      cfg.zonas.push({id:Date.now().toString(36)+v.k,nome:EST[v.k][1]+(v.d===1?' (anterior)':' (2 antes)'),est:v.k,dist:v.d,auto:true,x:Math.max(0,esq/W),y:Math.max(0,a.y1/H),w:Math.min(1,(dir-esq)/W),h:Math.max(.05,1-a.y1/H)});
+      cfg.zonas.push({id:Date.now().toString(36)+v.k,nome:EST[v.k][1],est:v.k,dist:v.d,auto:true,x:Math.max(0,esq/W),y:Math.max(0,a.y1/H),w:Math.min(1,(dir-esq)/W),h:Math.max(.05,1-a.y1/H)});
       ok.push(EST[v.k][1]);
     }
     // estação que não aparece no CIMG: marca a borda da imagem do lado de onde ela fica
@@ -387,7 +387,7 @@ async function acharEstacoes(){
       let orient=0;
       for(let m=0;m<vis.length&&!orient;m++)for(let n=m+1;n<vis.length&&!orient;n++)orient=Math.sign((vis[n].a.x-vis[m].a.x)*(vis[n].j-vis[m].j));
       for(const dir of [-1,1]){
-        const vz=[1,2].map(d=>l.est[i+dir*d]).filter(Boolean);
+        const vz=[1].map(d=>l.est[i+dir*d]).filter(Boolean);
         const sem=vz.filter(k=>!achadas[k]);if(!sem.length)continue;
         if(!orient){continue}
         const lado=dir*orient; // -1 = borda esquerda, +1 = borda direita
@@ -543,7 +543,7 @@ cv.addEventListener('pointerup',()=>{
   if(a.w>0.01&&a.h>0.01){
     if(marcarEst){
       const v=marcarEst;cfg.zonas=cfg.zonas.filter(z=>z.est!==v.k);
-      cfg.zonas.push({id:Date.now().toString(36),nome:EST[v.k][1]+(v.d===1?' (anterior)':' (2 antes)'),est:v.k,dist:v.d,x:a.x,y:a.y,w:a.w,h:a.h});salvar();listarZonas();
+      cfg.zonas.push({id:Date.now().toString(36),nome:EST[v.k][1],est:v.k,dist:v.d,x:a.x,y:a.y,w:a.w,h:a.h});salvar();listarZonas();
     }else{
       const nome=(prompt('Nome desta área (ex.: Barra Funda plat. 4):','Área '+(cfg.zonas.length+1))||'').trim();
       if(nome){cfg.zonas.push({id:Date.now().toString(36),nome,x:a.x,y:a.y,w:a.w,h:a.h});salvar();listarZonas()}
@@ -867,7 +867,7 @@ function avisar(p,onde,id,zid){
   const msg='Trem '+(id||p)+' em '+onde+' às '+hora().slice(0,5)+(obs?' · '+obs.replace(/\n/g,' · '):'');
   if(zid){areasAvisadas.add(zid);progresso()}
   alertaPref=p;
-  const zz=cfg.zonas.find(z=>z.id===zid),dist=zz&&zz.borda?' · entrando pela borda do sinótico':zz&&zz.dist?(zz.dist===1?' · na estação anterior à sua':' · a 2 estações da sua'):'';
+  const zz=cfg.zonas.find(z=>z.id===zid),dist=zz&&zz.borda?' · entrando pela borda do sinótico':zz&&zz.est?' · estação vizinha da sua':'';
   registrar(msg+dist);mostrar(id||p,'em '+onde+dist,false,obs);falar('Atenção. Trem '+p.split('').join(' ')+' em '+onde+(obs?'. '+obs.replace(/\n/g,'. ').replace(/ · /g,', '):''));
 }
 // quantas áreas marcadas já tiveram pelo menos um aviso
