@@ -335,6 +335,8 @@ const sigla=k=>EST[k][0].normalize('NFD').replace(/[̀-ͯ]/g,'');
 // conferido nos painéis CCO Linha 11 e CCO Linha 12/13; Barra Funda só aparece como BF1, BF2 e BF3
 const SIG_CIMG={BFU:'BF',BRA:'BAS',DOB:'DBO',USP:'USL'};
 const siglaCimg=k=>SIG_CIMG[k]||sigla(k);
+// caixas de estação do metrô que aparecem no sinótico junto da Linha 11 (servem de limite entre áreas)
+const SIG_OUTRAS=['ALV','PTR','MTD','CCP','SGU'];
 // "BFU - Palmeiras - Barra Funda" vira BFU; se a sigla não bater, procura pelo nome
 function estDoSigo(txt){
   const m=String(txt||'').match(/^\s*([A-Z]{2,4})\s*-/);
@@ -417,15 +419,47 @@ async function acharEstacoes(){
   const b=$('#bAchar');b.disabled=true;b.textContent='Procurando as estações…';
   try{
     const W=frame.width,H=frame.height,{words,achadas}=await lerSiglas();
-    // limites entre estações: qualquer sigla de 3 letras na imagem (inclui estações de fora da lista)
-    const xs=[...new Set(words.filter(x=>/^[A-Z]{2,3}$/.test(x.t)).map(x=>x.x).concat(Object.values(achadas).map(a=>a.x)))].sort((a,b)=>a-b);
-    const falta=[],ok=[];
+    // limites entre estações: só siglas de estação (as nossas e as do metrô que aparecem no sinótico),
+    // na mesma faixa de altura da estação. Outras palavras curtas lidas (FC, IN, AE...) não contam
+    const conhecidas=new Set(Object.keys(EST).map(siglaCimg).concat(SIG_OUTRAS));
+    const marcos=Object.values(achadas).concat(words.filter(x=>conhecidas.has(x.t)));
+    const mesmaFaixa=(a,x)=>Math.abs((x.y0+x.y1)/2-(a.y0+a.y1)/2)<=Math.max(12,1.5*(a.y1-a.y0));
+    const xsDe=a=>[...new Set(marcos.filter(x=>mesmaFaixa(a,x)&&(x.x===a.x||Math.abs(x.x-a.x)>15)).map(x=>x.x).concat(a.x))].sort((p,q)=>p-q);
+    const ref=achadas[cfg.minha]||Object.values(achadas)[0];
+    const xs=ref?xsDe(ref):[];
+    // faixa de altura da área: da sigla até a próxima fileira de siglas abaixo (no painel da Linha 11 a Linha 12
+    // fica embaixo). Sigla no rodapé da imagem (Linha 13) tem os trilhos acima dela: a faixa sobe até a fileira de cima
+    const faixa=a=>{
+      // só conta como fileira a altura com 2 ou mais siglas (uma caixa solta, como Calmon Viana no painel 12/13, não corta a área)
+      const fileira=x=>marcos.filter(o=>Math.abs(o.y0-x.y0)<=15&&Math.abs(o.x-x.x)>40).length>0;
+      const abaixo=marcos.filter(x=>x.y0>a.y1+8&&fileira(x)).map(x=>x.y0),acima=marcos.filter(x=>x.y1<a.y0-8&&fileira(x)).map(x=>x.y1);
+      if(H-a.y1<H*0.15&&acima.length){const t=Math.max(...acima)+4;return [t/H,(a.y1-t)/H]}
+      const fim=abaixo.length?Math.min(...abaixo)-4:H;return [Math.max(0,a.y0/H),Math.max(.05,(fim-a.y0)/H)];
+    };
+    const falta=[],ok=[],deduzidas=new Set();
     for(const v of vizinhas(cfg.minha)){
-      const a=achadas[v.k];if(!a){falta.push(EST[v.k][1]);continue}
+      const a=achadas[v.k];
+      if(!a){
+        // sigla não lida, mas a estação seguinte da linha aparece: a vizinha fica entre ela e a sua
+        const m=achadas[cfg.minha];let feito=false;
+        if(m)for(const l of LINHAS){
+          const im=l.est.indexOf(cfg.minha),iv=l.est.indexOf(v.k);if(im<0||iv<0)continue;
+          const sd=Math.sign(iv-im);let far=null;
+          for(let d=2;d<=4&&!far;d++){const k=l.est[im+sd*d];if(k&&achadas[k])far=k}
+          if(!far)continue;
+          const xf=achadas[far].x,g=m.x-xf,x1=xf+g*0.1,x2=xf+g*0.85,[fy,fh]=faixa(m);
+          cfg.zonas=cfg.zonas.filter(z=>z.est!==v.k);
+          cfg.zonas.push({id:Date.now().toString(36)+v.k,nome:EST[v.k][1]+' (entre '+EST[far][1]+' e a sua)',est:v.k,dist:v.d,auto:true,deduzida:far,x:Math.max(0,Math.min(x1,x2)/W),y:fy,w:Math.abs(x2-x1)/W,h:fh});
+          ok.push(EST[v.k][1]+' (pela posição de '+EST[far][1]+')');deduzidas.add(v.k);feito=true;break;
+        }
+        if(!feito)falta.push(EST[v.k][1]);
+        continue;
+      }
       // a área vai até 3/4 do caminho para a sigla do lado (antes ia só até a metade), para não deixar trem passar
-      const i=xs.indexOf(a.x),esq=i>0?a.x-(a.x-xs[i-1])*0.75:a.x-W*0.08,dir=i<xs.length-1?a.x+(xs[i+1]-a.x)*0.75:a.x+W*0.08;
+      const xa=xsDe(a),i=xa.indexOf(a.x),esq=i>0?a.x-(a.x-xa[i-1])*0.75:a.x-W*0.08,dir=i<xa.length-1?a.x+(xa[i+1]-a.x)*0.75:a.x+W*0.08;
       cfg.zonas=cfg.zonas.filter(z=>z.est!==v.k);
-      cfg.zonas.push({id:Date.now().toString(36)+v.k,nome:EST[v.k][1],est:v.k,dist:v.d,auto:true,x:Math.max(0,esq/W),y:Math.max(0,a.y0/H),w:Math.min(1,dir/W)-Math.max(0,esq/W),h:Math.max(.05,1-a.y0/H)});
+      const [fy,fh]=faixa(a);
+      cfg.zonas.push({id:Date.now().toString(36)+v.k,nome:EST[v.k][1],est:v.k,dist:v.d,auto:true,x:Math.max(0,esq/W),y:fy,w:Math.min(1,dir/W)-Math.max(0,esq/W),h:fh});
       ok.push(EST[v.k][1]);
     }
     // estação que não aparece no sinótico: marca a borda da imagem do lado de onde ela fica
@@ -436,15 +470,18 @@ async function acharEstacoes(){
       const vis=l.est.map((k,j)=>({j,a:achadas[k]})).filter(o=>o.a);
       let orient=0;
       for(let m=0;m<vis.length&&!orient;m++)for(let n=m+1;n<vis.length&&!orient;n++)orient=Math.sign((vis[n].a.x-vis[m].a.x)*(vis[n].j-vis[m].j));
+      // com uma estação só na imagem, vale o desenho dos painéis: o centro (Barra Funda, Brás) fica à direita
+      if(!orient)orient=-1;
       for(const dir of [-1,1]){
         const vz=[1].map(d=>l.est[i+dir*d]).filter(Boolean);
-        const sem=vz.filter(k=>!achadas[k]);if(!sem.length)continue;
+        const sem=vz.filter(k=>!achadas[k]&&!deduzidas.has(k));if(!sem.length)continue;
         if(!orient){continue}
         const lado=dir*orient; // -1 = borda esquerda, +1 = borda direita
         // borda larga: da beira da imagem até 3/4 do caminho para a primeira sigla, entre 10% e 35% da largura
         const vao=lado<0?(xs.length?xs[0]:W*0.2):(xs.length?W-xs[xs.length-1]:W*0.2);
         const lim=Math.min(W*0.35,Math.max(W*0.1,vao*0.75));
-        cfg.zonas=cfg.zonas.filter(z=>!sem.includes(z.est)&&!(z.cobre||[]).some(k=>sem.includes(k)));
+        // tira áreas antigas dessas estações, mas não a borda criada agora para outra linha
+        cfg.zonas=cfg.zonas.filter(z=>z.novaBorda||(!sem.includes(z.est)&&!(z.cobre||[]).some(k=>sem.includes(k))));
         const k0=sem[sem.length-1],d0=vz.indexOf(k0)+1;
         // o trem que entra por esta borda vem da estação que ficou fora da imagem e segue para a ponta do outro lado
         const vem={de:EST[k0][1],sentido:EST[dir<0?l.est[l.est.length-1]:l.est[0]][1],linha:l.n};
@@ -749,8 +786,9 @@ function preparar(z){
   return o;
 }
 // letras que o leitor confunde com números viram a mesma coisa dos dois lados
-const PARES={O:'0',D:'0',Q:'0',I:'1',L:'1',J:'1',Z:'2',S:'5',B:'8',G:'6'};
-const canon=s=>s.toUpperCase().replace(/[^A-Z0-9]/g,'').replace(/[ODQILJZSBG]/g,c=>PARES[c]);
+// C entrou depois do teste com o sinótico real: o leitor troca 0 por C (S100 lido como S1C0)
+const PARES={O:'0',D:'0',Q:'0',C:'0',I:'1',L:'1',J:'1',Z:'2',S:'5',B:'8',G:'6'};
+const canon=s=>s.toUpperCase().replace(/[^A-Z0-9]/g,'').replace(/[ODQCILJZSBG]/g,c=>PARES[c]);
 const limpo=s=>s.toUpperCase().replace(/[^A-Z0-9]/g,'');
 // o leitor costuma trocar U por V, Y, 0/O ou por duas letras (LI, IJ): depois do canon
 // essas formas viram U, V, Y, 0 ou 11, e todas valem como U na hora de procurar
@@ -767,9 +805,11 @@ const padrao=(p,cp)=>{
   const m=limpo(p).match(/^([A-Z]+)0*([1-9][A-Z0-9]*)$/);
   const ini=m?[...canon(m[1])]:[],cs=m?[...canon(m[2])]:[...cp],zeros=m?'0*':'';
   const junta=x=>ini.map(parte).join('')+zeros+x.map(parte).join('');
-  let r='(?:'+junta(cs)+'(?![0-9]))';
-  if(ini.length+cs.length>=4&&cs.length>=2)r+='|(?:'+junta(cs.slice(0,-1))+'(?![0-9]))';
-  return new RegExp(r)};
+  // "depois não vem número" é conferido no texto lido, não no convertido: em R528S375 o S vira 5
+  // na conversão, mas no texto é letra
+  let r='(?:'+junta(cs)+')';
+  if(ini.length+cs.length>=4&&cs.length>=2)r+='|(?:'+junta(cs.slice(0,-1))+')';
+  return new RegExp(r,'g')};
 function procurar(linhas,p,cp){
   const achados=[],re=padrao(p,cp);
   const add=(r,i,n)=>{
@@ -778,7 +818,13 @@ function procurar(linhas,p,cp){
     if(o){if(exato&&!o.exato){o.id=id;o.exato=true}}else achados.push({id,exato});
   };
   // no sinótico o prefixo vem no começo do código (S128E508); aceita 1 caractere solto antes (traço lido como I ou 1)
-  const tenta=(r,livre)=>{const m=canon(r).match(re);if(m&&(livre||m.index===0||(m.index===1&&/[IL1J]/.test(r[0])))){add(r,m.index,m[0].length);return true}return false};
+  const tenta=(r,livre)=>{
+    for(const m of canon(r).matchAll(re)){
+      if(!(livre||m.index===0||(m.index===1&&/[IL1J]/.test(r[0]))))continue;
+      if(/[0-9]/.test(r[m.index+m[0].length]||''))continue;
+      add(r,m.index,m[0].length);return true;
+    }
+    return false};
   let algum=false;
   for(const l of linhas)for(const r of l.split(/\s+/).map(limpo))if(tenta(r))algum=true;
   if(!algum)for(const l of linhas){const t=limpo(l);if(t.includes(p))tenta(t,true)}
@@ -837,6 +883,8 @@ async function conferirPosicao(){
   const W=frame.width,{achadas}=await lerSiglas(),probs=[];
   if(!achadas[cfg.minha])probs.push(EST[cfg.minha][1]+' não aparece mais no sinótico');
   for(const z of cfg.zonas.filter(z=>z.auto&&z.est)){
+    // área deduzida (sigla não lida): confere pela estação que serviu de referência
+    if(z.deduzida){if(!achadas[z.deduzida])probs.push(EST[z.deduzida][1]+' não aparece mais no sinótico');continue}
     if(z.borda){
       const v=(z.cobre||[z.est]).filter(k=>achadas[k]);
       if(v.length)probs.push(v.map(k=>EST[k][1]).join(' e ')+' apareceu no sinótico e a '+z.nome.split(' (')[0].toLowerCase()+' não vale mais');
