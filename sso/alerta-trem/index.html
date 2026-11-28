@@ -1014,7 +1014,9 @@ async function abrirPip(){
    '@keyframes p{50%{background:#C2410C}}'+
    '.lt{margin:6px 0 0;display:flex;flex-direction:column;gap:4px;max-height:132px;overflow:auto}'+
    '.lt div{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);border-radius:6px;padding:3px 4px 3px 8px}'+
-   '.lt div.av{background:rgba(11,122,117,.45)}.lt code{font:800 15px ui-monospace,Consolas,monospace}.lt span{flex:1;font-size:12px;line-height:1.25;color:#C9D4E3;font-weight:500}'+
+   '.lt div.av{background:#0B7A75;box-shadow:inset 4px 0 0 #FFC61A;padding-left:10px}.lt div.ag{background:#FF5A1F;box-shadow:inset 4px 0 0 #fff;padding-left:10px}'+
+   '.lt div.av span,.lt div.ag span{color:#fff;font-weight:600}.lt em{flex:none;font:900 11px system-ui,sans-serif;letter-spacing:.04em;padding:2px 6px;border-radius:4px;background:#FFC61A;color:#162030}.lt div.ag em{background:#fff;color:#C2410C}'+
+   '.lt code{font:800 15px ui-monospace,Consolas,monospace}.lt span{flex:1;font-size:12px;line-height:1.25;color:#C9D4E3;font-weight:500}'+
    '.lt button{flex:none;min-height:26px;padding:0 9px;font-size:13px;border-width:1px}.lt button.cf{background:#C62828;border-color:#C62828;color:#fff}'+
    'form{display:flex;flex-direction:column;gap:6px;padding:10px 12px;flex:1;overflow:auto}form[hidden],.corpo[hidden]{display:none}'+
    'form label{display:flex;flex-direction:column;gap:2px;font-size:12px;font-weight:600;color:#C9D4E3;flex:1;min-width:0}form .lin{display:flex;gap:6px}'+
@@ -1051,9 +1053,10 @@ let pipConfirma=null,pipLista='',pipForm=false;
 function pipTrens(d,c){
   const box=d.createElement('div');box.className='lt';
   for(const p of cfg.prefixos){
-    const s=estadoTrem[p],r=d.createElement('div');if(s)r.className='av';
+    const s=estadoTrem[p],r=d.createElement('div');if(s)r.className=s.agora?'ag':'av';
     const cd=d.createElement('code');cd.textContent=p;
-    const tx=d.createElement('span');tx.textContent=infoPartes(p).concat(s?(s.agora?'agora em ':'avisado em ')+s.onde+' '+s.quando:'ainda não visto').join(' · ');tx.title=tx.textContent;
+    const tx=d.createElement('span');tx.textContent=infoPartes(p).concat(s?'em '+s.onde+' às '+s.quando:'ainda não visto').join(' · ');tx.title=tx.textContent;
+    let selo=null;if(s){selo=d.createElement('em');selo.textContent=s.agora?'AGORA':'✓ AVISADO'}
     const b=d.createElement('button');b.type='button';
     const conf=pipConfirma&&pipConfirma.p===p&&Date.now()<pipConfirma.ate;
     b.textContent=conf?'Remover?':'×';b.title='Remover '+p;if(conf)b.className='cf';
@@ -1062,7 +1065,7 @@ function pipTrens(d,c){
       pipConfirma={p,ate:Date.now()+4000};pipDesenhar();
       setTimeout(()=>{if(pipConfirma&&pipConfirma.p===p&&Date.now()>=pipConfirma.ate){pipConfirma=null;pipDesenhar()}},4100);
     };
-    r.append(cd,tx,b);box.appendChild(r);
+    r.append(...[cd,selo,tx,b].filter(Boolean));box.appendChild(r);
   }
   c.appendChild(box);
 }
