@@ -78,6 +78,10 @@ details.sigo summary{cursor:pointer;padding:12px 0;font-weight:800;color:#0A4E4A
 details.sigo[open]{padding-bottom:12px;display:flex;flex-direction:column;gap:8px}
 details.sigo textarea{width:100%;min-height:70px;border:2px solid var(--ln);border-radius:10px;padding:8px;font:500 13px/1.3 var(--mono);background:#fff}
 .z .peq{color:#8E1B1B;font-weight:800}
+.verif{margin:0;font-size:14.5px;font-weight:700;border-radius:10px;padding:8px 10px;background:#F1F1EC;color:var(--mt)}
+.verif.ok{background:var(--tl2);color:#0A4E4A}
+.verif.no{background:#FDECEC;color:#8E1B1B}
+.verif .lnk{font-weight:800}
 .est{flex:none;font-weight:800;font-size:14px;padding:7px 12px;border-radius:999px;background:#3A3A36;color:#fff;white-space:nowrap}
 .est.on{background:var(--tl)}
 .est.err{background:var(--rd)}
@@ -171,6 +175,7 @@ label.cfg input[type=range]{flex:1;accent-color:var(--k)}
   <section class="card">
     <h2><span class="n">2</span>Marque as estações</h2>
     <label class="campo"><span>Em qual estação você está?</span><select id="iMinha"><option value="">Escolha a sua estação</option></select></label>
+    <p class="verif" id="verif" hidden></p>
     <div class="estAv" id="estAv" hidden></div>
     <p class="dica">Toque em <b>Marcar área</b> e arraste um retângulo sobre o lugar onde o prefixo do trem aparece na estação. Dê um nome à área. Pode marcar várias.</p>
     <div class="row">
@@ -356,18 +361,40 @@ function listarEstAviso(){
     box.appendChild(d);
   });
 }
-$('#iMinha').onchange=e=>{cfg.minha=e.target.value;salvar();listarEstAviso()};
+$('#iMinha').onchange=e=>{cfg.minha=e.target.value;salvar();listarEstAviso();verificarMinha()};
+// lê o sinótico inteiro e devolve as siglas de estação achadas, com a posição de cada uma
+async function lerSiglas(){
+  const w=await prepararOCR(),W=frame.width,H=frame.height;
+  const esc=Math.min(Math.max(3,Math.min(7,260/H)),Math.max(1,3600/W)),pad=24;
+  const {data}=await w.recognize(preparar({x:0,y:0,w:1,h:1}));
+  const words=(data.words||[]).map(x=>({t:limpo(x.text),x:((x.bbox.x0+x.bbox.x1)/2-pad)/esc,y0:(x.bbox.y0-pad)/esc,y1:(x.bbox.y1-pad)/esc})).filter(x=>x.t.length>=2&&x.t.length<=4);
+  const cods=Object.keys(EST),achadas={};
+  for(const x of words){const k=cods.find(k=>k===x.t||sigla(k)===x.t);if(k&&!achadas[k])achadas[k]=x}
+  return {words,achadas};
+}
+// confere se a estação escolhida aparece no sinótico mostrado
+let verificando=false;
+async function verificarMinha(){
+  const el=$('#verif');
+  if(!cfg.minha||!EST[cfg.minha]){el.hidden=true;return}
+  el.hidden=false;
+  if(!frame){el.className='verif';el.textContent='Mostre o sinótico (passo 1) para conferir se '+EST[cfg.minha][1]+' aparece nele.';return}
+  if(verificando)return;verificando=true;
+  el.className='verif';el.textContent='Conferindo se '+EST[cfg.minha][1]+' aparece no sinótico…';
+  try{
+    const {achadas}=await lerSiglas(),nome=EST[cfg.minha][1];
+    if(achadas[cfg.minha]){el.className='verif ok';el.textContent='✓ '+nome+' ('+sigla(cfg.minha)+') aparece no sinótico.'}
+    else{el.className='verif no';el.innerHTML='⚠ Não achei '+escH(nome)+' ('+sigla(cfg.minha)+') no sinótico. Confira se escolheu a estação certa e role o CIMG até ela aparecer. <button class="lnk" type="button" id="bVerif">Conferir de novo</button>';$('#bVerif').onclick=()=>{$('#bFoto').click();setTimeout(verificarMinha,600)}}
+  }catch(e){el.className='verif no';el.textContent='Não consegui ler o sinótico: '+e.message}
+  verificando=false;
+}
+
 // lê o sinótico inteiro, acha as siglas das estações e propõe uma área para cada uma
 async function acharEstacoes(){
   if(!frame||!cfg.minha)return;
   const b=$('#bAchar');b.disabled=true;b.textContent='Procurando as estações…';
   try{
-    const w=await prepararOCR(),W=frame.width,H=frame.height;
-    const sw=W,sh=H,esc=Math.min(Math.max(3,Math.min(7,260/sh)),Math.max(1,3600/sw)),pad=24;
-    const {data}=await w.recognize(preparar({x:0,y:0,w:1,h:1}));
-    const words=(data.words||[]).map(x=>({t:limpo(x.text),x:((x.bbox.x0+x.bbox.x1)/2-pad)/esc,y0:(x.bbox.y0-pad)/esc,y1:(x.bbox.y1-pad)/esc})).filter(x=>x.t.length>=2&&x.t.length<=4);
-    const cods=Object.keys(EST),achadas={};
-    for(const x of words){const k=cods.find(k=>k===x.t||sigla(k)===x.t);if(k&&!achadas[k])achadas[k]=x}
+    const W=frame.width,H=frame.height,{words,achadas}=await lerSiglas();
     // limites entre estações: qualquer sigla de 3 letras na imagem (inclui estações de fora da lista)
     const xs=[...new Set(words.filter(x=>/^[A-Z]{3}$/.test(x.t)).map(x=>x.x).concat(Object.values(achadas).map(a=>a.x)))].sort((a,b)=>a-b);
     const falta=[],ok=[];
@@ -513,6 +540,7 @@ async function capturar(){
   desenhar();
   $('#telaVazia').hidden=true;
   ['#bMarcar','#bFoto','#bLer'].forEach(s=>$(s).disabled=false);listarEstAviso();
+  if(!capturar.conferiu&&cfg.minha){capturar.conferiu=true;verificarMinha()}
   estado();
   return f;
 }
